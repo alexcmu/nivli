@@ -9,17 +9,17 @@ import SwiftUI
 struct RootView: View {
     @Bindable var connection: Connection
     @State private var selection = 0
+    @State private var repository = TaskRepository()
+    private var taskIdentity: String { (connection.saved?.server.absoluteString ?? "") + "/" + (connection.saved?.credentials.ownerId ?? "") + "/" + (connection.saved?.credentials.deviceId ?? "") }
     var body: some View {
         TabView(selection: $selection) {
             NavigationStack {
-                UnavailableContent(title: "提醒功能尚未开放", symbol: "sun.max", explanation: "当前版本提供环境连接。事项与提醒将在后续版本开放。") {
-                    Button { selection = 1 } label: { Text("去交代").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle()) }
-                }.navigationTitle("此刻")
-            }.tabItem { Label("此刻", systemImage: "sun.max") }.tag(0)
+                TaskListView(connection: connection, repository: repository)
+            }.id(taskIdentity).tabItem { Label("此刻", systemImage: "sun.max") }.tag(0)
             NavigationStack {
-                UnavailableContent(title: "交代功能尚未开放", symbol: "text.bubble", explanation: "当前版本不会保存交代或创建提醒。请先在“我的”连接个人环境。") { EmptyView() }
-                    .navigationTitle("交代")
-            }.tabItem { Label("交代", systemImage: "text.bubble") }.tag(1)
+                if connection.saved != nil { ManualTaskView(connection: connection, repository: repository) }
+                else { ContentUnavailableView("先连接个人环境", systemImage: "network", description: Text("在“我的”连接后即可手动创建事项。")) }
+            }.id(taskIdentity).tabItem { Label("交代", systemImage: "text.bubble") }.tag(1)
             NavigationStack {
                 List {
                     Section("个人环境") {

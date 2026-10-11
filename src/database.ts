@@ -2,6 +2,7 @@ import pg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { sql } from "drizzle-orm";
 import { PgBoss } from "pg-boss";
+import { migrateTasks } from "./task-schema.js";
 export const SCHEMA_VERSION = 1;
 export function connect(databaseUrl: string) {
   const pool = new pg.Pool({
@@ -48,6 +49,7 @@ export async function migrate(databaseUrl: string) {
  INSERT INTO schema_version(version) VALUES (1) ON CONFLICT DO NOTHING;`),
       );
     });
+    await migrateTasks(pool);
     const boss = new PgBoss({ connectionString: databaseUrl });
     boss.on("error", () => {});
     await boss.start();
@@ -65,7 +67,10 @@ export async function verifySchema(databaseUrl: string) {
     const r = await pool.query(
       "select max(version) as version from schema_version",
     );
-    if (r.rows[0]?.version !== SCHEMA_VERSION)
+    const tasks = await pool.query(
+      "SELECT to_regclass('task_command_key') AS table_name",
+    );
+    if (r.rows[0]?.version !== SCHEMA_VERSION || !tasks.rows[0]?.table_name)
       throw new Error("Incompatible schema; run migration before starting");
   } finally {
     await pool.end();
