@@ -140,7 +140,7 @@ struct ConversationView: View {
                     draft.text="";draft.submittedText=nil;draft.key=nil;draft.runId=nil;draft.cancelKey=nil;draft.cancellationRequested=nil;draft.replyToInputId=nil;draft.taskId=nil;draft.timeZone=nil;persist();return
                 case .clarification,.needs_clarification:
                     message = run.message ?? "请补充具体日期、时间与事项。"
-                    draft.replyToInputId=run.inputId;draft.text="";draft.submittedText=nil;draft.key = nil; draft.runId = nil;draft.cancelKey=nil;draft.cancellationRequested=nil;draft.timeZone=nil;try store.save(draft);await refreshHistory(); return
+                    draft.replyToInputId=run.clarificationReplyInputId;draft.text="";draft.submittedText=nil;draft.key = nil; draft.runId = nil;draft.cancelKey=nil;draft.cancellationRequested=nil;draft.timeZone=nil;try store.save(draft);await refreshHistory(); return
                 case .failed,.cancelled,.timed_out:
                     await refreshHistory()
                     failedRun = true; error = run.message ?? "模型暂时无法处理，请手动设置或稍后再试。"; return
