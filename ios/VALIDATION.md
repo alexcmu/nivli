@@ -44,3 +44,9 @@ Ephemeral pairing inputs are excluded from Git. Raw result bundles stay private;
 - Unsigned iOS simulator compilation passed with `xcodebuild -project ios/Nivli.xcodeproj -scheme Nivli -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO build`.
 - The “交代” tab now retains text, submission identity, time zone and run identity in identity-scoped Keychain storage, polls queued/running work, fetches the current real task after success, installs notifications through the existing coordinator, and offers the existing manual form with the original text. Explicit failed-run retries use their own durable idempotency key.
 - Native IME composition, Return submission, Shift+Return newline, relaunch recovery and live input → task → notification interactions still need device acceptance. Compilation and DTO decoding do not claim those interactions passed.
+
+## 工单 07：生产 AI 交代真机闭环（2026-10-11）
+
+临时独立 `app.nivli.agentvalidation` 在授权 iPhone 上运行 `AgentUITests.testZDurableAgentInputCreatesSystemReminderAndRecoversAfterRelaunch`，正确构建结果 TEST SUCCEEDED。真实 HTTPS API/PostgreSQL/pg-boss/Pi，仅控制外部模型 HTTP。验证已提交中文 Unicode+Enter、处理中终止/重开保留原话和 run、一个真实任务和一次模型请求、当前确认卡/来源/时区、`local_installed`、外部 OS pending=1 与生产默认通用预览、再次重开与认证断开清理。测试 fixture/数据库/tunnel/临时 app 均清理，既有 Nivli 未改变。详情见 `docs/ticket-07-device-evidence.md`。
+
+中文输入法组合与 Shift+Enter 仍待真人观察；程序化文字输入不宣称这些验收完成。真实 Claude 模型冒烟仍需管理员显式 API key。
