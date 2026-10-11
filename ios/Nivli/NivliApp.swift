@@ -10,6 +10,7 @@ import SwiftUI
     @ViewBuilder private var appContent: some View {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-notification-platform-validation") { NotificationValidationView() }
+        else if ProcessInfo.processInfo.arguments.contains("-agent-system-evidence") { AgentNotificationEvidenceView() }
         else { RootView(connection: connection, notificationNavigation: notificationNavigation) }
         #else
         RootView(connection: connection, notificationNavigation: notificationNavigation)
