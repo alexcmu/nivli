@@ -1,6 +1,23 @@
 import XCTest
 @testable import NivliCore
 
+final class VersionedNotificationContractTests: XCTestCase {
+    func testSwiftDecodesPublishedNotificationPlanAndReceipt() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("contracts/examples")
+        let page = try JSONDecoder().decode(NotificationPlanPage.self, from: Data(contentsOf: root.appendingPathComponent("notification-plans.json")))
+        let receipt = try JSONDecoder().decode(NotificationPlanCommand.self, from: Data(contentsOf: root.appendingPathComponent("notification-plan-command.json")))
+        let plan = try XCTUnwrap(page.plans.first)
+        XCTAssertNotNil(UUID(uuidString: plan.id))
+        XCTAssertNotNil(UUID(uuidString: try XCTUnwrap(plan.taskId)))
+        XCTAssertEqual(receipt.occurrenceId, plan.id)
+        XCTAssertEqual(receipt.reminderRevision, plan.reminderRevision)
+        XCTAssertEqual(receipt.routingVersion, plan.routingVersion)
+        XCTAssertEqual(receipt.requestId, plan.requestId)
+        XCTAssertEqual(receipt.operation, "installed")
+        XCTAssertEqual(plan.timeZone, "Asia/Shanghai")
+    }
+}
+
 @MainActor final class NotificationTests: XCTestCase {
     func testPermissionQuietHoursAndCapacityDoNotPromiseAnInstalledReminder() async throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

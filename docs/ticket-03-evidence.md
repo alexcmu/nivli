@@ -13,7 +13,7 @@ The dedicated `migrateLocalNotifications` migration upgrades the original restri
 ## Verification
 
 - `npm run build`: passed.
-- `npm test`: 20 tests passed across pairing and task public HTTP suites, using isolated real PostgreSQL databases and real pg-boss initialization.
+- `npm test`: 25 tests passed across pairing, task and Gmail public HTTP suites after merging integration commit `0424ac1`, using isolated real PostgreSQL databases and real pg-boss initialization.
 - The local intent test first failed with HTTP 422 before the implementation, then passed.
 - The HTTP suite exercises an actual ticket-02 schema fixture (original status CHECK, no occurrence table), migrates it, and then saves local plans.
 - Coverage includes creation beyond the rolling window, stable plan identity after application restart, installation ack recovery/repetition, stale routing/reminder versions, wrong system request identity, wrong device, unauthenticated plan access, receipt transport key conflict/replay, quiet confirmation, denied permission and capacity failure with no server fallback.
@@ -21,4 +21,9 @@ The dedicated `migrateLocalNotifications` migration upgrades the original restri
 
 ## Native evidence
 
-Native implementation and device verification are recorded below when completed. Backend passing tests alone do not prove that iOS displayed a notification while locked or offline.
+- `swift test --package-path ios`: 11 tests passed. Native notification seam tests use the real SQLite journal and a substituted OS notification boundary. They cover denied permission, quiet hours, conservative capacity, lost receipt/restart recovery without duplicate request identity, and exact published plan/receipt JSON DTO decoding.
+- Generic iOS build passed after merging the Gmail integration. Log: `/tmp/nivli-03-merged-build.log`.
+- SwiftUI supports saved/not-ready reasons, settings link, explicit quiet-hours confirmation and read-only current notification detail. Logout removes this identity's pending and delivered requests and clears its journal.
+- Physical iPhone run is pending device unlock. This is not evidence that iOS displayed a notification. Actual device delivery, background/locked/offline behavior, real permission-off behavior and the initial 16-request product budget remain unverified until recorded by the native validation run and human observation.
+- Accessibility audits are waived by the user's explicit scope adjustment. Functional and privacy acceptance remain.
+

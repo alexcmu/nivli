@@ -506,7 +506,13 @@ export async function registerTasks(instance: FastifyInstance, ctx: Context) {
           o.routing_version !== b.routingVersion ||
           (b.requestId !== undefined && b.requestId !== o.request_id)
         )
-          throw new PublicError(409, "STALE_PLAN", "提醒版本已变更，请刷新。");
+          throw new PublicError(
+            409,
+            "STALE_PLAN",
+            "提醒版本已变更，请刷新。",
+            false,
+            `/v1/tasks/${o.task_id}`,
+          );
         const digest = createHash("sha256").update(canonical(b)).digest("hex");
         const prior = (
           await c.query(
@@ -553,6 +559,8 @@ export async function registerTasks(instance: FastifyInstance, ctx: Context) {
               409,
               "QUIET_HOURS_CONFIRMATION_REQUIRED",
               "请先确认安静时段提醒。",
+              false,
+              `/v1/tasks/${o.task_id}`,
             );
           if (
             b.requestId !== o.request_id ||
