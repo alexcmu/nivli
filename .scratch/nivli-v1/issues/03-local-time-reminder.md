@@ -31,3 +31,5 @@
 ## Comments
 
 - 2026-10-11: Software implementation committed on `implement/nivli-03` and merged integration `0424ac1`. Atomic local intent/identity and strict current-owner/version receipts, quiet confirmation and honest failure states are implemented. Evidence: [ticket-03-evidence](../../../docs/ticket-03-evidence.md). Post-merge backend 25 tests, Swift 11 tests and generic iOS build passed. Device validation is waiting for the connected iPhone to unlock; locked/offline display, real permission-off and measured capacity remain unchecked. Status remains `ready-for-agent`; this is not a closure claim. Accessibility audits are waived by the user.
+
+- 2026-10-11 follow-up: Real iPhone platform test passed (one test, 20.031 seconds): 16 OS-pending requests, conservative next-request capacity rejection, persistent journal reopening, actual generic background banner and delivered record. Locked/offline display and real permission-off validation remain incomplete; no closure. The user's later steering prioritizes the AI agent path, with remaining native verification continuing separately. See the same evidence document for the actual result bundle.
