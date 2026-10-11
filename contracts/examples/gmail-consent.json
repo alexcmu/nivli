@@ -1,0 +1,7 @@
+{
+  "labelIds": ["INBOX"],
+  "initialDays": 7,
+  "retentionDays": 7,
+  "confirmed": true,
+  "expectedRevision": 0
+}

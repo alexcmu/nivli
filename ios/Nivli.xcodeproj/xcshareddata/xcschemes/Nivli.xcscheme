@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "EEEFDAFCF0D801846F364BAF"
+               BlueprintIdentifier = "FE8F8EC6F8D2E51B3116BE1C"
                BuildableName = "Nivli.app"
                BlueprintName = "Nivli"
                ReferencedContainer = "container:Nivli.xcodeproj">
@@ -30,7 +30,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "EEEFDAFCF0D801846F364BAF"
+            BlueprintIdentifier = "FE8F8EC6F8D2E51B3116BE1C"
             BuildableName = "Nivli.app"
             BlueprintName = "Nivli"
             ReferencedContainer = "container:Nivli.xcodeproj">
@@ -41,7 +41,7 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "147AECC8CB4501329A8EC919"
+               BlueprintIdentifier = "8A15D05C294F3E7B09E7B863"
                BuildableName = "NivliUITests.xctest"
                BlueprintName = "NivliUITests"
                ReferencedContainer = "container:Nivli.xcodeproj">
@@ -63,7 +63,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "EEEFDAFCF0D801846F364BAF"
+            BlueprintIdentifier = "FE8F8EC6F8D2E51B3116BE1C"
             BuildableName = "Nivli.app"
             BlueprintName = "Nivli"
             ReferencedContainer = "container:Nivli.xcodeproj">
@@ -80,7 +80,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "EEEFDAFCF0D801846F364BAF"
+            BlueprintIdentifier = "FE8F8EC6F8D2E51B3116BE1C"
             BuildableName = "Nivli.app"
             BlueprintName = "Nivli"
             ReferencedContainer = "container:Nivli.xcodeproj">

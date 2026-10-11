@@ -7,6 +7,7 @@ import {
   CredentialsDTO,
   ErrorDTO,
 } from "./contracts.js";
+import { GmailStatusDTO, GmailConsentDTO } from "./gmail-routes.js";
 import {
   CreateTaskDTO,
   TaskDTO,
@@ -42,6 +43,8 @@ FormatRegistry.Set(
     /^\d{4}-\d\d-\d\dT/.test(value) && Number.isFinite(Date.parse(value)),
 );
 for (const [name, schema] of Object.entries({
+  "gmail-status": GmailStatusDTO,
+  "gmail-consent": GmailConsentDTO,
   task: TaskDTO,
   "notification-plans": NotificationPlansDTO,
   "notification-plan-command": NotificationPlanCommandDTO,
