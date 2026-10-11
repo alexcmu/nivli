@@ -1,7 +1,7 @@
 import Foundation
 import SQLite3
 
-public struct TaskReminder: Codable, Sendable { public let id: String; public let revision: Int; public let instant: String; public let timeZone: String; public let schedulingStatus: String; public let occurrence: NotificationPlan? }
+public struct TaskReminder: Codable, Sendable { public let id: String; public let revision: Int; public let instant: String; public let timeZone: String; public let schedulingStatus: String; public let originalExpression:String?;public let timeSemantics:String?; public let occurrence: NotificationPlan? }
 public struct TaskDeadline: Codable, Sendable {
     public let kind: String; public let date: String?; public let instant: String?; public let timeZone: String
     public init(kind: String, date: String? = nil, instant: String? = nil, timeZone: String) { self.kind = kind; self.date = date; self.instant = instant; self.timeZone = timeZone }

@@ -96,6 +96,8 @@ export const TaskDTO = Type.Object(
           revision: Type.Integer({ minimum: 1 }),
           instant,
           timeZone: zone,
+          originalExpression: Type.Optional(Type.String()),
+          timeSemantics: Type.Optional(Type.Literal("fixed_instant")),
           schedulingStatus: Type.Union([
             Type.Literal("not_scheduled"),
             Type.Literal("needs_confirmation"),

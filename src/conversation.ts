@@ -291,6 +291,11 @@ export async function applyConversationChange(
     now,
     input.inputId,
   );
+  if (reminder)
+    await c.query(
+      "UPDATE reminder SET original_expression=$1 WHERE owner_id=$2 AND task_id=$3 AND active",
+      [input.text, identity.ownerId, change.taskId],
+    );
   await c.query(
     "INSERT INTO task_evidence(id,owner_id,task_id,kind,text,created_at) VALUES($1,$2,$3,'instruction',$4,$5) ON CONFLICT DO NOTHING",
     [input.inputId, identity.ownerId, change.taskId, input.text, now],

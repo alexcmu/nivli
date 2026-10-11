@@ -114,6 +114,8 @@ export async function readTask(
           revision: reminder.revision,
           instant: iso(reminder.instant),
           timeZone: reminder.time_zone,
+          originalExpression: reminder.original_expression,
+          timeSemantics: reminder.time_semantics,
           schedulingStatus: reminder.scheduling_status,
           ...(occurrence
             ? {
