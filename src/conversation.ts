@@ -76,13 +76,23 @@ export async function loadConversationContext(
         -4,
       );
   const tasks = [];
-  for (const id of ids) tasks.push(await readTask(pool, input.owner_id, id));
+  for (const id of ids) {
+    const t = await readTask(pool, input.owner_id, id);
+    tasks.push({
+      id: t.id,
+      title: t.title,
+      status: t.status,
+      revision: t.revision,
+      reminder: t.reminder,
+      deadline: t.deadline,
+    });
+  }
   const context = {
     messages: recent.map((r) => ({
       inputId: r.id,
       replyToInputId: r.reply_to_input_id ?? undefined,
       createdAt: new Date(r.created_at).toISOString(),
-      text: r.text.slice(0, 2000),
+      text: r.text.slice(0, 500),
       timeZone: r.time_zone,
       status: r.status,
       message: r.message?.slice(0, 500),

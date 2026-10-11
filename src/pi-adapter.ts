@@ -219,7 +219,6 @@ export async function interpret(
       terminal || budgetFailed ? { action: "end" } : undefined,
     streamFn: async (m, context, options) => {
       await input.assertActive?.();
-      reservation = await input.beforeRequest?.(context, maxTokens);
       if (
         signal.aborted ||
         requests >= 3 ||
@@ -259,6 +258,7 @@ export async function interpret(
         stream.end(error);
         return stream;
       }
+      reservation = await input.beforeRequest?.(context, maxTokens);
       requests++;
       return models.streamSimple(m, context, {
         ...options,
