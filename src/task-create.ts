@@ -30,7 +30,7 @@ export async function createTaskInTransaction(
         input.taskId,
         input.reminder.instant,
         input.reminder.timeZone,
-        input.reminder.instant,
+        source.kind === "instruction" ? source.text : input.reminder.instant,
       ],
     );
     if (input.localDeviceId) {

@@ -8,6 +8,9 @@ private struct ConversationDraft: Codable {
     var key: String?
     var runId: String?
     var retryKey: String?
+    var conversationId:String?
+    var replyToInputId:String?
+    var taskId:String?
 }
 
 struct ConversationView: View {
@@ -15,11 +18,13 @@ struct ConversationView: View {
     @Bindable var repository: TaskRepository
     @Environment(\.scenePhase) private var scenePhase
     @State private var draft = ConversationDraft()
+    @State private var history:ConversationHistory?
     @State private var busy = false
     @State private var failedRun = false
     @State private var message: String?
     @State private var error: String?
     @State private var saved: TaskRecord?
+    @State private var cost:RunCost?
     @State private var model: ModelConfiguration?
     @State private var manual = false
     @State private var pollTrigger = 0
@@ -37,9 +42,22 @@ struct ConversationView: View {
                 if let model {
                     Text(model.configured ? "\(model.provider) · \(model.model)\n内容将发送至：\(model.dataDestination)" : "模型尚未配置，仍可手动设置。").font(.footnote).foregroundStyle(.secondary)
                 }
-                if busy { ProgressView("正在处理，原话已保留…") }
+                if busy { ProgressView("正在处理，原话已保留…");Button("停止此次处理") { Task { await cancel() } } }
+                if let history {ForEach(history.messages) {item in
+                    GroupBox { VStack(alignment:.leading,spacing:8) {
+                        Text(item.text).font(.body)
+                        if let task=item.task {
+                            Text(task.title).bold();Text(task.status == "active" ? "当前事项" : task.status == "completed" ? "已完成" : "已取消")
+                            if let reminder=task.reminder {Text(taskDate(reminder.instant,zone:reminder.timeZone));Text("时区："+reminder.timeZone)}
+                            if let deadline=task.deadline {Text("截止："+(deadline.date ?? deadline.instant ?? ""))}
+                            NavigationLink("查看最新事项和来源") {TaskDetailView(initial:task,connection:connection)}
+                            if task.status == "active" {Button("修改此事项") {draft.taskId=task.id;persist()}}
+                        } else if let message=item.message {Text(message).foregroundStyle(.secondary)}
+                    }.frame(maxWidth:.infinity,alignment:.leading)}
+                }}
                 if let message { Text(message) }
-                if let error { Text(error).foregroundStyle(.red); Text("原话已保留。重试会沿用同一次交代，不重复保存事项。").font(.footnote) }
+                if let cost {Text("用量估算 $\(cost.usageUsd, specifier: "%.4f") · 预算占用 $\(cost.reservedUsd, specifier: "%.4f")，不代表供应商账单。" ).font(.footnote);if cost.unknownRequests>0 {Text("有请求未返回用量，预算暂按上限计入。").font(.footnote)}}
+                if let error { Text(error).foregroundStyle(.red); Text("原话已保留。重试会沿用同一次交代；再次调用模型可能产生费用。").font(.footnote) }
                 if let saved {
                     GroupBox("已保存事项") {
                         VStack(alignment: .leading, spacing: 10) {
@@ -52,9 +70,8 @@ struct ConversationView: View {
                             Button("再交代一件事") { draft = ConversationDraft(); self.saved = nil; message = nil; error = nil; persist() }
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }
-                } else {
-                    Button(error == nil ? "交代" : "重试") { submit() }.buttonStyle(.borderedProminent).disabled(busy || draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
+                    Button(error == nil ? "交代" : "重试") { submit() }.buttonStyle(.borderedProminent).disabled(busy || draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 Button("手动设置提醒") { manual = true }.disabled(busy)
             }.padding()
         }.navigationTitle("交代")
@@ -63,15 +80,26 @@ struct ConversationView: View {
             .task {
                 do { draft = try store.read(ConversationDraft.self) ?? ConversationDraft() } catch { self.error = error.localizedDescription }
                 if let session = connection.saved { model = try? await NivliAPI(server: session.server).model(token: session.credentials.accessToken) }
+                if let session=connection.saved,let id=draft.conversationId {history=try? await NivliAPI(server:session.server).conversation(id:id,token:session.credentials.accessToken)}
                 if draft.runId != nil { pollTrigger += 1 }
             }
-            .onAppear { if draft.runId != nil && !busy { pollTrigger += 1 } }
-            .onChange(of: scenePhase) { if scenePhase == .active && draft.runId != nil && !busy { pollTrigger += 1 } }
+            .onAppear {Task {await refreshHistory()};if draft.runId != nil && !busy { pollTrigger += 1 } }
+            .onChange(of: scenePhase) {if scenePhase == .active {Task {await refreshHistory()};if draft.runId != nil && !busy {pollTrigger += 1}} }
             .task(id: pollTrigger) { if pollTrigger > 0 { await process() } }
+    }
+    private func refreshHistory() async {
+        guard let session=connection.saved,let id=draft.conversationId else{return}
+        let result=try? await NivliAPI(server:session.server).conversation(id:id,token:session.credentials.accessToken)
+        guard connection.saved?.server==session.server,connection.saved?.credentials.deviceId==session.credentials.deviceId else{return}
+        history=result
+    }
+    private func cancel() async {
+        guard let session=connection.saved,let id=draft.runId else{return}
+        do {_ = try await NivliAPI(server:session.server).cancelRun(id:id,key:UUID().uuidString,token:session.credentials.accessToken)}catch{self.error=error.localizedDescription}
     }
     private func persist() { do { try store.save(draft) } catch { self.error = error.localizedDescription } }
     private func submit() {
-        guard !busy, saved == nil, !draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        guard !busy, !draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         draft.key = draft.key ?? UUID().uuidString
         if failedRun { draft.retryKey = draft.retryKey ?? UUID().uuidString }
         draft.submittedText = draft.text
@@ -84,8 +112,8 @@ struct ConversationView: View {
         let api = NivliAPI(server: session.server)
         do {
             if draft.runId == nil {
-                let accepted = try await api.submitInput(text: draft.text, timeZone: draft.timeZone ?? TimeZone.current.identifier, key: draft.key ?? UUID().uuidString, token: session.credentials.accessToken)
-                try Task.checkCancellation(); draft.runId = accepted.runId; try store.save(draft)
+                let accepted = try await api.submitInput(text: draft.text, timeZone: draft.timeZone ?? TimeZone.current.identifier, key: draft.key ?? UUID().uuidString, token: session.credentials.accessToken,conversationId:draft.conversationId,replyToInputId:draft.replyToInputId,taskId:draft.taskId)
+                try Task.checkCancellation(); draft.conversationId=accepted.conversationId ?? draft.conversationId;draft.runId = accepted.runId; try store.save(draft)
             }
             guard let runId = draft.runId else { return }
             if let retryKey = draft.retryKey {
@@ -96,8 +124,9 @@ struct ConversationView: View {
                 let run = try await api.run(id: runId, token: session.credentials.accessToken)
                 try Task.checkCancellation()
                 guard connection.saved?.credentials.deviceId == session.credentials.deviceId, connection.saved?.credentials.ownerId == session.credentials.ownerId, connection.saved?.server == session.server else { return }
+                cost=run.cost
                 switch run.status {
-                case .queued, .running: try await Task.sleep(for: .seconds(1))
+                case .queued, .running: if run.stillProcessing == true {message="仍在处理中，可以停止；原话会保留。"};try await Task.sleep(for: .seconds(1))
                 case .succeeded:
                     if let taskId = run.taskId {
                         let task = try await api.task(id: taskId, token: session.credentials.accessToken)
@@ -107,11 +136,13 @@ struct ConversationView: View {
                         await repository.refresh(connection)
                         message = nil; error = nil
                     } else { message = run.message ?? "本次没有创建事项。" }
-                    return
-                case .clarification:
+                    await refreshHistory()
+                    draft.text="";draft.submittedText=nil;draft.key=nil;draft.runId=nil;draft.replyToInputId=nil;draft.taskId=nil;draft.timeZone=nil;persist();return
+                case .clarification,.needs_clarification:
                     message = run.message ?? "请补充具体日期、时间与事项。"
-                    draft.key = nil; draft.runId = nil; try store.save(draft); return
-                case .failed:
+                    draft.replyToInputId=run.inputId;draft.text="";draft.submittedText=nil;draft.key = nil; draft.runId = nil;draft.timeZone=nil;try store.save(draft);await refreshHistory(); return
+                case .failed,.cancelled,.timed_out:
+                    await refreshHistory()
                     failedRun = true; error = run.message ?? "模型暂时无法处理，请手动设置或稍后再试。"; return
                 }
             }

@@ -1,3 +1,4 @@
+import { linkedInstruction } from "./conversation.js";
 import type { AgentInput, Proposal } from "./pi-adapter.js";
 const local = (instant: Date, zone: string) =>
   new Intl.DateTimeFormat("sv-SE", {
@@ -13,6 +14,23 @@ const local = (instant: Date, zone: string) =>
     .format(instant)
     .replace(" ", "T");
 export function validateProposal(p: Proposal, i: AgentInput): boolean {
+  const linked = linkedInstruction(i);
+  if (
+    linked &&
+    p?.instruction === i.text &&
+    i.text.includes(p.timeExpression)
+  ) {
+    const effective = {
+      ...i,
+      text: linked.text,
+      now: linked.now,
+      context: undefined,
+    };
+    return validateProposal(
+      { ...p, instruction: linked.text, timeExpression: linked.text },
+      effective,
+    );
+  }
   if (
     !p ||
     typeof p !== "object" ||
@@ -100,7 +118,18 @@ export function validateProposal(p: Proposal, i: AgentInput): boolean {
         .slice(0, 10);
   }
   if (!expected || date !== expected) return false;
-  const clock = e.match(/(\d{1,2})[:：点时](?:(\d{1,2})分?)?/);
+  const clockText = e.replace(/[零一二三四五六七八九十两]+(?=[点时])/g, (n) => {
+    const digits = "零一二三四五六七八九";
+    if (n === "两") return "2";
+    if (n.includes("十")) {
+      const [a, b] = n.split("十");
+      return String(
+        (a ? digits.indexOf(a) : 1) * 10 + (b ? digits.indexOf(b) : 0),
+      );
+    }
+    return String(digits.indexOf(n));
+  });
+  const clock = clockText.match(/(\d{1,2})[:：点时](?:(\d{1,2})分?)?/);
   if (!clock) return false;
   let hour = Number(clock[1]),
     minute = Number(clock[2] ?? (/半/.test(e) ? 30 : 0));

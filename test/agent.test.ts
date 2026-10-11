@@ -306,7 +306,7 @@ test("invalid, invented-authority, ambiguous and wish proposals cannot create bu
     fixtureOverride = override;
     const run = await submit(text);
     expect(run.taskId).toBeUndefined();
-    expect(["failed", "clarification"]).toContain(run.status);
+    expect(["failed", "needs_clarification"]).toContain(run.status);
   }
   fixtureOverride = undefined;
 });
@@ -320,7 +320,7 @@ test("DST repeated clocks require clarification instead of choosing an offset", 
     timeZone: "America/Los_Angeles",
   };
   const run = await submit("2026-11-01 1:30提醒我检查", "America/Los_Angeles");
-  expect(run.status).toBe("clarification");
+  expect(run.status).toBe("needs_clarification");
   expect(run.taskId).toBeUndefined();
   fixtureOverride = undefined;
 });
@@ -401,9 +401,9 @@ test("raw numeric values cannot be normalized into authorization and no late tas
   });
   fixtureMode = "timeout";
   const run = await submit();
-  expect(run.status).toBe("failed");
+  expect(run.status).toBe("timed_out");
   expect(run.taskId).toBeUndefined();
   await new Promise((r) => setTimeout(r, 1100));
-  expect((await call("/v1/runs/" + run.id)).body.status).toBe("failed");
+  expect((await call("/v1/runs/" + run.id)).body.status).toBe("timed_out");
   fixtureMode = "valid";
 });

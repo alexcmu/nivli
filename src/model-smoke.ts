@@ -1,3 +1,4 @@
+import { INPUT_TOKEN_RESERVATION } from "./agent-budget.js";
 import { readModelConfig } from "./model-config.js";
 import { interpret } from "./pi-adapter.js";
 import { validateProposal } from "./agent-validation.js";
@@ -6,6 +7,12 @@ if (process.env.NIVLI_REAL_MODEL_SMOKE !== "1")
   throw new Error("Explicit NIVLI_REAL_MODEL_SMOKE=1 is required");
 const model = await readModelConfig();
 if (!model) throw new Error("Configure a server-only model API key first");
+const smokeBudget = Number(process.env.MODEL_SMOKE_BUDGET_USD ?? 0.5);
+if (!Number.isFinite(smokeBudget) || smokeBudget <= 0 || smokeBudget > 1)
+  throw new Error("Isolated smoke budget must be >0 and <=1 USD");
+let committed = 0,
+  usageUsd = 0;
+const reservations = new Map<string, number>();
 const input = {
   ownerId: randomUUID(),
   inputId: randomUUID(),
@@ -13,6 +20,32 @@ const input = {
   timeZone: "Asia/Shanghai",
   now: new Date().toISOString(),
   signal: AbortSignal.timeout(60000),
+  beforeRequest: async (_context: unknown, maxTokens: number) => {
+    const estimate = (INPUT_TOKEN_RESERVATION * 2 + maxTokens * 10) / 1_000_000;
+    if (committed + estimate > smokeBudget)
+      throw new Error("Isolated smoke budget exhausted");
+    const id = randomUUID();
+    committed += estimate;
+    reservations.set(id, estimate);
+    return id;
+  },
+  afterRequest: async (
+    id: string,
+    usage: {
+      input: number;
+      output: number;
+      totalTokens: number;
+      costTotal: number;
+    },
+  ) => {
+    if (usage.totalTokens <= 0) return;
+    const cost = Math.max(
+      (usage.input * 2 + usage.output * 10) / 1_000_000,
+      usage.costTotal || 0,
+    );
+    committed += cost - (reservations.get(id) ?? 0);
+    usageUsd += cost;
+  },
 };
 const result = await interpret(model, input);
 if (
@@ -33,5 +66,9 @@ console.log(
     requests: result.requests,
     toolCalls: result.toolCalls,
     usage: result.usage,
+    isolatedSmokeBudgetUsd: smokeBudget,
+    usageUsd,
+    invoiceAvailable: false,
+    productionBudgetShared: false,
   }),
 );

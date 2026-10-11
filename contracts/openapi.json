@@ -4282,6 +4282,15 @@
                           "maxLength": 100,
                           "type": "string"
                         },
+                        "originalExpression": {
+                          "type": "string"
+                        },
+                        "timeSemantics": {
+                          "type": "string",
+                          "enum": [
+                            "fixed_instant"
+                          ]
+                        },
                         "schedulingStatus": {
                           "anyOf": [
                             {
@@ -4962,6 +4971,15 @@
                           "maxLength": 100,
                           "type": "string"
                         },
+                        "originalExpression": {
+                          "type": "string"
+                        },
+                        "timeSemantics": {
+                          "type": "string",
+                          "enum": [
+                            "fixed_instant"
+                          ]
+                        },
                         "schedulingStatus": {
                           "anyOf": [
                             {
@@ -5575,6 +5593,15 @@
                                 "minLength": 1,
                                 "maxLength": 100,
                                 "type": "string"
+                              },
+                              "originalExpression": {
+                                "type": "string"
+                              },
+                              "timeSemantics": {
+                                "type": "string",
+                                "enum": [
+                                  "fixed_instant"
+                                ]
                               },
                               "schedulingStatus": {
                                 "anyOf": [
@@ -6564,6 +6591,15 @@
                           "maxLength": 100,
                           "type": "string"
                         },
+                        "originalExpression": {
+                          "type": "string"
+                        },
+                        "timeSemantics": {
+                          "type": "string",
+                          "enum": [
+                            "fixed_instant"
+                          ]
+                        },
                         "schedulingStatus": {
                           "anyOf": [
                             {
@@ -7127,6 +7163,15 @@
                           "maxLength": 100,
                           "type": "string"
                         },
+                        "originalExpression": {
+                          "type": "string"
+                        },
+                        "timeSemantics": {
+                          "type": "string",
+                          "enum": [
+                            "fixed_instant"
+                          ]
+                        },
                         "schedulingStatus": {
                           "anyOf": [
                             {
@@ -7515,6 +7560,610 @@
         }
       }
     },
+    "/v1/conversations/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "revision",
+                    "acceptedRevision",
+                    "messages"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "revision": {
+                      "type": "integer"
+                    },
+                    "acceptedRevision": {
+                      "type": "integer"
+                    },
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "type": "object",
+                        "required": [
+                          "inputId",
+                          "runId",
+                          "revision",
+                          "text",
+                          "timeZone",
+                          "status"
+                        ],
+                        "properties": {
+                          "inputId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "runId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "revision": {
+                            "type": "integer"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "timeZone": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          },
+                          "replyToInputId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "task": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "ownerId",
+                              "revision",
+                              "status",
+                              "title",
+                              "background",
+                              "deadline",
+                              "reminder",
+                              "sources",
+                              "createdAt",
+                              "updatedAt"
+                            ],
+                            "properties": {
+                              "id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "ownerId": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "revision": {
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "status": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "active"
+                                    ]
+                                  },
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "completed"
+                                    ]
+                                  },
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "cancelled"
+                                    ]
+                                  }
+                                ]
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "background": {
+                                "type": "string"
+                              },
+                              "deadline": {
+                                "anyOf": [
+                                  {
+                                    "anyOf": [
+                                      {
+                                        "additionalProperties": false,
+                                        "type": "object",
+                                        "required": [
+                                          "kind",
+                                          "date",
+                                          "timeZone"
+                                        ],
+                                        "properties": {
+                                          "kind": {
+                                            "type": "string",
+                                            "enum": [
+                                              "date"
+                                            ]
+                                          },
+                                          "date": {
+                                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                                            "type": "string"
+                                          },
+                                          "timeZone": {
+                                            "minLength": 1,
+                                            "maxLength": 100,
+                                            "type": "string"
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "type": "object",
+                                        "required": [
+                                          "kind",
+                                          "instant",
+                                          "timeZone"
+                                        ],
+                                        "properties": {
+                                          "kind": {
+                                            "type": "string",
+                                            "enum": [
+                                              "instant"
+                                            ]
+                                          },
+                                          "instant": {
+                                            "format": "date-time",
+                                            "type": "string"
+                                          },
+                                          "timeZone": {
+                                            "minLength": 1,
+                                            "maxLength": 100,
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "nullable": true,
+                                    "enum": [
+                                      null
+                                    ]
+                                  }
+                                ]
+                              },
+                              "reminder": {
+                                "additionalProperties": false,
+                                "type": "object",
+                                "required": [
+                                  "id",
+                                  "revision",
+                                  "instant",
+                                  "timeZone",
+                                  "schedulingStatus"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "format": "uuid",
+                                    "type": "string"
+                                  },
+                                  "revision": {
+                                    "minimum": 1,
+                                    "type": "integer"
+                                  },
+                                  "instant": {
+                                    "format": "date-time",
+                                    "type": "string"
+                                  },
+                                  "timeZone": {
+                                    "minLength": 1,
+                                    "maxLength": 100,
+                                    "type": "string"
+                                  },
+                                  "originalExpression": {
+                                    "type": "string"
+                                  },
+                                  "timeSemantics": {
+                                    "type": "string",
+                                    "enum": [
+                                      "fixed_instant"
+                                    ]
+                                  },
+                                  "schedulingStatus": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "not_scheduled"
+                                        ]
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "needs_confirmation"
+                                        ]
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "local_pending"
+                                        ]
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "local_installed"
+                                        ]
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "permission_denied"
+                                        ]
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "capacity_exceeded"
+                                        ]
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "installation_failed"
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "occurrence": {
+                                    "additionalProperties": false,
+                                    "type": "object",
+                                    "required": [
+                                      "id",
+                                      "reminderRevision",
+                                      "routingVersion",
+                                      "requestId",
+                                      "scheduledAt",
+                                      "timeZone",
+                                      "installationStatus",
+                                      "quietHoursConfirmed"
+                                    ],
+                                    "properties": {
+                                      "id": {
+                                        "format": "uuid",
+                                        "type": "string"
+                                      },
+                                      "reminderRevision": {
+                                        "minimum": 1,
+                                        "type": "integer"
+                                      },
+                                      "routingVersion": {
+                                        "minimum": 1,
+                                        "type": "integer"
+                                      },
+                                      "requestId": {
+                                        "type": "string"
+                                      },
+                                      "scheduledAt": {
+                                        "format": "date-time",
+                                        "type": "string"
+                                      },
+                                      "timeZone": {
+                                        "minLength": 1,
+                                        "maxLength": 100,
+                                        "type": "string"
+                                      },
+                                      "installationStatus": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "pending"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "installed"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "denied"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "capacity"
+                                            ]
+                                          },
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "failed"
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      "quietHoursConfirmed": {
+                                        "type": "boolean"
+                                      }
+                                    }
+                                  }
+                                },
+                                "nullable": true
+                              },
+                              "sources": {
+                                "type": "array",
+                                "items": {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": [
+                                    "id",
+                                    "kind",
+                                    "text",
+                                    "createdAt"
+                                  ],
+                                  "properties": {
+                                    "id": {
+                                      "format": "uuid",
+                                      "type": "string"
+                                    },
+                                    "kind": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string",
+                                          "enum": [
+                                            "manual"
+                                          ]
+                                        },
+                                        {
+                                          "type": "string",
+                                          "enum": [
+                                            "instruction"
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    "text": {
+                                      "type": "string"
+                                    },
+                                    "createdAt": {
+                                      "format": "date-time",
+                                      "type": "string"
+                                    }
+                                  }
+                                }
+                              },
+                              "createdAt": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "updatedAt": {
+                                "format": "date-time",
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/model": {
       "get": {
         "security": [
@@ -7548,6 +8197,244 @@
                     },
                     "dataDestination": {
                       "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/model/budget": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "day",
+                    "timeZone",
+                    "limitUsd",
+                    "requests",
+                    "reservedUsd",
+                    "usageUsd",
+                    "unknownRequests",
+                    "remainingUsd",
+                    "invoiceAvailable"
+                  ],
+                  "properties": {
+                    "day": {
+                      "type": "string"
+                    },
+                    "timeZone": {
+                      "type": "string",
+                      "enum": [
+                        "UTC"
+                      ]
+                    },
+                    "limitUsd": {
+                      "type": "number"
+                    },
+                    "requests": {
+                      "type": "integer"
+                    },
+                    "reservedUsd": {
+                      "type": "number"
+                    },
+                    "usageUsd": {
+                      "type": "number"
+                    },
+                    "unknownRequests": {
+                      "type": "integer"
+                    },
+                    "remainingUsd": {
+                      "type": "number"
+                    },
+                    "invoiceAvailable": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
                     }
                   }
                 }
@@ -7968,6 +8855,18 @@
                   "timeZone"
                 ],
                 "properties": {
+                  "conversationId": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "replyToInputId": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "taskId": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
                   "text": {
                     "minLength": 1,
                     "maxLength": 2000,
@@ -8019,6 +8918,13 @@
                     "runId": {
                       "format": "uuid",
                       "type": "string"
+                    },
+                    "conversationId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "conversationRevision": {
+                      "type": "integer"
                     }
                   }
                 }
@@ -8257,6 +9163,356 @@
                     "runId": {
                       "format": "uuid",
                       "type": "string"
+                    },
+                    "conversationId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "conversationRevision": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runs/{id}/cancel": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "inputId",
+                    "status",
+                    "text",
+                    "timeZone",
+                    "stillProcessing",
+                    "cost",
+                    "requests",
+                    "toolCalls"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "inputId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "status": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "queued"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "running"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "succeeded"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "needs_clarification"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "cancelled"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "timed_out"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "failed"
+                          ]
+                        }
+                      ]
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "timeZone": {
+                      "type": "string"
+                    },
+                    "stillProcessing": {
+                      "type": "boolean"
+                    },
+                    "errorCode": {
+                      "type": "string"
+                    },
+                    "cost": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "reservedUsd",
+                        "usageUsd",
+                        "unknownRequests",
+                        "invoiceAvailable"
+                      ],
+                      "properties": {
+                        "reservedUsd": {
+                          "type": "number"
+                        },
+                        "usageUsd": {
+                          "type": "number"
+                        },
+                        "unknownRequests": {
+                          "type": "integer"
+                        },
+                        "invoiceAvailable": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        }
+                      }
+                    },
+                    "requests": {
+                      "type": "integer"
+                    },
+                    "toolCalls": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "taskId": {
+                      "format": "uuid",
+                      "type": "string"
                     }
                   }
                 }
@@ -8466,6 +9722,10 @@
                     "id",
                     "inputId",
                     "status",
+                    "text",
+                    "timeZone",
+                    "stillProcessing",
+                    "cost",
                     "requests",
                     "toolCalls"
                   ],
@@ -8501,7 +9761,19 @@
                         {
                           "type": "string",
                           "enum": [
-                            "clarification"
+                            "needs_clarification"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "cancelled"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "timed_out"
                           ]
                         },
                         {
@@ -8511,6 +9783,45 @@
                           ]
                         }
                       ]
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "timeZone": {
+                      "type": "string"
+                    },
+                    "stillProcessing": {
+                      "type": "boolean"
+                    },
+                    "errorCode": {
+                      "type": "string"
+                    },
+                    "cost": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "reservedUsd",
+                        "usageUsd",
+                        "unknownRequests",
+                        "invoiceAvailable"
+                      ],
+                      "properties": {
+                        "reservedUsd": {
+                          "type": "number"
+                        },
+                        "usageUsd": {
+                          "type": "number"
+                        },
+                        "unknownRequests": {
+                          "type": "integer"
+                        },
+                        "invoiceAvailable": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        }
+                      }
                     },
                     "requests": {
                       "type": "integer"

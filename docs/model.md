@@ -17,3 +17,13 @@ Docker Compose 添加 `-f deploy/model.compose.yaml` 并设置 `MODEL_API_KEY_PA
 服务端提供 owner、设备、当前时间、时区和允许证据。工具仅输出 proposal；独立业务校验阻止身份字段、非字符串强制转换、非明确指令、原文之外的证据、错误时区/时间、过去日期、DST 重叠及普通愿望。当前确定性日期校验支持明确年月日、今天/明天/后天与数字时刻，其他表达先澄清。操作身份从 InputEvent ID 派生，源证据标记 `instruction`。事务再次检查 run、设备及 session 权限，避免晚到/已失效结果提交。
 
 本地提醒沿用同一事务命令与 occurrence/installation receipt 契约。确认卡查询当前真实事项并安排本地通知，显示实际安装状态，安静时段必须先确认。该服务器的独立静默预算/完整多轮修改由工单 08/09 扩展。
+
+## 失败、取消与预算恢复
+
+运行状态为 `queued/running/needs_clarification/succeeded/failed/cancelled/timed_out`。20 秒后 `stillProcessing` 明确表示仍在处理，不提前宣称成功；每次尝试默认 60 秒硬期限。`GET /v1/runs/:id` 返回持久化原话、时区、处理结果和真实事项身份。`POST /v1/runs/:id/cancel` 使用独立 UUID 幂等键，停止尚未完成的执行，后续请求、工具及提交再次检查持久化状态和尝试身份。已提交事项保留成功结果，取消不会声称撤销它。失败、超时或取消可通过 retry 恢复同一输入身份；缺信息应补充回答。
+
+API 与 agent 配置同一 `MODEL_DAILY_BUDGET_USD`（默认 1 USD，范围 0–10000）和 `MODEL_MAX_OUTPUT_TOKENS`（默认 1024，范围 128–1024），修改后同时重启。预算按 **UTC 日期、UTC 00:00** 重置。每次请求在数据库事务内锁定当天预算，先预留 65536 输入 token（涵盖 16000 UTF-16 字符上下文、工具结果与 provider 封装）及最大输出 token 的保守费用；Pi 每次请求都会重新检查上下文增长。已确认 usage 按 token 费率与 SDK 估价的较高值记账；超出预留也计入下一次请求的预算检查。传输中断、取消、进程崩溃且 usage 未确认时保留完整预留，不假定费用为零。记录仅包含数值、请求/运行身份，不保存模型隐藏推理或原始 provider 数据。
+
+管理员 `GET /v1/admin/model/budget` 返回 UTC 日期、额度、预留估算、已确认 usage、usage 未确认的请求数量和剩余可用额度。运行结果 `cost` 同样区分预留、usage 与未知请求；`invoiceAvailable:false` 明确这些都不是 provider 账单。管理员 `/v1/admin/model/test` 使用同一生产预算，预算不足返回 `MODEL_BUDGET_EXHAUSTED`。CLI smoke 则是显式启用的独立测试：`MODEL_SMOKE_BUDGET_USD` 默认为 0.5 USD、最高 1 USD，每次请求预留后才发送；它会产生模型费用，**不共享生产每日预算**，输出注明独立预算与账单不可用。
+
+运行 lease 用数据库时间更新。进程被终止后未确认请求由队列重新执行，可能再次产生模型费用；原业务操作使用稳定 InputEvent UUID，且业务写入与运行成功在同一事务提交。旧尝试的晚到结果不能提交。API、agent 和 delivery 分开运行，agent 单个 worker 的并发额度为 1；模型阻塞或预算耗尽不会占用 API 或 delivery 配额，也不会影响设备已安装的离线提醒。
