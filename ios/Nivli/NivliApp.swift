@@ -38,6 +38,7 @@ struct RootView: View {
 }
 struct EnvironmentView: View {
     @Bindable var connection: Connection
+    @State private var removingLocalCredentials = false
     var body: some View {
         Form {
             if let saved = connection.saved {
@@ -48,11 +49,15 @@ struct EnvironmentView: View {
                     Text("提醒同步尚未开放。").foregroundStyle(.primary)
                     Button("重新检查连接") { Task { await connection.restore() } }.disabled(connection.busy)
                     Button("吊销并断开此设备", role: .destructive) { Task { await connection.disconnect() } }.disabled(connection.busy)
+                    Button("移除此 iPhone 的连接", role: .destructive) { removingLocalCredentials = true }.disabled(connection.busy)
                 }
             } else { PairingView(connection: connection) }
             if connection.busy { ProgressView("正在连接") }
             if let error = connection.error { Section("连接失败") { Text(error); Button("重试") { Task { await connection.restore() } }.disabled(connection.busy || connection.saved == nil) } }
         }.navigationTitle("环境连接")
+            .confirmationDialog("仅移除本机凭据，服务器会话可能仍有效。需管理员吊销旧设备后重新配对。", isPresented: $removingLocalCredentials, titleVisibility: .visible) {
+                Button("移除本机凭据", role: .destructive) { connection.forgetLocalCredentials() }
+            }
     }
 }
 struct EnvironmentDetails: View {
