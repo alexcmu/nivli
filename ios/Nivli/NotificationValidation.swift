@@ -16,6 +16,7 @@ struct NotificationValidationView: View {
                 Button("安排3分钟验收通知") { Task { await schedule(delay: 180) } }
                 Button("安排自动化验收通知") { Task { await schedule(delay: 8) } }
                 Button("检查系统投递记录") { Task { await check() } }
+                Button("打开通知设置") { openNotificationSettings() }
                 Button("清理验收通知") { Task { await clear(); evidence = "已清理" } }
                 Text("锁屏和离线的显示结果须由真机观察。系统 pending 或 delivered 记录不代表用户已看到。")
             }.navigationTitle("通知平台验收")

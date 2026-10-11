@@ -35,6 +35,37 @@ final class NivliUITests: XCTestCase {
         app.buttons["返回手动输入"].tap()
         XCTAssertTrue(app.textFields["serverAddress"].exists)
     }
+    @MainActor func testPrepareLockedOfflineNotificationObservation() throws {
+        let app = XCUIApplication(); app.launchArguments = ["-notification-platform-validation"]; app.launch()
+        app.buttons["安排3分钟验收通知"].tap()
+        let accepted = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'installed；pending=true'")).firstMatch
+        XCTAssertTrue(accepted.waitForExistence(timeout: 10), app.staticTexts["notificationEvidence"].label)
+        print("NIVLI_MANUAL_NOTIFICATION_READY \(app.staticTexts["notificationEvidence"].label)")
+        XCUIDevice.shared.press(.home)
+    }
+
+    @MainActor func testNotificationPermissionOffPreservesUnscheduledState() throws {
+        let app = XCUIApplication(); app.launchArguments = ["-notification-platform-validation"]; app.launch()
+        app.buttons["打开通知设置"].tap()
+        let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
+        let permission = settings.switches.matching(NSPredicate(format: "label CONTAINS[c] 'Allow Notifications' OR label CONTAINS '允许通知'")).firstMatch
+        XCTAssertTrue(permission.waitForExistence(timeout: 10))
+        guard permission.exists else { return }
+        print("NIVLI_PERMISSION_BEFORE \(String(describing: permission.value))")
+        if permission.value as? String == "1" { permission.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap() }
+        let off = NSPredicate(format: "value == '0'")
+        guard off.evaluate(with: permission) || XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: off, object: permission)], timeout: 5) == .completed else { throw XCTSkip("Device Settings did not turn notification authorization off; manual permission-off acceptance remains required.") }
+        print("NIVLI_PERMISSION_AFTER \(String(describing: permission.value))")
+        app.activate()
+        app.buttons["验证本机容量与恢复"].tap()
+        XCTAssertTrue(app.staticTexts["权限关闭：未安装，事项保留"].waitForExistence(timeout: 10), app.staticTexts["notificationEvidence"].label)
+        app.buttons["打开通知设置"].tap()
+        XCTAssertTrue(permission.waitForExistence(timeout: 10))
+        print("NIVLI_PERMISSION_RESTORE \(String(describing: permission.value))")
+        if permission.value as? String == "0" { permission.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap() }
+        app.activate()
+    }
+
     @MainActor func testNotificationPlatformCapacityRecoveryAndBackgroundDelivery() throws {
         let app = XCUIApplication(); app.launchArguments = ["-notification-platform-validation"]; app.launch()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
