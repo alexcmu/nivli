@@ -4425,9 +4425,19 @@
                             "type": "string"
                           },
                           "kind": {
-                            "type": "string",
-                            "enum": [
-                              "manual"
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "manual"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "instruction"
+                                ]
+                              }
                             ]
                           },
                           "text": {
