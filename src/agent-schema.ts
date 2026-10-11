@@ -9,7 +9,11 @@ export async function migrateAgent(pool: pg.Pool) {
  ALTER TABLE agent_run ADD CONSTRAINT agent_run_status_check CHECK(status IN('queued','running','needs_clarification','succeeded','failed','cancelled','timed_out'));
  ALTER TABLE agent_run ADD COLUMN IF NOT EXISTS error_code text;
  ALTER TABLE agent_run ADD COLUMN IF NOT EXISTS deadline_at timestamptz;
+ ALTER TABLE agent_run ADD COLUMN IF NOT EXISTS lease_expires_at timestamptz;
  CREATE TABLE IF NOT EXISTS agent_cancel(run_id uuid NOT NULL REFERENCES agent_run(id),idempotency_key uuid NOT NULL,PRIMARY KEY(run_id,idempotency_key));
+ CREATE TABLE IF NOT EXISTS model_request(id uuid PRIMARY KEY,run_id uuid REFERENCES agent_run(id),attempt integer NOT NULL,budget_day date NOT NULL,reserved_usd numeric NOT NULL CHECK(reserved_usd>=0),max_output_tokens integer NOT NULL,settled boolean NOT NULL DEFAULT false,input_tokens integer,output_tokens integer,usage_usd numeric CHECK(usage_usd>=0),created_at timestamptz NOT NULL);
+ ALTER TABLE model_request ALTER COLUMN run_id DROP NOT NULL;
+ CREATE INDEX IF NOT EXISTS model_request_budget_day ON model_request(budget_day);
  ALTER TABLE task_evidence DROP CONSTRAINT IF EXISTS task_evidence_kind_check;
  ALTER TABLE task_evidence ADD CONSTRAINT task_evidence_kind_check CHECK(kind IN('manual','instruction'));`);
 }

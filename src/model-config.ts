@@ -22,5 +22,22 @@ export async function readModelConfig(): Promise<ModelConfig | undefined> {
   const model = process.env.MODEL_ID ?? "claude-sonnet-5-5";
   if (model !== "claude-sonnet-5-5")
     throw new Error("This release supports configured Claude Sonnet 5.5 only");
-  return { apiKey, baseUrl: endpoint.toString().replace(/\/$/, ""), model };
+  const maxOutputTokens = Number(process.env.MODEL_MAX_OUTPUT_TOKENS ?? 1024),
+    dailyBudgetUsd = Number(process.env.MODEL_DAILY_BUDGET_USD ?? 1);
+  if (
+    !Number.isInteger(maxOutputTokens) ||
+    maxOutputTokens < 128 ||
+    maxOutputTokens > 1024 ||
+    !Number.isFinite(dailyBudgetUsd) ||
+    dailyBudgetUsd < 0 ||
+    dailyBudgetUsd > 10000
+  )
+    throw new Error("Model limits out of range");
+  return {
+    maxOutputTokens,
+    dailyBudgetUsd,
+    apiKey,
+    baseUrl: endpoint.toString().replace(/\/$/, ""),
+    model,
+  };
 }

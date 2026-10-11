@@ -1,3 +1,4 @@
+import { spawn, execFileSync } from "node:child_process";
 import { createServer } from "node:http";
 import { startAgentWorker } from "../src/agent-worker.js";
 import { beforeAll, afterAll, test, expect } from "vitest";
@@ -103,7 +104,10 @@ beforeAll(async () => {
             content: [],
             stop_reason: null,
             stop_sequence: null,
-            usage: { input_tokens: 20, output_tokens: 0 },
+            usage: {
+              input_tokens: fixtureMode === "budget" ? 65536 : 20,
+              output_tokens: 0,
+            },
           },
         },
       ],
@@ -137,7 +141,7 @@ beforeAll(async () => {
         {
           type: "message_delta",
           delta: { stop_reason: "tool_use", stop_sequence: null },
-          usage: { output_tokens: 30 },
+          usage: { output_tokens: fixtureMode === "budget" ? 512 : 30 },
         },
       ],
       ["message_stop", { type: "message_stop" }],
@@ -173,7 +177,8 @@ beforeAll(async () => {
           ],
           ["content_block_stop", { type: "content_block_stop", index }],
         );
-    if(fixtureMode === "late") await new Promise(r=>setTimeout(r,1000));
+    if (fixtureMode === "budget") await new Promise((r) => setTimeout(r, 300));
+    if (fixtureMode === "late") await new Promise((r) => setTimeout(r, 1000));
     res.writeHead(200, { "content-type": "text/event-stream" });
     for (const [event, data] of events)
       res.write("event: " + event + "\ndata: " + JSON.stringify(data) + "\n\n");
@@ -221,35 +226,194 @@ async function submit(
   const q = await call("/v1/inputs", "POST", { text, timeZone });
   return settle(q.body.runId);
 }
-test("cancelled run preserves original input and prevents late provider output and new requests", async () => {
-  fixtureMode = "late";
-  const queued = await call("/v1/inputs", "POST", { text: "明天上午9点提醒我提交材料", timeZone:"Asia/Shanghai" });
-  for(let i=0;i<100;i++){ if((await call("/v1/runs/"+queued.body.runId)).body.status === "running") break; await new Promise(r=>setTimeout(r,50)); }
-  const key=randomUUID();
-  const cancel=await call("/v1/runs/"+queued.body.runId+"/cancel","POST",{},key);
-  expect(cancel.status).toBe(200);
-  expect(cancel.body).toMatchObject({status:"cancelled",text:"明天上午9点提醒我提交材料",timeZone:"Asia/Shanghai"});
-  expect((await call("/v1/runs/"+queued.body.runId+"/cancel","POST",{},key)).body.status).toBe("cancelled");
-  const before=payloads.length;
-  await new Promise(r=>setTimeout(r,1200));
-  expect(payloads.length).toBe(before);
-  expect((await call("/v1/tasks")).body.tasks).toHaveLength(0);
-  fixtureMode="valid";
-});
-
-test("daily budget serializes concurrent requests, reports estimates separately, and leaves manual API operational", async()=>{
+test("daily budget serializes concurrent requests, reports estimates separately, and leaves manual API operational", async () => {
   await worker.stop();
-  worker=await startAgentWorker({...config,model:{model:"claude-sonnet-5-5",apiKey:"external-fixture-key",baseUrl:"http://127.0.0.1:"+(provider.address() as {port:number}).port,dailyBudgetUsd:0.08,maxOutputTokens:512}});
-  const before=payloads.length;
-  const qs=await Promise.all(Array.from({length:3},()=>call("/v1/inputs","POST",{text:"明天上午9点提醒我提交材料",timeZone:"Asia/Shanghai"})));
-  const runs=await Promise.all(qs.map(q=>settle(q.body.runId)));
-  expect(payloads.length-before).toBe(1);
-  expect(runs.filter(r=>r.status==='succeeded')).toHaveLength(1);
-  expect(runs.filter(r=>r.errorCode==='MODEL_BUDGET_EXHAUSTED')).toHaveLength(2);
-  expect((await call("/v1/tasks","POST",draft())).status).toBe(201);
-  const budget=await call("/v1/admin/model/budget","GET",undefined,randomUUID(),admin);
-  expect(budget.body).toMatchObject({invoiceAvailable:false,requests:1});
+  worker = await startAgentWorker({
+    ...config,
+    model: {
+      model: "claude-sonnet-5-5",
+      apiKey: "external-fixture-key",
+      baseUrl:
+        "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+      dailyBudgetUsd: 0.15,
+      maxOutputTokens: 512,
+    },
+  });
+  fixtureMode = "budget";
+  const competing = await startAgentWorker({
+    ...config,
+    model: {
+      model: "claude-sonnet-5-5",
+      apiKey: "external-fixture-key",
+      baseUrl:
+        "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+      dailyBudgetUsd: 0.15,
+      maxOutputTokens: 512,
+    },
+  });
+  const before = payloads.length;
+  const qs = await Promise.all(
+    Array.from({ length: 3 }, () =>
+      call("/v1/inputs", "POST", {
+        text: "明天上午9点提醒我提交材料",
+        timeZone: "Asia/Shanghai",
+      }),
+    ),
+  );
+  const runs = await Promise.all(qs.map((q) => settle(q.body.runId)));
+  await competing.stop();
+  expect(payloads.length - before).toBe(1);
+  expect(runs.filter((r) => r.status === "succeeded")).toHaveLength(1);
+  expect(
+    runs.filter((r) => r.errorCode === "MODEL_BUDGET_EXHAUSTED"),
+  ).toHaveLength(2);
+  expect((await call("/v1/tasks", "POST", draft())).status).toBe(200);
+  const budget = await call(
+    "/v1/admin/model/budget",
+    "GET",
+    undefined,
+    randomUUID(),
+    admin,
+  );
+  expect(budget.body).toMatchObject({ invoiceAvailable: false, requests: 1 });
   expect(budget.body.reservedUsd).toBeGreaterThan(0);
   expect(budget.body.usageUsd).toBeGreaterThan(0);
   expect(payloads.at(-1)?.max_tokens).toBe(512);
+  fixtureMode = "valid";
+  await worker.stop();
+  worker = await startAgentWorker({
+    ...config,
+    model: {
+      model: "claude-sonnet-5-5",
+      apiKey: "external-fixture-key",
+      baseUrl:
+        "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+    },
+  });
 });
+test("cancelled run preserves original input and prevents late provider output and new requests", async () => {
+  fixtureMode = "late";
+  const previousTasks = (await call("/v1/tasks")).body.tasks.length;
+  const queued = await call("/v1/inputs", "POST", {
+    text: "明天上午9点提醒我提交材料",
+    timeZone: "Asia/Shanghai",
+  });
+  for (let i = 0; i < 100; i++) {
+    if ((await call("/v1/runs/" + queued.body.runId)).body.status === "running")
+      break;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+  const key = randomUUID();
+  const cancel = await call(
+    "/v1/runs/" + queued.body.runId + "/cancel",
+    "POST",
+    {},
+    key,
+  );
+  expect(cancel.status).toBe(200);
+  expect(cancel.body).toMatchObject({
+    status: "cancelled",
+    text: "明天上午9点提醒我提交材料",
+    timeZone: "Asia/Shanghai",
+  });
+  expect(
+    (await call("/v1/runs/" + queued.body.runId + "/cancel", "POST", {}, key))
+      .body.status,
+  ).toBe("cancelled");
+  const before = payloads.length;
+  await new Promise((r) => setTimeout(r, 1200));
+  expect(payloads.length).toBe(before);
+  expect((await call("/v1/tasks")).body.tasks).toHaveLength(previousTasks);
+  fixtureMode = "valid";
+});
+
+test("hard deadline returns timed_out, retained input retries with stable identity, and succeeded cancellation cannot undo a task", async () => {
+  await worker.stop();
+  const model = {
+    model: "claude-sonnet-5-5",
+    apiKey: "external-fixture-key",
+    baseUrl:
+      "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+    timeoutMs: 100,
+  };
+  worker = await startAgentWorker({ ...config, model });
+  fixtureMode = "late";
+  const q = await call("/v1/inputs", "POST", {
+    text: "明天上午9点提醒我提交材料",
+    timeZone: "Asia/Shanghai",
+  });
+  const r = await settle(q.body.runId);
+  expect(r).toMatchObject({
+    status: "timed_out",
+    errorCode: "MODEL_TIMEOUT",
+    text: "明天上午9点提醒我提交材料",
+  });
+  await new Promise((r) => setTimeout(r, 1100));
+  expect((await call("/v1/runs/" + r.id)).body.status).toBe("timed_out");
+  fixtureMode = "valid";
+  await worker.stop();
+  worker = await startAgentWorker({
+    ...config,
+    model: { ...model, timeoutMs: 60000 },
+  });
+  const retry = await call("/v1/runs/" + r.id + "/retry", "POST", {});
+  expect(retry.body).toMatchObject({ inputId: r.inputId, runId: r.id });
+  const saved = await settle(r.id);
+  expect(saved.status).toBe("succeeded");
+  const cancelled = await call("/v1/runs/" + r.id + "/cancel", "POST", {});
+  expect(cancelled.body).toMatchObject({
+    status: "succeeded",
+    taskId: saved.taskId,
+  });
+  expect((await call("/v1/tasks/" + saved.taskId)).status).toBe(200);
+});
+
+test("a killed worker redelivers an unconfirmed request and never duplicates the business result after a committed run", async () => {
+  await worker.stop();
+  execFileSync("npm", ["run", "build"], { stdio: "pipe" });
+  const model = {
+    model: "claude-sonnet-5-5",
+    apiKey: "external-fixture-key",
+    baseUrl:
+      "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+  };
+  const child = spawn(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      `import {startAgentWorker} from './dist/agent-worker.js';await startAgentWorker(${JSON.stringify({ ...config, clock: undefined, model })});`,
+    ],
+    { cwd: process.cwd(), stdio: "ignore" },
+  );
+  fixtureMode = "late";
+  const before = payloads.length,
+    q = await call("/v1/inputs", "POST", {
+      text: "明天上午9点提醒我提交材料",
+      timeZone: "Asia/Shanghai",
+    });
+  for (let i = 0; i < 100 && payloads.length === before; i++)
+    await new Promise((r) => setTimeout(r, 50));
+  expect(payloads.length).toBe(before + 1);
+  const ended = new Promise<void>((resolve) =>
+    child.once("exit", () => resolve()),
+  );
+  child.kill("SIGKILL");
+  await ended;
+  fixtureMode = "valid";
+  worker = await startAgentWorker({ ...config, model });
+  const saved = await settle(q.body.runId);
+  expect(saved.status).toBe("succeeded");
+  expect(payloads.length - before).toBe(2);
+  expect(saved.taskId).toBe(q.body.inputId);
+  await worker.stop();
+  worker = await startAgentWorker({ ...config, model });
+  await new Promise((r) => setTimeout(r, 800));
+  expect((await call("/v1/runs/" + saved.id)).body.taskId).toBe(saved.taskId);
+  expect(payloads.length - before).toBe(2);
+  expect(
+    (await call("/v1/tasks")).body.tasks.filter(
+      (t: { id: string }) => t.id === saved.taskId,
+    ),
+  ).toHaveLength(1);
+}, 20000);

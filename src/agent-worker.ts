@@ -1,3 +1,4 @@
+import { reserveRequest, settleRequest } from "./agent-budget.js";
 import {
   commitConversationResult,
   loadConversationContext,
@@ -23,8 +24,14 @@ export async function startAgentWorker(config: {
   async function processRun(id: string) {
     const claimed = (
       await pool.query(
-        "UPDATE agent_run SET status='running',started_at=$2,deadline_at=$3,attempt=attempt+1 WHERE id=$1 AND status='queued' AND NOT EXISTS(SELECT 1 FROM input_event mine JOIN input_event earlier ON earlier.conversation_id=mine.conversation_id AND earlier.conversation_revision<mine.conversation_revision JOIN agent_run prior ON prior.input_id=earlier.id WHERE mine.id=agent_run.input_id AND prior.status IN('queued','running')) RETURNING *",
-        [id, now(),new Date(now().getTime()+Math.min(config.model?.timeoutMs??60000,60000))],
+        "UPDATE agent_run SET status='running',started_at=$2,deadline_at=$3,lease_expires_at=clock_timestamp()+interval '2 seconds',attempt=attempt+1 WHERE id=$1 AND status='queued' AND NOT EXISTS(SELECT 1 FROM input_event mine JOIN input_event earlier ON earlier.conversation_id=mine.conversation_id AND earlier.conversation_revision<mine.conversation_revision JOIN agent_run prior ON prior.input_id=earlier.id WHERE mine.id=agent_run.input_id AND prior.status IN('queued','running')) RETURNING *",
+        [
+          id,
+          now(),
+          new Date(
+            now().getTime() + Math.min(config.model?.timeoutMs ?? 60000, 60000),
+          ),
+        ],
       )
     ).rows[0];
     if (!claimed) return;
@@ -33,17 +40,58 @@ export async function startAgentWorker(config: {
         claimed.input_id,
       ])
     ).rows[0];
-    const runAbort=new AbortController();
-    const monitor=setInterval(()=>{void pool.query("SELECT status,attempt,deadline_at FROM agent_run WHERE id=$1",[id]).then(({rows})=>{const r=rows[0];if(!r||r.status!=='running'||r.attempt!==claimed.attempt||new Date(r.deadline_at).getTime()<=now().getTime())runAbort.abort();}).catch(()=>runAbort.abort());},50);
-    const hard=setTimeout(()=>runAbort.abort(),Math.min(config.model?.timeoutMs??60000,60000));
+    const runAbort = new AbortController();
+    const monitor = setInterval(() => {
+      void pool
+        .query(
+          "UPDATE agent_run SET lease_expires_at=clock_timestamp()+interval '2 seconds' WHERE id=$1 AND status='running' AND attempt=$2 RETURNING status,attempt,deadline_at",
+          [id, claimed.attempt],
+        )
+        .then(({ rows }) => {
+          const r = rows[0];
+          if (
+            !r ||
+            r.status !== "running" ||
+            r.attempt !== claimed.attempt ||
+            new Date(r.deadline_at).getTime() <= now().getTime()
+          )
+            runAbort.abort();
+        })
+        .catch(() => runAbort.abort());
+    }, 50);
+    const hard = setTimeout(
+      () => runAbort.abort(),
+      Math.min(config.model?.timeoutMs ?? 60000, 60000),
+    );
     const owned: AgentInput = {
       ownerId: input.owner_id,
       inputId: input.id,
       text: input.text,
       timeZone: input.time_zone,
       now: now().toISOString(),
-      signal: AbortSignal.any([shutdown.signal,runAbort.signal]),
+      signal: AbortSignal.any([shutdown.signal, runAbort.signal]),
       context: await loadConversationContext(pool, input),
+      assertActive: async () => {
+        owned.signal.throwIfAborted();
+        const r = (
+          await pool.query(
+            "SELECT id FROM agent_run WHERE id=$1 AND status='running' AND attempt=$2 AND deadline_at>$3",
+            [id, claimed.attempt, now()],
+          )
+        ).rowCount;
+        if (!r) throw new Error("Run inactive");
+      },
+      beforeRequest: async (_context, maxTokens) =>
+        reserveRequest(
+          pool,
+          id,
+          claimed.attempt,
+          config.model?.dailyBudgetUsd ?? 1,
+          maxTokens,
+          now(),
+        ),
+      afterRequest: async (reservation, usage) =>
+        settleRequest(pool, reservation, usage),
     };
     const permitted = (
       await pool.query(
@@ -62,7 +110,8 @@ export async function startAgentWorker(config: {
             requests: 0,
             toolCalls: 0,
           };
-    clearInterval(monitor);clearTimeout(hard);
+    clearInterval(monitor);
+    clearTimeout(hard);
     const c = await pool.connect();
     try {
       await c.query("BEGIN");
@@ -79,9 +128,16 @@ export async function startAgentWorker(config: {
         await c.query("ROLLBACK");
         return;
       }
-      if (owned.signal.aborted || new Date(active.deadline_at).getTime()<=now().getTime()) {
-        await c.query("UPDATE agent_run SET status='timed_out',error_code='MODEL_TIMEOUT',message='处理已超时，原话已保留。重试可能再次产生模型费用。',finished_at=$2 WHERE id=$1",[id,now()]);
-        await c.query("COMMIT");return;
+      if (
+        owned.signal.aborted ||
+        new Date(active.deadline_at).getTime() <= now().getTime()
+      ) {
+        await c.query(
+          "UPDATE agent_run SET status='timed_out',error_code='MODEL_TIMEOUT',message='处理已超时，原话已保留。重试可能再次产生模型费用。',finished_at=$2 WHERE id=$1",
+          [id, now()],
+        );
+        await c.query("COMMIT");
+        return;
       }
       const auth = (
         await c.query(
@@ -92,7 +148,10 @@ export async function startAgentWorker(config: {
       let status = "failed",
         message = "身份已失效，请重新连接。",
         taskId: string | null = null;
-      if (auth) {
+      if (active.error_code === "MODEL_BUDGET_EXHAUSTED") {
+        message =
+          "今日 AI 额度已用完（UTC 零点重置）。原话已保留，可手动设置或稍后重试。";
+      } else if (auth) {
         if (result.output.kind === "proposal") {
           if (validateProposal(result.output.proposal, owned)) {
             const p = result.output.proposal;
@@ -128,7 +187,8 @@ export async function startAgentWorker(config: {
               "请补充明确的日期、时间和要提醒的事项；当前交代尚未创建事项。";
           }
         } else {
-          status = result.output.kind === "failed" ? "failed" : "needs_clarification";
+          status =
+            result.output.kind === "failed" ? "failed" : "needs_clarification";
           message =
             result.output.kind === "reply"
               ? "AI 未创建事项。请明确日期和时间，或手动设置。"
@@ -164,19 +224,23 @@ export async function startAgentWorker(config: {
     try {
       // InputEvent and queued run are the durable outbox. Crash between commit and enqueue is recovered here.
       await pool.query(
-        "UPDATE agent_run SET status='failed',message='上次处理已中断，可重试。',finished_at=$1 WHERE status='running' AND started_at<$2",
-        [now(), new Date(now().getTime() - 65000)],
+        "UPDATE agent_run SET status='queued',message='上次处理已中断，正在恢复；未确认的请求可能再次产生模型费用。',started_at=NULL,deadline_at=NULL WHERE status='running' AND (lease_expires_at<clock_timestamp() OR (lease_expires_at IS NULL AND started_at<$1))",
+        [new Date(now().getTime() - 65000)],
       );
       const rows = (
         await pool.query(
-          "SELECT id FROM agent_run WHERE status='queued' ORDER BY id LIMIT 100",
+          "SELECT id,attempt FROM agent_run WHERE status='queued' ORDER BY id LIMIT 100",
         )
       ).rows;
       for (const row of rows)
         await boss.send(
           "agent",
           { runId: row.id },
-          { singletonKey: row.id, retryLimit: 0, expireInSeconds: 65 },
+          {
+            singletonKey: row.id + ":" + row.attempt,
+            retryLimit: 0,
+            expireInSeconds: 65,
+          },
         );
     } catch {
       console.error("Agent dispatch unavailable");
