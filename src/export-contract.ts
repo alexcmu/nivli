@@ -1,3 +1,4 @@
+import { TaskActionDTO } from "./task-action-contracts.js";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { Value } from "@sinclair/typebox/value";
 import { FormatRegistry } from "@sinclair/typebox";
@@ -46,6 +47,7 @@ for (const [name, schema] of Object.entries({
   "gmail-status": GmailStatusDTO,
   "gmail-consent": GmailConsentDTO,
   task: TaskDTO,
+  "task-action": TaskActionDTO,
   "notification-plans": NotificationPlansDTO,
   "notification-plan-command": NotificationPlanCommandDTO,
   "task-page": TaskPageDTO,

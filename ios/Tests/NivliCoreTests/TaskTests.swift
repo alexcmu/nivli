@@ -48,3 +48,17 @@ final class VersionedTaskContractTests: XCTestCase {
         XCTAssertEqual(command.deadline?.kind, "date")
     }
 }
+final class TaskActionContractTests: XCTestCase {
+    func testActionRetryUsesStableIdentityAndExplicitDeadlineRemoval() async throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("contracts/examples")
+        let command = try JSONDecoder().decode(TaskActionCommand.self, from: Data(contentsOf: root.appendingPathComponent("task-action.json")))
+        let configuration = URLSessionConfiguration.ephemeral; configuration.protocolClasses = [HTTPBoundary.self]
+        HTTPBoundary.requests = []
+        let api = NivliAPI(server: URL(string: "https://home.example")!, session: URLSession(configuration: configuration))
+        for _ in 0..<2 { do { _ = try await api.taskAction(id: "task", command: command, token: "token"); XCTFail("Expected public error") } catch is APIError {} }
+        XCTAssertEqual(HTTPBoundary.requests.map { $0.value(forHTTPHeaderField: "Idempotency-Key") }, [command.commandId, command.commandId])
+        let body = try JSONSerialization.jsonObject(with: JSONEncoder().encode(command)) as! [String: Any]
+        XCTAssertTrue(body["deadline"] is NSNull)
+        XCTAssertEqual(HTTPBoundary.requests.last?.url?.path, "/v1/tasks/task/commands")
+    }
+}

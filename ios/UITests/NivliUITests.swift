@@ -35,6 +35,14 @@ final class NivliUITests: XCTestCase {
         app.buttons["返回手动输入"].tap()
         XCTAssertTrue(app.textFields["serverAddress"].exists)
     }
+    @MainActor func testNotificationActionsReplaceAndCancelAcrossJournalReopen() {
+        let app = XCUIApplication(); app.launchArguments = ["-notification-platform-validation"]; app.launch()
+        app.buttons["验证通知动作与替换取消"].tap()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let allow = springboard.buttons.matching(NSPredicate(format: "label == 'Allow' OR label == '允许'")).firstMatch
+        if allow.waitForExistence(timeout: 2) { allow.tap() }
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS '认证动作=true；替换=true；取消=true；新计划=installed'")).firstMatch.waitForExistence(timeout: 15), app.staticTexts["notificationEvidence"].label)
+    }
     @MainActor func testPrepareLockedOfflineNotificationObservation() throws {
         let app = XCUIApplication(); app.launchArguments = ["-notification-platform-validation"]; app.launch()
         app.buttons["安排3分钟验收通知"].tap()

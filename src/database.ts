@@ -1,3 +1,4 @@
+import { migrateTaskActions } from "./task-action-schema.js";
 import { migrateLocalNotifications } from "./notification-schema.js";
 import pg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -5,7 +6,7 @@ import { sql } from "drizzle-orm";
 import { PgBoss } from "pg-boss";
 import { migrateGmail } from "./gmail-schema.js";
 import { migrateTasks } from "./task-schema.js";
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 export function connect(databaseUrl: string) {
   const pool = new pg.Pool({
     connectionString: databaseUrl,
@@ -54,6 +55,7 @@ export async function migrate(databaseUrl: string) {
     await migrateGmail(pool);
     await migrateTasks(pool);
     await migrateLocalNotifications(pool);
+    await migrateTaskActions(pool);
     const boss = new PgBoss({ connectionString: databaseUrl });
     boss.on("error", () => {});
     await boss.start();

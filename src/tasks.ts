@@ -1,3 +1,4 @@
+import { registerTaskActions } from "./task-actions.js";
 import type { FastifyInstance } from "fastify";
 import type pg from "pg";
 import { Type, type Static } from "@sinclair/typebox";
@@ -148,6 +149,7 @@ function isQuiet(instant: string, zone: string) {
   return hour >= 22 || hour < 8;
 }
 export async function registerTasks(instance: FastifyInstance, ctx: Context) {
+  await registerTaskActions(instance, ctx);
   const app = instance.withTypeProvider<TypeBoxTypeProvider>();
   app.post(
     "/v1/tasks",
