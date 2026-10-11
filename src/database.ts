@@ -1,3 +1,4 @@
+import { migrateConversation } from "./conversation-schema.js";
 import { migrateAgent } from "./agent-schema.js";
 import { migrateTaskActions } from "./task-action-schema.js";
 import { migrateLocalNotifications } from "./notification-schema.js";
@@ -58,6 +59,7 @@ export async function migrate(databaseUrl: string) {
     await migrateLocalNotifications(pool);
     await migrateTaskActions(pool);
     await migrateAgent(pool);
+    await migrateConversation(pool);
     await pool.query(
       "INSERT INTO schema_version(version) VALUES(3) ON CONFLICT DO NOTHING",
     );

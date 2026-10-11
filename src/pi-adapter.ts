@@ -19,6 +19,19 @@ export interface AgentInput {
   timeZone: string;
   now: string;
   signal: AbortSignal;
+  context?: {
+    messages: Array<{
+      inputId: string;
+      text: string;
+      timeZone: string;
+      status: string;
+      message?: string;
+      taskId?: string;
+    }>;
+    tasks: any[];
+    replyToInputId?: string;
+    selectedTaskId?: string;
+  };
 }
 export interface Proposal {
   title: string;

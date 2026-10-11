@@ -1,3 +1,7 @@
+import {
+  commitConversationResult,
+  loadConversationContext,
+} from "./conversation.js";
 import pg from "pg";
 import { PgBoss } from "pg-boss";
 import { interpret, type ModelConfig, type AgentInput } from "./pi-adapter.js";
@@ -19,7 +23,7 @@ export async function startAgentWorker(config: {
   async function processRun(id: string) {
     const claimed = (
       await pool.query(
-        "UPDATE agent_run SET status='running',started_at=$2,attempt=attempt+1 WHERE id=$1 AND status='queued' RETURNING *",
+        "UPDATE agent_run SET status='running',started_at=$2,attempt=attempt+1 WHERE id=$1 AND status='queued' AND NOT EXISTS(SELECT 1 FROM input_event mine JOIN input_event earlier ON earlier.conversation_id=mine.conversation_id AND earlier.conversation_revision<mine.conversation_revision JOIN agent_run prior ON prior.input_id=earlier.id WHERE mine.id=agent_run.input_id AND prior.status IN('queued','running')) RETURNING *",
         [id, now()],
       )
     ).rows[0];
@@ -36,6 +40,7 @@ export async function startAgentWorker(config: {
       timeZone: input.time_zone,
       now: now().toISOString(),
       signal: shutdown.signal,
+      context: await loadConversationContext(pool, input),
     };
     const permitted = (
       await pool.query(
@@ -126,6 +131,7 @@ export async function startAgentWorker(config: {
         "UPDATE agent_run SET status=$2,message=$3,task_id=$4,requests=$5,tool_calls=$6,finished_at=$7 WHERE id=$1",
         [id, status, message, taskId, result.requests, result.toolCalls, now()],
       );
+      await commitConversationResult(c, input);
       await c.query("COMMIT");
     } catch {
       await c.query("ROLLBACK");
