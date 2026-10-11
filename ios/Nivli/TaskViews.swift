@@ -77,13 +77,14 @@ struct TaskListView: View {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(task.title).font(.headline)
                                 if let reminder = task.reminder { Text(taskDate(reminder.instant, zone: reminder.timeZone)).font(.subheadline) }
-                                Text(repository.notifications.localStatus[task.id] ?? reminderStatus(task.reminder)).font(.caption).foregroundStyle(.secondary)
+                                Text(task.status == "active" ? (repository.notifications.localStatus[task.id] ?? reminderStatus(task.reminder)) : task.status == "completed" ? "已完成" : "已取消").font(.caption).foregroundStyle(.secondary)
                             }.padding(.vertical, 4)
                         }
                     }
                     if repository.nextCursor != nil { Button("加载更多") { Task { await repository.refresh(connection, more: true) } }.disabled(repository.loading) }
                     if let error = repository.error { Section("暂时无法更新 · 显示本机已保存事项") { Text(error); Button("重试") { Task { await repository.refresh(connection) } } } }
                 }.refreshable { await repository.refresh(connection) }
+                .onAppear { Task { await repository.refresh(connection) } }
             }
         }.navigationTitle("此刻")
             .toolbar { Button("新增事项", systemImage: "plus") { presentingForm = true }.disabled(connection.saved == nil) }
@@ -156,6 +157,7 @@ struct ManualTaskView: View {
 
 struct TaskDetailView: View {
     let initial: TaskRecord
+    var undoMutation: String? = nil
     @Bindable var connection: Connection
     @State private var latest: TaskRecord?
     @State private var error: String?
@@ -175,6 +177,7 @@ struct TaskDetailView: View {
                 if let deadline = task.deadline { Text(deadline.kind == "date" ? (deadline.date ?? "") + "（仅日期）" : taskDate(deadline.instant ?? "", zone: deadline.timeZone)); LabeledContent("时区", value: deadline.timeZone) }
                 else { Text("未设置截止时间") }
             }
+            TaskActionControls(task: task, connection: connection, initialUndoMutation: undoMutation) { latest = $0 }
             Section("来源") { ForEach(task.sources, id: \.id) { source in VStack(alignment: .leading) { Text(source.kind == "manual" ? "手动交代" : source.kind).font(.headline); Text(source.text); Text(taskDate(source.createdAt, zone: TimeZone.current.identifier)).font(.caption).foregroundStyle(.secondary) } } }
             if let error { Section("暂时无法更新") { Text(error) } }
         }.navigationTitle("事项详情").task { await refresh() }.refreshable { await refresh() }

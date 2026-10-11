@@ -63,3 +63,33 @@ public final class TaskProjection {
     public func clear() throws { try execute("DELETE FROM task_projection WHERE identity=?", values: [identity]) }
     public enum ProjectionError: Error, LocalizedError { case storage; public var errorDescription: String? { "无法读取或保存本机事项。请检查设备存储后重试。" } }
 }
+
+public enum TaskDeadlineChange: Codable, Sendable {
+    case clear, value(TaskDeadline)
+    public init(from decoder: Decoder) throws { let container = try decoder.singleValueContainer(); self = container.decodeNil() ? .clear : .value(try container.decode(TaskDeadline.self)) }
+    public func encode(to encoder: Encoder) throws { var container = encoder.singleValueContainer(); switch self { case .clear: try container.encodeNil(); case .value(let deadline): try container.encode(deadline) } }
+}
+public struct TaskActionCommand: Codable, Sendable {
+    public struct Occurrence: Codable, Sendable {
+        public let id: String; public let reminderRevision: Int; public let routingVersion: Int; public let requestId: String
+        public init(plan: NotificationPlan) { id = plan.id; reminderRevision = plan.reminderRevision; routingVersion = plan.routingVersion; requestId = plan.requestId }
+    }
+    public let commandId: String; public let clientMutationId: String; public let expectedRevision: Int; public let operation: String
+    public let title: String?; public let background: String?; public let reminder: ManualTaskCommand.Reminder?; public let targetMutationId: String?; public let occurrence: Occurrence?; public let quietHoursConfirmed: Bool?; public let deadline: TaskDeadlineChange?
+    private enum CodingKeys: String, CodingKey { case commandId, clientMutationId, expectedRevision, operation, title, background, reminder, targetMutationId, occurrence, quietHoursConfirmed, deadline }
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        commandId = try c.decode(String.self, forKey: .commandId); clientMutationId = try c.decode(String.self, forKey: .clientMutationId)
+        expectedRevision = try c.decode(Int.self, forKey: .expectedRevision); operation = try c.decode(String.self, forKey: .operation)
+        title = try c.decodeIfPresent(String.self, forKey: .title); background = try c.decodeIfPresent(String.self, forKey: .background)
+        reminder = try c.decodeIfPresent(ManualTaskCommand.Reminder.self, forKey: .reminder); targetMutationId = try c.decodeIfPresent(String.self, forKey: .targetMutationId)
+        occurrence = try c.decodeIfPresent(Occurrence.self, forKey: .occurrence); quietHoursConfirmed = try c.decodeIfPresent(Bool.self, forKey: .quietHoursConfirmed)
+        deadline = c.contains(.deadline) ? (try c.decodeNil(forKey: .deadline) ? .clear : .value(try c.decode(TaskDeadline.self, forKey: .deadline))) : nil
+    }
+    public init(commandId: String = UUID().uuidString, clientMutationId: String = UUID().uuidString, expectedRevision: Int, operation: String, title: String? = nil, background: String? = nil, reminder: ManualTaskCommand.Reminder? = nil, targetMutationId: String? = nil, occurrence: Occurrence? = nil, quietHoursConfirmed: Bool? = nil, deadline: TaskDeadlineChange? = nil) {
+        self.commandId = commandId; self.clientMutationId = clientMutationId; self.expectedRevision = expectedRevision; self.operation = operation; self.title = title; self.background = background; self.reminder = reminder; self.targetMutationId = targetMutationId; self.occurrence = occurrence; self.quietHoursConfirmed = quietHoursConfirmed; self.deadline = deadline
+    }
+}
+extension NivliAPI {
+    public func taskAction(id: String, command: TaskActionCommand, token: String) async throws -> TaskRecord { try await request("v1/tasks/\(id)/commands", method: "POST", body: JSONEncoder().encode(command), token: token, key: command.commandId, as: TaskRecord.self) }
+}

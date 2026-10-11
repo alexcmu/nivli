@@ -1,4 +1,5 @@
 import { migrateAgent } from "./agent-schema.js";
+import { migrateTaskActions } from "./task-action-schema.js";
 import { migrateLocalNotifications } from "./notification-schema.js";
 import pg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -55,6 +56,7 @@ export async function migrate(databaseUrl: string) {
     await migrateGmail(pool);
     await migrateTasks(pool);
     await migrateLocalNotifications(pool);
+    await migrateTaskActions(pool);
     await migrateAgent(pool);
     await pool.query(
       "INSERT INTO schema_version(version) VALUES(3) ON CONFLICT DO NOTHING",

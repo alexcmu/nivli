@@ -38,6 +38,7 @@ import CryptoKit
         let content = UNMutableNotificationContent()
         content.title = request.title; content.body = request.body; content.sound = .default
         content.interruptionLevel = .active
+        content.categoryIdentifier = "NIVLI_TASK"
         content.userInfo = ["installationIdentity": namespace, "taskId": request.taskId, "occurrenceId": request.occurrenceId, "reminderRevision": request.reminderRevision, "routingVersion": request.routingVersion, "instant": request.instant.timeIntervalSince1970]
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
         var components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: request.instant)
@@ -92,6 +93,7 @@ import CryptoKit
             try configure(session)
             let page = try await NivliAPI(server: session.server).notificationPlans(deviceId: session.credentials.deviceId, token: session.credentials.accessToken)
             try await scheduler?.reconcile(current: page.plans)
+            localStatus = [:]
             var updates: [TaskRecord] = []
             for plan in page.plans.sorted(by: { $0.scheduledAt < $1.scheduledAt }) {
                 do { if let task = try await update(plan, session: session, requestPermission: false) { updates.append(task) } }
@@ -128,10 +130,45 @@ func reminderStatus(_ reminder: TaskReminder?) -> String {
 
 @MainActor @Observable final class NotificationNavigation: NSObject, UNUserNotificationCenterDelegate {
     var taskId: String?
-    override init() { super.init(); UNUserNotificationCenter.current().delegate = self }
+    var actionError: String?
+    var actionMutation: String?
+    var reloadId = UUID()
+    override init() {
+        super.init()
+        let complete = UNNotificationAction(identifier: "NIVLI_COMPLETE", title: "完成", options: [.authenticationRequired, .foreground])
+        let snooze = UNNotificationAction(identifier: "NIVLI_SNOOZE", title: "30 分钟后", options: [.authenticationRequired, .foreground])
+        UNUserNotificationCenter.current().setNotificationCategories([UNNotificationCategory(identifier: "NIVLI_TASK", actions: [complete, snooze], intentIdentifiers: [], options: [])])
+        UNUserNotificationCenter.current().delegate = self
+    }
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         let id = response.notification.request.content.userInfo["taskId"] as? String
-        Task { @MainActor [weak self] in self?.taskId = id }
+        let info = response.notification.request.content.userInfo
+        let action = response.actionIdentifier
+        let requestId = response.notification.request.identifier
+        let namespace = info["installationIdentity"] as? String
+        let occurrenceId = info["occurrenceId"] as? String
+        let revision = info["reminderRevision"] as? Int
+        let routing = info["routingVersion"] as? Int
+        Task { @MainActor [weak self] in
+            self?.taskId = id
+            self?.actionError = nil
+            self?.actionMutation = nil
+            defer { self?.reloadId = UUID() }
+            guard action == "NIVLI_COMPLETE" || action == "NIVLI_SNOOZE", let id, let namespace, let occurrenceId, let revision, let routing else { return }
+            do {
+                guard let session = try SecureStore().load(), IOSNotificationSystem.namespace(session) == namespace else { return }
+                let api = NivliAPI(server: session.server)
+                let latest = try await api.task(id: id, token: session.credentials.accessToken)
+                guard let occurrence = latest.reminder?.occurrence, occurrence.id == occurrenceId, occurrence.reminderRevision == revision, occurrence.routingVersion == routing, occurrence.requestId == requestId else {
+                    self?.actionError = "提醒已更新。已打开最新事项，旧提醒未改变当前计划。"; return
+                }
+                let existing = try TaskActionTransport.pending(id, session: session)
+                let command = existing ?? TaskActionCommand(expectedRevision: latest.revision, operation: action == "NIVLI_COMPLETE" ? "complete" : "snooze", reminder: action == "NIVLI_SNOOZE" ? .init(instant: isoDate(Date().addingTimeInterval(1800)), timeZone: latest.reminder?.timeZone ?? TimeZone.current.identifier) : nil, occurrence: .init(plan: occurrence))
+                _ = try await TaskActionTransport.execute(id, command: command, session: session)
+                self?.actionError = nil
+                self?.actionMutation = command.clientMutationId
+            } catch { self?.actionError = error.localizedDescription }
+        }
         completionHandler()
     }
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) { completionHandler([.banner, .list, .sound]) }
@@ -140,11 +177,12 @@ func reminderStatus(_ reminder: TaskReminder?) -> String {
 struct NotificationDetailView: View {
     let taskId: String
     @Bindable var connection: Connection
+    var undoMutation: String? = nil
     @State private var task: TaskRecord?
     @State private var error: String?
     var body: some View {
         Group {
-            if let task { TaskDetailView(initial: task, connection: connection) }
+            if let task { TaskDetailView(initial: task, undoMutation: undoMutation, connection: connection) }
             else if let error { ContentUnavailableView("无法打开当前事项", systemImage: "exclamationmark.circle", description: Text(error)) }
             else { ProgressView("正在读取最新事项…") }
         }.task {

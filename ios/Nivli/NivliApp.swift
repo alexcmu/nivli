@@ -49,7 +49,7 @@ struct RootView: View {
         }.task { await connection.restore() }
             .onChange(of: scenePhase) { if scenePhase == .active { Task { await repository.refresh(connection) } } }
             .sheet(isPresented: Binding(get: { notificationNavigation.taskId != nil }, set: { if !$0 { notificationNavigation.taskId = nil } })) {
-                if let taskId = notificationNavigation.taskId { NavigationStack { NotificationDetailView(taskId: taskId, connection: connection) } }
+                if let taskId = notificationNavigation.taskId { NavigationStack { VStack { if let error = notificationNavigation.actionError { Text(error).padding().foregroundStyle(.red) }; NotificationDetailView(taskId: taskId, connection: connection, undoMutation: notificationNavigation.actionMutation).id(notificationNavigation.reloadId) } } }
             }
     }
 }
