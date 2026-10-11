@@ -304,6 +304,7 @@ export async function startAgentWorker(config: {
   const interval = setInterval(() => void scan(), 500);
   return {
     stop: async () => {
+      if (shutdown.signal.aborted) return;
       clearInterval(interval);
       shutdown.abort();
       await boss.stop({ graceful: true });

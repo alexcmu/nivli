@@ -15,6 +15,7 @@ url.pathname = "/" + name;
 const databaseUrl = url.toString(),
   maintenance = new pg.Pool({ connectionString: rootUrl });
 const admin = "t".repeat(48);
+let logs = "";
 let currentInstant = "2026-10-11T12:00:00Z";
 const config = {
   databaseUrl,
@@ -65,7 +66,7 @@ beforeAll(async () => {
   await migrate(databaseUrl);
   const previousSchema = new pg.Pool({ connectionString: databaseUrl });
   await previousSchema.query(
-    "ALTER TABLE reminder DROP CONSTRAINT reminder_scheduling_status_check; ALTER TABLE reminder ADD CONSTRAINT reminder_scheduling_status_check CHECK(scheduling_status='not_scheduled'); DROP TABLE notification_plan_command; DROP TABLE local_occurrence;",
+    "ALTER TABLE reminder DROP CONSTRAINT reminder_scheduling_status_check; ALTER TABLE reminder ADD CONSTRAINT reminder_scheduling_status_check CHECK(scheduling_status='not_scheduled'); DROP TABLE notification_plan_command; DROP TABLE local_occurrence; DROP TABLE model_request; DROP TABLE agent_cancel; ALTER TABLE agent_run DROP COLUMN error_code, DROP COLUMN deadline_at, DROP COLUMN lease_expires_at; ALTER TABLE agent_run DROP CONSTRAINT agent_run_status_check; ALTER TABLE agent_run ADD CONSTRAINT agent_run_status_check CHECK(status IN('queued','running','clarification','succeeded','failed')); DELETE FROM schema_version WHERE version=4; INSERT INTO schema_version(version) VALUES(3) ON CONFLICT DO NOTHING;",
   );
   await previousSchema.end();
   await migrate(databaseUrl);
@@ -106,7 +107,12 @@ beforeAll(async () => {
             stop_reason: null,
             stop_sequence: null,
             usage: {
-              input_tokens: fixtureMode === "budget" ? 65536 : 20,
+              input_tokens:
+                fixtureMode === "budget"
+                  ? 65536
+                  : fixtureMode === "over_usage"
+                    ? 1000000
+                    : 20,
               output_tokens: 0,
             },
           },
@@ -193,7 +199,16 @@ beforeAll(async () => {
     baseUrl:
       "http://127.0.0.1:" + (provider.address() as { port: number }).port,
   };
-  app = await createApp({ ...config, model });
+  app = await createApp({
+    ...config,
+    model,
+    logger: true,
+    logStream: {
+      write: (message) => {
+        logs += message;
+      },
+    },
+  });
   worker = await startAgentWorker({ ...config, model });
   base = await app.listen({ host: "127.0.0.1", port: 0 });
   const code = (
@@ -421,12 +436,24 @@ test("a killed worker redelivers an unconfirmed request and never duplicates the
   child.kill("SIGKILL");
   await ended;
   fixtureMode = "valid";
-  worker = await startAgentWorker({ ...config, model });
+  const recoveryChild = spawn(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      `import {startAgentWorker} from './dist/agent-worker.js';await startAgentWorker({...${JSON.stringify({ ...config, clock: undefined, model })},clock:()=>new Date('2026-10-11T12:00:00Z')});`,
+    ],
+    { cwd: process.cwd(), stdio: "ignore" },
+  );
   const saved = await settle(q.body.runId);
   expect(saved.status).toBe("succeeded");
   expect(payloads.length - before).toBe(2);
   expect(saved.taskId).toBe(q.body.inputId);
-  await worker.stop();
+  const committedEnded = new Promise<void>((resolve) =>
+    recoveryChild.once("exit", () => resolve()),
+  );
+  recoveryChild.kill("SIGKILL");
+  await committedEnded;
   worker = await startAgentWorker({ ...config, model });
   await new Promise((r) => setTimeout(r, 800));
   expect((await call("/v1/runs/" + saved.id)).body.taskId).toBe(saved.taskId);
@@ -460,4 +487,38 @@ test("the 20-second foreground target reports waiting while manual creation rema
   await call("/v1/runs/" + q.body.runId + "/cancel", "POST", {});
   currentInstant = "2026-10-11T12:00:00Z";
   fixtureMode = "valid";
+});
+
+test("model failures and malformed instructions keep original conversation and credentials out of enabled HTTP logs", async () => {
+  const privateText = "PRIVATE-CONVERSATION-DO-NOT-LOG-9290";
+  await call("/v1/inputs", "POST", {
+    text: privateText,
+    timeZone: "not/a/timezone",
+  });
+  expect(logs.length).toBeGreaterThan(0);
+  for (const secret of [privateText, "external-fixture-key", token, admin])
+    expect(logs).not.toContain(secret);
+});
+
+test("reported usage above a conservative estimate is charged and stops later requests without negative remaining budget", async () => {
+  fixtureMode = "over_usage";
+  const before = payloads.length;
+  const saved = await submit();
+  expect(saved.status).toBe("succeeded");
+  expect(saved.cost.usageUsd).toBeGreaterThan(saved.cost.reservedUsd);
+  fixtureMode = "valid";
+  const denied = await submit();
+  expect(denied).toMatchObject({
+    status: "failed",
+    errorCode: "MODEL_BUDGET_EXHAUSTED",
+  });
+  expect(payloads.length - before).toBe(1);
+  const budget = await call(
+    "/v1/admin/model/budget",
+    "GET",
+    undefined,
+    randomUUID(),
+    admin,
+  );
+  expect(budget.body.remainingUsd).toBe(0);
 });
