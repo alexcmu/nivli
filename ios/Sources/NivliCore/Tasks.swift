@@ -1,7 +1,7 @@
 import Foundation
 import SQLite3
 
-public struct TaskReminder: Codable, Sendable { public let id: String; public let revision: Int; public let instant: String; public let timeZone: String; public let schedulingStatus: String }
+public struct TaskReminder: Codable, Sendable { public let id: String; public let revision: Int; public let instant: String; public let timeZone: String; public let schedulingStatus: String; public let occurrence: NotificationPlan? }
 public struct TaskDeadline: Codable, Sendable {
     public let kind: String; public let date: String?; public let instant: String?; public let timeZone: String
     public init(kind: String, date: String? = nil, instant: String? = nil, timeZone: String) { self.kind = kind; self.date = date; self.instant = instant; self.timeZone = timeZone }
@@ -15,9 +15,9 @@ public struct TaskRecord: Codable, Identifiable, Sendable {
 public struct ManualTaskCommand: Codable, Sendable {
     public struct Reminder: Codable, Sendable { public let instant: String; public let timeZone: String; public init(instant: String, timeZone: String) { self.instant = instant; self.timeZone = timeZone } }
     public let taskId: String; public let commandId: String; public let title: String; public let background: String
-    public let reminder: Reminder?; public let deadline: TaskDeadline?
-    public init(taskId: String = UUID().uuidString, commandId: String = UUID().uuidString, title: String, background: String, reminder: Reminder?, deadline: TaskDeadline?) {
-        self.taskId = taskId; self.commandId = commandId; self.title = title; self.background = background; self.reminder = reminder; self.deadline = deadline
+    public let reminder: Reminder?; public let deadline: TaskDeadline?; public let localDeviceId: String?; public let quietHoursConfirmed: Bool?
+    public init(taskId: String = UUID().uuidString, commandId: String = UUID().uuidString, title: String, background: String, reminder: Reminder?, deadline: TaskDeadline?, localDeviceId: String? = nil, quietHoursConfirmed: Bool? = nil) {
+        self.taskId = taskId; self.commandId = commandId; self.title = title; self.background = background; self.reminder = reminder; self.deadline = deadline; self.localDeviceId = localDeviceId; self.quietHoursConfirmed = quietHoursConfirmed
     }
 }
 public struct TaskPage: Codable, Sendable { public let tasks: [TaskRecord]; public let nextCursor: String? }

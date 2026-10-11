@@ -2,12 +2,24 @@ import SwiftUI
 
 @main struct NivliApp: App {
     @State private var connection = Connection()
-    var body: some Scene { WindowGroup { RootView(connection: connection).tint(Color(uiColor: UIColor { traits in
+    @State private var notificationNavigation = NotificationNavigation()
+    var body: some Scene { WindowGroup {
+            appContent.tint(Color(uiColor: UIColor { traits in
                 traits.userInterfaceStyle == .dark ? UIColor(red: 0.47, green: 0.71, blue: 1, alpha: 1) : UIColor(red: 0, green: 0.36, blue: 0.75, alpha: 1)
             })) } }
+    @ViewBuilder private var appContent: some View {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-notification-platform-validation") { NotificationValidationView() }
+        else { RootView(connection: connection, notificationNavigation: notificationNavigation) }
+        #else
+        RootView(connection: connection, notificationNavigation: notificationNavigation)
+        #endif
+    }
 }
 struct RootView: View {
     @Bindable var connection: Connection
+    @Bindable var notificationNavigation: NotificationNavigation
+    @Environment(\.scenePhase) private var scenePhase
     @State private var selection = 0
     @State private var repository = TaskRepository()
     private var taskIdentity: String { (connection.saved?.server.absoluteString ?? "") + "/" + (connection.saved?.credentials.ownerId ?? "") + "/" + (connection.saved?.credentials.deviceId ?? "") }
@@ -34,6 +46,10 @@ struct RootView: View {
                 }.navigationTitle("我的")
             }.tabItem { Label("我的", systemImage: "person.crop.circle") }.tag(2)
         }.task { await connection.restore() }
+            .onChange(of: scenePhase) { if scenePhase == .active { Task { await repository.refresh(connection) } } }
+            .sheet(isPresented: Binding(get: { notificationNavigation.taskId != nil }, set: { if !$0 { notificationNavigation.taskId = nil } })) {
+                if let taskId = notificationNavigation.taskId { NavigationStack { NotificationDetailView(taskId: taskId, connection: connection) } }
+            }
     }
 }
 struct EnvironmentView: View {
@@ -56,7 +72,7 @@ struct EnvironmentView: View {
             if let error = connection.error { Section("连接失败") { Text(error); Button("重试") { Task { await connection.restore() } }.disabled(connection.busy || connection.saved == nil) } }
         }.navigationTitle("环境连接")
             .confirmationDialog("仅移除本机凭据，服务器会话可能仍有效。需管理员吊销旧设备后重新配对。", isPresented: $removingLocalCredentials, titleVisibility: .visible) {
-                Button("移除本机凭据", role: .destructive) { connection.forgetLocalCredentials() }
+                Button("移除本机凭据", role: .destructive) { Task { await connection.forgetLocalCredentials() } }
             }
     }
 }

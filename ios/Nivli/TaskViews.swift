@@ -6,6 +6,7 @@ import SwiftUI
     var loading = false
     var status = "active"
     var nextCursor: String?
+    let notifications = NotificationCoordinator()
     private var identity: String?
     private var projection: TaskProjection?
     func configure(_ session: SavedSession?) throws {
@@ -36,8 +37,12 @@ import SwiftUI
             let page = try await NivliAPI(server: session.server).tasks(token: session.credentials.accessToken, status: requestedStatus, cursor: more ? nextCursor : nil)
             guard identity == key, status == requestedStatus, connection.saved?.server == session.server, connection.saved?.credentials.ownerId == session.credentials.ownerId, connection.saved?.credentials.deviceId == session.credentials.deviceId else { return }
             for task in page.tasks { try projection?.save(task) }
+            let installed = await notifications.synchronize(session)
+            guard identity == key else { return }
+            for task in installed { try projection?.save(task) }
+            let refreshed = page.tasks.map { old in installed.first(where: { $0.id == old.id }) ?? old }
             // Server pagination controls visible online results; stored projection is the offline fallback.
-            tasks = more ? tasks + page.tasks.filter { item in !tasks.contains(where: { $0.id == item.id }) } : page.tasks
+            tasks = more ? tasks + refreshed.filter { item in !tasks.contains(where: { $0.id == item.id }) } : refreshed
             nextCursor = page.nextCursor; error = nil
         } catch { self.error = error.localizedDescription }
     }
@@ -45,7 +50,9 @@ import SwiftUI
         try configure(connection.saved)
         guard let session = connection.saved else { throw PairingError.invalidResponse }
         let key = identity
-        let task = try await NivliAPI(server: session.server).createTask(command, token: session.credentials.accessToken)
+        let committed = try await NivliAPI(server: session.server).createTask(command, token: session.credentials.accessToken)
+        let current = try? await NivliAPI(server: session.server).task(id: committed.id, token: session.credentials.accessToken)
+        let task = await notifications.install(current ?? committed, session: session)
         guard identity == key, connection.saved?.server == session.server, connection.saved?.credentials.ownerId == session.credentials.ownerId, connection.saved?.credentials.deviceId == session.credentials.deviceId else { throw PairingError.identityChanged }
         try projection?.save(task)
         tasks = try projection?.tasks(status: status) ?? []; error = nil
@@ -70,7 +77,7 @@ struct TaskListView: View {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(task.title).font(.headline)
                                 if let reminder = task.reminder { Text(taskDate(reminder.instant, zone: reminder.timeZone)).font(.subheadline) }
-                                Text(task.reminder == nil ? "已保存 · 未设置提醒" : "已保存，提醒尚未安排").font(.caption).foregroundStyle(.secondary)
+                                Text(repository.notifications.localStatus[task.id] ?? reminderStatus(task.reminder)).font(.caption).foregroundStyle(.secondary)
                             }.padding(.vertical, 4)
                         }
                     }
@@ -111,24 +118,32 @@ struct ManualTaskView: View {
                 TextField("IANA 时区，如 Asia/Shanghai", text: $zone).textInputAutocapitalization(.never).autocorrectionDisabled()
                 if TimeZone(identifier: zone) == nil { Text("请输入有效的 IANA 时区。").foregroundStyle(.red) }
                 if hasReminder { DatePicker("提醒时间", selection: $reminderDate).environment(\.timeZone, timeZone); Text(taskDate(isoDate(reminderDate), zone: zone)) }
-                Text("保存后会显示尚未安排。此版本尚未启用系统通知排程。").font(.footnote).foregroundStyle(.secondary)
+                Text("使用此处确认的时区与时刻排程，旅行不会移动提醒。首次需要通知时请求权限；通知只显示通用文案。").font(.footnote).foregroundStyle(.secondary)
             }
             Section("独立截止时间") {
                 Picker("类型", selection: $deadlineKind) { Text("无").tag("none"); Text("仅日期").tag("date"); Text("具体时间").tag("instant") }
                 if deadlineKind != "none" { DatePicker("截止", selection: $deadlineDate, displayedComponents: deadlineKind == "date" ? [.date] : [.date, .hourAndMinute]).environment(\.timeZone, timeZone) }
             }
             if let error { Section("保存失败 · 输入已保留") { Text(error) } }
-            if let saved { Section("已保存") { NavigationLink("查看事项") { TaskDetailView(initial: saved, connection: connection) }; Text(saved.reminder == nil ? "未设置提醒" : "提醒尚未安排"); Button("再交代一件事") { title = ""; background = ""; command = nil; self.saved = nil; error = nil } } }
+            if let saved { Section("已保存") { NavigationLink("查看事项") { TaskDetailView(initial: saved, connection: connection) }; Text(repository.notifications.localStatus[saved.id] ?? reminderStatus(saved.reminder));
+                if saved.reminder?.schedulingStatus == "needs_confirmation" { Text("所选时间在安静时段 22:00–08:00，尚未安装通知。确认将保留该时间；系统专注模式仍按你的设置生效。"); Button("仍在此时间提醒") { Task { await confirmQuietHours(saved) } }; Button("修改提醒时间") { self.saved = nil; command = nil } }
+                if saved.reminder?.schedulingStatus == "permission_denied" || repository.notifications.localStatus[saved.id]?.contains("权限") == true { Button("打开通知设置") { openNotificationSettings() } };
+                if let notificationError = repository.notifications.error { Text(notificationError) }; Button("再交代一件事") { title = ""; background = ""; command = nil; self.saved = nil; error = nil } } }
             else { Button(busy ? "正在保存…" : error == nil ? "保存事项" : "重试保存") { Task { await save() } }.disabled(busy || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || TimeZone(identifier: zone) == nil) }
         }.navigationTitle("手动交代").disabled(busy)
             .toolbar { Button(saved == nil ? "取消" : "完成") { dismiss() }.disabled(busy) }
             .onChange(of: draftSignature) { command = nil; saved = nil }
     }
+    private func confirmQuietHours(_ task: TaskRecord) async {
+        guard let session = connection.saved else { return }; busy = true; defer { busy = false }
+        saved = await repository.notifications.install(task, session: session, confirmQuietHours: true)
+        await repository.refresh(connection)
+    }
     private func save() async {
         busy = true; defer { busy = false }
         let dateFormatter = DateFormatter(); dateFormatter.locale = Locale(identifier: "en_US_POSIX"); dateFormatter.calendar = Calendar(identifier: .gregorian); dateFormatter.timeZone = timeZone; dateFormatter.dateFormat = "yyyy-MM-dd"
         let deadline: TaskDeadline? = deadlineKind == "none" ? nil : TaskDeadline(kind: deadlineKind, date: deadlineKind == "date" ? dateFormatter.string(from: deadlineDate) : nil, instant: deadlineKind == "instant" ? isoDate(deadlineDate) : nil, timeZone: zone)
-        let attempt = command ?? ManualTaskCommand(title: title.trimmingCharacters(in: .whitespacesAndNewlines), background: background, reminder: hasReminder ? .init(instant: isoDate(reminderDate), timeZone: zone) : nil, deadline: deadline)
+        let attempt = command ?? ManualTaskCommand(title: title.trimmingCharacters(in: .whitespacesAndNewlines), background: background, reminder: hasReminder ? .init(instant: isoDate(reminderDate), timeZone: zone) : nil, deadline: deadline, localDeviceId: connection.saved?.credentials.deviceId)
         command = attempt
         do { saved = try await repository.save(attempt, connection: connection); error = nil } catch { self.error = error.localizedDescription }
     }
@@ -139,12 +154,16 @@ struct TaskDetailView: View {
     @Bindable var connection: Connection
     @State private var latest: TaskRecord?
     @State private var error: String?
+    @State private var notifications = NotificationCoordinator()
+    @State private var scheduling = false
     private var task: TaskRecord { latest ?? initial }
     var body: some View {
         Form {
             Section("事项") { Text(task.title).font(.headline); Text(task.status == "active" ? "进行中" : task.status == "completed" ? "已完成" : "已取消"); if !task.background.isEmpty { Text(task.background) } }
             Section("提醒") {
-                if let reminder = task.reminder { Text(taskDate(reminder.instant, zone: reminder.timeZone)); LabeledContent("时区", value: reminder.timeZone); Text("已保存，提醒尚未安排") }
+                if let reminder = task.reminder { Text(taskDate(reminder.instant, zone: reminder.timeZone)); LabeledContent("时区", value: reminder.timeZone); Text(notifications.localStatus[task.id] ?? reminderStatus(reminder));
+                    if reminder.schedulingStatus == "needs_confirmation" { Text("此时间在安静时段 22:00–08:00，尚未安装通知。"); Button("仍在此时间提醒") { Task { await install(confirm: true) } }.disabled(scheduling) }
+                    else if ["permission_denied", "capacity_exceeded", "installation_failed", "local_pending"].contains(reminder.schedulingStatus) { Button("重试本机安排") { Task { await install(confirm: false) } }.disabled(scheduling) }; if reminder.schedulingStatus == "permission_denied" { Button("打开通知设置") { openNotificationSettings() } } }
                 else { Text("未设置提醒") }
             }
             Section("截止") {
@@ -154,6 +173,10 @@ struct TaskDetailView: View {
             Section("来源") { ForEach(task.sources, id: \.id) { source in VStack(alignment: .leading) { Text(source.kind == "manual" ? "手动交代" : source.kind).font(.headline); Text(source.text); Text(taskDate(source.createdAt, zone: TimeZone.current.identifier)).font(.caption).foregroundStyle(.secondary) } } }
             if let error { Section("暂时无法更新") { Text(error) } }
         }.navigationTitle("事项详情").task { await refresh() }.refreshable { await refresh() }
+    }
+    private func install(confirm: Bool) async {
+        guard let session = connection.saved else { return }; scheduling = true; defer { scheduling = false }
+        latest = await notifications.install(task, session: session, confirmQuietHours: confirm); error = notifications.error
     }
     private func refresh() async {
         guard let session = connection.saved else { return }
@@ -168,3 +191,5 @@ func taskDate(_ instant: String, zone: String) -> String {
     let formatter = DateFormatter(); formatter.locale = Locale(identifier: "zh_CN"); formatter.timeZone = TimeZone(identifier: zone); formatter.dateFormat = "yyyy年MM月dd日 HH:mm:ss zzz"
     return formatter.string(from: date)
 }
+
+@MainActor func openNotificationSettings() { if let url = URL(string: UIApplication.openNotificationSettingsURLString) { UIApplication.shared.open(url) } }

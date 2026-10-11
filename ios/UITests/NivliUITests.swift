@@ -35,6 +35,26 @@ final class NivliUITests: XCTestCase {
         app.buttons["返回手动输入"].tap()
         XCTAssertTrue(app.textFields["serverAddress"].exists)
     }
+    @MainActor func testNotificationPlatformCapacityRecoveryAndBackgroundDelivery() throws {
+        let app = XCUIApplication(); app.launchArguments = ["-notification-platform-validation"]; app.launch()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        app.buttons["验证本机容量与恢复"].tap()
+        let allow = springboard.buttons.matching(NSPredicate(format: "label == 'Allow' OR label == '允许'")).firstMatch
+        if allow.waitForExistence(timeout: 3) { allow.tap() }
+        let capacity = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'OS pending 16' AND label CONTAINS '下一条 capacity' AND label CONTAINS '恢复 installed'")).firstMatch
+        XCTAssertTrue(capacity.waitForExistence(timeout: 20), app.staticTexts["notificationEvidence"].label)
+        app.buttons["安排自动化验收通知"].tap()
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'installed；pending=true'")).firstMatch.waitForExistence(timeout: 10))
+        XCUIDevice.shared.press(.home)
+        let generic = springboard.staticTexts["Nivli 提醒"].firstMatch
+        let visuallyObserved = generic.waitForExistence(timeout: 15)
+        print("NIVLI_NOTIFICATION_BANNER_OBSERVED \(visuallyObserved)")
+        app.activate()
+        app.buttons["检查系统投递记录"].tap()
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'pending=false；delivered=true'")).firstMatch.waitForExistence(timeout: 5))
+        app.buttons["清理验收通知"].tap()
+    }
+
     @MainActor func testZLivePairingRestoresAndRevokesSession() throws {
         guard let url = Bundle(for: Self.self).url(forResource: "LiveFixture", withExtension: "json") else { throw XCTSkip("Provide ephemeral HTTPS fixture to run live pairing") }
         struct Fixture: Decodable { let serverUrl: String; let code: String }

@@ -7,7 +7,13 @@ import {
   CredentialsDTO,
   ErrorDTO,
 } from "./contracts.js";
-import { CreateTaskDTO, TaskDTO, TaskPageDTO } from "./task-contracts.js";
+import {
+  CreateTaskDTO,
+  TaskDTO,
+  TaskPageDTO,
+  NotificationPlansDTO,
+  NotificationPlanCommandDTO,
+} from "./task-contracts.js";
 import { createApp } from "./app.js";
 const app = await createApp({
   databaseUrl:
@@ -37,6 +43,8 @@ FormatRegistry.Set(
 );
 for (const [name, schema] of Object.entries({
   task: TaskDTO,
+  "notification-plans": NotificationPlansDTO,
+  "notification-plan-command": NotificationPlanCommandDTO,
   "task-page": TaskPageDTO,
   "task-command": CreateTaskDTO,
   environment: EnvironmentDTO,

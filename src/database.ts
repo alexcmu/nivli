@@ -1,3 +1,4 @@
+import { migrateLocalNotifications } from "./notification-schema.js";
 import pg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { sql } from "drizzle-orm";
@@ -50,6 +51,7 @@ export async function migrate(databaseUrl: string) {
       );
     });
     await migrateTasks(pool);
+    await migrateLocalNotifications(pool);
     const boss = new PgBoss({ connectionString: databaseUrl });
     boss.on("error", () => {});
     await boss.start();
@@ -68,9 +70,14 @@ export async function verifySchema(databaseUrl: string) {
       "select max(version) as version from schema_version",
     );
     const tasks = await pool.query(
-      "SELECT to_regclass('task_command_key') AS table_name",
+      "SELECT to_regclass('task_command_key') AS table_name, to_regclass('local_occurrence') AS occurrences, to_regclass('notification_plan_command') AS notification_commands",
     );
-    if (r.rows[0]?.version !== SCHEMA_VERSION || !tasks.rows[0]?.table_name)
+    if (
+      r.rows[0]?.version !== SCHEMA_VERSION ||
+      !tasks.rows[0]?.table_name ||
+      !tasks.rows[0]?.occurrences ||
+      !tasks.rows[0]?.notification_commands
+    )
       throw new Error("Incompatible schema; run migration before starting");
   } finally {
     await pool.end();
