@@ -1,0 +1,176 @@
+{
+  "status": "completed",
+  "model": "claude-sonnet-5-5",
+  "piVersion": "1.1.0",
+  "budgetUsd": 0.18,
+  "invoiceAvailable": false,
+  "cases": 6,
+  "usageUsd": 0.028728300000000002,
+  "unknownRequests": 0,
+  "requests": 6,
+  "results": [
+    {
+      "id": "eval-15",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "2027-03-14 当天洛杉矶时间从 02:00 直接跳到 03:00,所以 02:30 这个时间并不存在。您希望改成哪个时间?例如 03:30(夏令时生效后)或 01:30(切换前),或者其他时间?",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.004236800000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-16",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "2026-11-01 01:30 在洛杉矶时区会出现两次(夏令时 PDT 和标准时间 PST)。请问您要哪一个?A) 第一次 01:30 PDT(UTC-7);B) 第二次 01:30 PST(UTC-8)。确认后我会创建\"打电话\"的提醒。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.004424300000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-18",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-11-01T10:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0061468,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-40",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "02:30 on 2027-03-14 doesn't exist in New York time, because clocks jump from 02:00 to 03:00 that day. What time would you like instead? For example, 03:30 or 01:30 on 2027-03-14.",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0040243,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-41",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "1:30 AM on Nov 1, 2026 happens twice in New York because clocks fall back that night. Do you want the first one (EDT, before the clocks change) or the second one (EST, after)?",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0038018,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-43",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-11-01T07:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0060943,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    }
+  ],
+  "sourceRevision": "d58e8d1 + DST prompt guidance (scoped subsequently in ac9d741)"
+}

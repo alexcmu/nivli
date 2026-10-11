@@ -1,0 +1,25 @@
+{
+  "status": "partial_failure",
+  "model": "claude-sonnet-5-5",
+  "piVersion": "1.1.0",
+  "budgetUsd": 1,
+  "invoiceAvailable": false,
+  "cases": 1,
+  "usageUsd": 0,
+  "unknownRequests": 0,
+  "requests": 0,
+  "results": [
+    {
+      "id": "eval-01",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": []
+    }
+  ],
+  "cleanupFailures": [
+    "app_close"
+  ],
+  "verification": "Temporary compiled CLI fault injection, controlled fake key, no provider requests",
+  "sourceRevision": "e5de12d"
+}

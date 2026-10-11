@@ -1,0 +1,41 @@
+{
+  "status": "completed",
+  "model": "claude-sonnet-5-5",
+  "piVersion": "1.1.0",
+  "budgetUsd": 0.16,
+  "invoiceAvailable": false,
+  "cases": 1,
+  "usageUsd": 0.004781800000000001,
+  "unknownRequests": 0,
+  "requests": 1,
+  "results": [
+    {
+      "id": "eval-18",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": false,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "请确认一下:2026-11-01 当天洛杉矶夏令时结束,凌晨 1:00–2:00 会重复出现一次。您说的 02:30 是指标准时间(PST,即 UTC-8)的 02:30 吗?另外,请确认是要在这个时间提醒您\"打电话\"吗?如果您其实想要的是 1:30 左右的时间,也请告诉我是夏令时(PDT)还是标准时间(PST)的 1:30。",
+          "passed": false,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.004781800000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    }
+  ],
+  "sourceRevision": "d58e8d1"
+}
