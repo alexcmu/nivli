@@ -182,12 +182,12 @@ export async function createApp(config: Config) {
         true,
       );
   };
-  const session = async (authorization?: string) => {
+  const session = async (authorization?: string, revokeReplay = false) => {
     const token = authorization?.startsWith("Bearer ")
       ? authorization.slice(7)
       : "";
     const r = await db.execute(
-      sql`SELECT s.id as "sessionId",s.owner_id as "ownerId",s.device_id as "deviceId" FROM session s JOIN device d ON d.id=s.device_id AND d.owner_id=s.owner_id WHERE s.access_hash=${hash(token)} AND s.revoked_at IS NULL AND d.revoked_at IS NULL AND s.access_expires_at>${now()} AND s.refresh_expires_at>${now()}`,
+      sql`SELECT s.id as "sessionId",s.owner_id as "ownerId",s.device_id as "deviceId" FROM session s JOIN device d ON d.id=s.device_id AND d.owner_id=s.owner_id WHERE s.access_hash=${hash(token)} AND (${revokeReplay} OR (s.revoked_at IS NULL AND d.revoked_at IS NULL)) AND s.access_expires_at>${now()} AND s.refresh_expires_at>${now()}`,
     );
     if (!r.rows[0]) throw unauthorized();
     return r.rows[0] as {
@@ -349,7 +349,7 @@ export async function createApp(config: Config) {
     async (req) => {
       await rate("claim:" + hash(req.ip));
       return await operate(
-        "claim:" + hash(req.body.code),
+        "claim",
         req.headers["idempotency-key"],
         req.body,
         async (tx) => {
@@ -426,16 +426,25 @@ export async function createApp(config: Config) {
     "/v1/session",
     {
       schema: {
+        headers: MutationHeaders,
         security: [{ bearerAuth: [] }],
         response: { 200: Type.Object({ revoked: Type.Boolean() }), ...errors },
       },
     },
     async (req) => {
-      const identity = await session(req.headers.authorization);
-      await db.execute(
-        sql`UPDATE session SET revoked_at=${now()} WHERE id=${identity.sessionId}`,
+      const identity = await session(req.headers.authorization, true);
+      return operate(
+        `${identity.ownerId}:${identity.deviceId}:revoke-session`,
+        req.headers["idempotency-key"],
+        { sessionId: identity.sessionId },
+        async (tx) => {
+          const r = await tx.execute(
+            sql`UPDATE session SET revoked_at=${now()} WHERE id=${identity.sessionId} AND revoked_at IS NULL AND EXISTS(SELECT 1 FROM device WHERE id=${identity.deviceId} AND revoked_at IS NULL) RETURNING id`,
+          );
+          if (!r.rows[0]) throw unauthorized();
+          return { revoked: true };
+        },
       );
-      return { revoked: true };
     },
   );
   app.delete(
@@ -443,6 +452,7 @@ export async function createApp(config: Config) {
     {
       schema: {
         security: [{ bearerAuth: [] }],
+        headers: MutationHeaders,
         params: Type.Object({ id: Type.String({ format: "uuid" }) }),
         response: { 200: Type.Object({ revoked: Type.Boolean() }), ...errors },
       },
@@ -450,16 +460,20 @@ export async function createApp(config: Config) {
     async (req) => {
       await rate("admin:" + hash(req.ip));
       admin(req.headers.authorization);
-      await db.transaction(async (tx) => {
-        await tx.execute(sql`SELECT id FROM owner FOR UPDATE`);
-        await tx.execute(
-          sql`UPDATE device SET revoked_at=${now()} WHERE id=${req.params.id}`,
-        );
-        await tx.execute(
-          sql`UPDATE session SET revoked_at=${now()} WHERE device_id=${req.params.id}`,
-        );
-      });
-      return { revoked: true };
+      return operate(
+        "admin-device-revoke",
+        req.headers["idempotency-key"],
+        { id: req.params.id },
+        async (tx) => {
+          await tx.execute(
+            sql`UPDATE device SET revoked_at=${now()} WHERE id=${req.params.id}`,
+          );
+          await tx.execute(
+            sql`UPDATE session SET revoked_at=${now()} WHERE device_id=${req.params.id}`,
+          );
+          return { revoked: true };
+        },
+      );
     },
   );
   return app;

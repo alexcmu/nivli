@@ -306,4 +306,79 @@ describe("personal environment pairing over HTTP with PostgreSQL", () => {
     expect(logs).not.toContain(privateText);
     expect(logs).not.toContain(admin);
   });
+  test("revocation retries recover the same response and reused mutation keys reject different contents", async () => {
+    clock += 60000;
+    const code = (await call("/v1/admin/pairings", "POST", {}, admin)).body
+      .code;
+    const claimKey = randomUUID(),
+      body = { code, deviceName: "phone" };
+    const paired = await call(
+      "/v1/pairings/claim",
+      "POST",
+      body,
+      undefined,
+      claimKey,
+    );
+    expect(
+      (
+        await call(
+          "/v1/pairings/claim",
+          "POST",
+          { ...body, deviceName: "different" },
+          undefined,
+          claimKey,
+        )
+      ).status,
+    ).toBe(409);
+    const revokeKey = randomUUID();
+    const revoked = await call(
+      "/v1/session",
+      "DELETE",
+      undefined,
+      paired.body.accessToken,
+      revokeKey,
+    );
+    expect(revoked.status).toBe(200);
+    expect(
+      await call(
+        "/v1/session",
+        "DELETE",
+        undefined,
+        paired.body.accessToken,
+        revokeKey,
+      ),
+    ).toEqual(revoked);
+    expect(
+      (await call("/v1/session", "DELETE", undefined, paired.body.accessToken))
+        .status,
+    ).toBe(401);
+    const deviceKey = randomUUID();
+    const deviceRevoked = await call(
+      "/v1/admin/devices/" + paired.body.deviceId,
+      "DELETE",
+      undefined,
+      admin,
+      deviceKey,
+    );
+    expect(
+      await call(
+        "/v1/admin/devices/" + paired.body.deviceId,
+        "DELETE",
+        undefined,
+        admin,
+        deviceKey,
+      ),
+    ).toEqual(deviceRevoked);
+    expect(
+      (
+        await call(
+          "/v1/admin/devices/" + randomUUID(),
+          "DELETE",
+          undefined,
+          admin,
+          deviceKey,
+        )
+      ).status,
+    ).toBe(409);
+  });
 });

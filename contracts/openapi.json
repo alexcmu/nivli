@@ -1352,6 +1352,17 @@
         }
       },
       "delete": {
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true
+          }
+        ],
         "security": [
           {
             "bearerAuth": []
@@ -1993,6 +2004,15 @@
             },
             "in": "path",
             "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "header",
+            "name": "idempotency-key",
             "required": true
           }
         ],
