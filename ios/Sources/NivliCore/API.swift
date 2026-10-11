@@ -1,0 +1,51 @@
+import Foundation
+public struct EnvironmentInfo: Codable, Sendable { public let name: String; public let host: String; public let pushMode: String; public let modelDataDestination: String; public let capabilities: [String] }
+public struct Credentials: Codable, Sendable {
+    public struct Sync: Codable, Sendable { public let state: String }
+    public let ownerId: String; public let deviceId: String; public let sessionId: String
+    public let accessToken: String; public let refreshToken: String
+    public let accessExpiresAt: String; public let refreshExpiresAt: String
+    public let capabilities: [String]; public let sync: Sync
+}
+public struct SessionIdentity: Codable, Sendable { public let ownerId: String; public let deviceId: String; public let sessionId: String }
+public struct APIError: Decodable, Error, LocalizedError, Sendable {
+    public let code: String; public let message: String; public let requestId: String; public let retryable: Bool
+    public var errorDescription: String? { "\(message)（请求 \(requestId)）" }
+}
+private final class SameHostTransport: NSObject, URLSessionTaskDelegate, Sendable {
+    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping @Sendable (URLRequest?) -> Void) { completionHandler(nil) }
+}
+public struct NivliAPI: Sendable {
+    private static let transport = URLSession(configuration: .ephemeral, delegate: SameHostTransport(), delegateQueue: nil)
+    public let server: URL
+    private let transport: URLSession
+    public init(server: URL, session: URLSession? = nil) { self.server = server; self.transport = session ?? Self.transport }
+    private func request<T: Decodable>(_ path: String, method: String = "GET", body: Data? = nil, token: String? = nil, key: String? = nil, as: T.Type) async throws -> T {
+        var request = URLRequest(url: server.appendingPathComponent(path))
+        request.httpMethod = method; request.httpBody = body; request.timeoutInterval = 20
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+        if let key { request.setValue(key, forHTTPHeaderField: "Idempotency-Key") }
+        let (data, response) = try await transport.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw PairingError.invalidResponse }
+        guard (200..<300).contains(http.statusCode) else {
+            throw (try? JSONDecoder().decode(APIError.self, from: data)) ?? APIError(code: "transport_error", message: "环境暂时无法连接，请重试。", requestId: "unknown", retryable: true)
+        }
+        return try JSONDecoder().decode(T.self, from: data)
+    }
+    public func environment() async throws -> EnvironmentInfo { try await request("v1/environment", as: EnvironmentInfo.self) }
+    public func claim(code: String, deviceName: String, key: String) async throws -> Credentials {
+        try await request("v1/pairings/claim", method: "POST", body: JSONEncoder().encode(["code": code, "deviceName": deviceName]), key: key, as: Credentials.self)
+    }
+    public func session(token: String) async throws -> SessionIdentity { try await request("v1/session", token: token, as: SessionIdentity.self) }
+    public func renew(refreshToken: String, key: String) async throws -> Credentials {
+        try await request("v1/session/renew", method: "POST", body: JSONEncoder().encode(["refreshToken": refreshToken]), key: key, as: Credentials.self)
+    }
+    public func revoke(token: String, key: String) async throws {
+        var request = URLRequest(url: server.appendingPathComponent("v1/session")); request.httpMethod = "DELETE"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(key, forHTTPHeaderField: "Idempotency-Key")
+        let (data, response) = try await transport.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { throw (try? JSONDecoder().decode(APIError.self, from: data)) ?? PairingError.invalidResponse }
+    }
+}
