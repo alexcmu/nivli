@@ -4,12 +4,16 @@ services:
       MODEL_API_KEY_FILE: /run/secrets/model_api_key
       MODEL_ID: ${MODEL_ID:-claude-sonnet-5-5}
       MODEL_BASE_URL: ${MODEL_BASE_URL:-https://api.anthropic.com}
+      MODEL_DAILY_BUDGET_USD: ${MODEL_DAILY_BUDGET_USD:-1}
+      MODEL_MAX_OUTPUT_TOKENS: ${MODEL_MAX_OUTPUT_TOKENS:-1024}
     secrets: [admin_secret, model_api_key]
   agent:
     environment:
       MODEL_API_KEY_FILE: /run/secrets/model_api_key
       MODEL_ID: ${MODEL_ID:-claude-sonnet-5-5}
       MODEL_BASE_URL: ${MODEL_BASE_URL:-https://api.anthropic.com}
+      MODEL_DAILY_BUDGET_USD: ${MODEL_DAILY_BUDGET_USD:-1}
+      MODEL_MAX_OUTPUT_TOKENS: ${MODEL_MAX_OUTPUT_TOKENS:-1024}
     secrets: [admin_secret, model_api_key]
 secrets:
   model_api_key:
