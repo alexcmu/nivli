@@ -30,7 +30,8 @@ struct RootView: View {
                             }.padding(.vertical, 6)
                         }
                     }
-                    Section("后续功能") { Text("记忆、地点、Gmail、提醒设置与数据控制尚未开放。").foregroundStyle(.primary) }
+                    Section("来源") { NavigationLink("Gmail") { GmailView(connection: connection) } }
+                    Section("后续功能") { Text("记忆、地点、提醒设置与数据控制尚未开放。").foregroundStyle(.primary) }
                 }.navigationTitle("我的")
             }.tabItem { Label("我的", systemImage: "person.crop.circle") }.tag(2)
         }.task { await connection.restore() }

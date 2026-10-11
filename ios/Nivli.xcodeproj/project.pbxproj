@@ -7,138 +7,129 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0B87513924D9F5371845ECE5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EA4C33CFDA8DD117B5776F21 /* Foundation.framework */; };
-		228705B3535B8C6F0FBBC8BD /* NivliUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16DCA68D1DD559F9F9CD254F /* NivliUITests.swift */; };
-		355F7FEC125A41730B4BBC04 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97273D322E5E6E6EC2E43FB3 /* API.swift */; };
-		6FB84E0F5433F727993238ED /* QRScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 449F672D55715C8B165A0C3F /* QRScanner.swift */; };
-		7F3F2CED710D76417AA5A551 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 37236D228B3525604E2D77EC /* libsqlite3.tbd */; };
-		8E96FD7BF171EFD607AF20E8 /* Pairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C20B08758D1F6C90F5FC29D /* Pairing.swift */; };
-		915ABFDE8C6A1C3214BAC5D3 /* Tasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C69C5BD23AF73558A619F7 /* Tasks.swift */; };
-		9DFD6AE981252AA4359F87F5 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6999B45D4889DEC73A66684C /* SessionStore.swift */; };
-		AC5811E0F92475EF60060726 /* TaskViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 777EF8A9C2A11A60CDB31DF0 /* TaskViews.swift */; };
-		B08A69AAB67E3921AA4DF6B8 /* PairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3ACC229F7A6FE7628C3EAF2 /* PairingView.swift */; };
-		B6275DF84D442D88FDF6DCE4 /* NivliApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D59678947E78AAE3CAB85BA /* NivliApp.swift */; };
-		F72D564BFF8DFAC8E417900B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EA4C33CFDA8DD117B5776F21 /* Foundation.framework */; };
+		1795A15B40AA5FAE39BF8FAF /* QRScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51B13F037B5DE62602485F2 /* QRScanner.swift */; };
+		2FC1D3778CCC43EC699B2F40 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F8A797CE2EDF57536D8AEEC /* API.swift */; };
+		3486AFF120A930D60E8A5A5F /* NivliApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D31D826E77A4275C93BACCA2 /* NivliApp.swift */; };
+		3B005645AA874C7D4FF9530E /* GmailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05E37BB6C738020A3163DC72 /* GmailView.swift */; };
+		3C6588739ADC87628910D5F8 /* NivliUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADF9063D3E22F16DDC6C98B /* NivliUITests.swift */; };
+		46C12168936B3253919CFFC6 /* GmailUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EEF8B1E10472720E27F4D12 /* GmailUITests.swift */; };
+		5C7CA10A0FB321CBE2013E64 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 083C2F7DA2126140B2A24B34 /* Foundation.framework */; };
+		8721CCD54DFF55F417E7C866 /* Tasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1388E66CCF14ADDD319F0E8B /* Tasks.swift */; };
+		89889AD7E74510616C99755C /* Pairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 304BF6E04805F5DC869A628D /* Pairing.swift */; };
+		899A30E1C423B1DBE7328E73 /* PairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 461451C876AE24B059998C69 /* PairingView.swift */; };
+		A41256124BB6CB9A21F32EB1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 083C2F7DA2126140B2A24B34 /* Foundation.framework */; };
+		B64BF5CEF79B7B3342BA46AB /* TaskViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4544EBB16BEEC12323B2900 /* TaskViews.swift */; };
+		C39617CA2CA82C6C23AD4FA1 /* GmailAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A004DA0A4A7C59659EA182CC /* GmailAPI.swift */; };
+		CF9CBE4F7B9BEC2F9A02B46D /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7CA6D1398833A9030EB6226 /* SessionStore.swift */; };
+		ED373654793972B3C62E84FB /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B805874891CDD66656DACC8 /* libsqlite3.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		344827B041A3DB40B51D0335 /* PBXContainerItemProxy */ = {
+		2A5BE4156371274033E57E8D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 1D90201DF73A6EF601CC1338 /* Project object */;
+			containerPortal = D3F42C018CE9F7EC80F1BC81 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 93CB30CD5BB88367A1249E22;
+			remoteGlobalIDString = 1C6F61CA38B933745C3D6A7D;
 			remoteInfo = Nivli;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		16DCA68D1DD559F9F9CD254F /* NivliUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NivliUITests.swift; path = UITests/NivliUITests.swift; sourceTree = "<group>"; };
-		37236D228B3525604E2D77EC /* libsqlite3.tbd */ = {isa = PBXFileReference; includeInIndex = 1; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
-		449F672D55715C8B165A0C3F /* QRScanner.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = QRScanner.swift; path = Nivli/QRScanner.swift; sourceTree = "<group>"; };
-		5D59678947E78AAE3CAB85BA /* NivliApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NivliApp.swift; path = Nivli/NivliApp.swift; sourceTree = "<group>"; };
-		6999B45D4889DEC73A66684C /* SessionStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SessionStore.swift; path = Nivli/SessionStore.swift; sourceTree = "<group>"; };
-		777EF8A9C2A11A60CDB31DF0 /* TaskViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TaskViews.swift; path = Nivli/TaskViews.swift; sourceTree = "<group>"; };
-		7C20B08758D1F6C90F5FC29D /* Pairing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Pairing.swift; path = Sources/NivliCore/Pairing.swift; sourceTree = "<group>"; };
-		97273D322E5E6E6EC2E43FB3 /* API.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = API.swift; path = Sources/NivliCore/API.swift; sourceTree = "<group>"; };
-		A9C69C5BD23AF73558A619F7 /* Tasks.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Tasks.swift; path = Sources/NivliCore/Tasks.swift; sourceTree = "<group>"; };
-		AAA624A4BBD44C22AE0D62B0 /* NivliUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NivliUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		E3ACC229F7A6FE7628C3EAF2 /* PairingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PairingView.swift; path = Nivli/PairingView.swift; sourceTree = "<group>"; };
-		EA4C33CFDA8DD117B5776F21 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		FBF3B015ED732C56BFE7AC4D /* Nivli.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nivli.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		05E37BB6C738020A3163DC72 /* GmailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GmailView.swift; path = Nivli/GmailView.swift; sourceTree = "<group>"; };
+		083C2F7DA2126140B2A24B34 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		1388E66CCF14ADDD319F0E8B /* Tasks.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Tasks.swift; path = Sources/NivliCore/Tasks.swift; sourceTree = "<group>"; };
+		304BF6E04805F5DC869A628D /* Pairing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Pairing.swift; path = Sources/NivliCore/Pairing.swift; sourceTree = "<group>"; };
+		461451C876AE24B059998C69 /* PairingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PairingView.swift; path = Nivli/PairingView.swift; sourceTree = "<group>"; };
+		4EEF8B1E10472720E27F4D12 /* GmailUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GmailUITests.swift; path = UITests/GmailUITests.swift; sourceTree = "<group>"; };
+		6B805874891CDD66656DACC8 /* libsqlite3.tbd */ = {isa = PBXFileReference; includeInIndex = 1; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		6CB3B184F27FF8FA99DFDBC8 /* NivliUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NivliUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		73A234CF173EF83DDBA6B05F /* Nivli.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nivli.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7ADF9063D3E22F16DDC6C98B /* NivliUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NivliUITests.swift; path = UITests/NivliUITests.swift; sourceTree = "<group>"; };
+		7F8A797CE2EDF57536D8AEEC /* API.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = API.swift; path = Sources/NivliCore/API.swift; sourceTree = "<group>"; };
+		A004DA0A4A7C59659EA182CC /* GmailAPI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GmailAPI.swift; path = Sources/NivliCore/GmailAPI.swift; sourceTree = "<group>"; };
+		B4544EBB16BEEC12323B2900 /* TaskViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TaskViews.swift; path = Nivli/TaskViews.swift; sourceTree = "<group>"; };
+		B51B13F037B5DE62602485F2 /* QRScanner.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = QRScanner.swift; path = Nivli/QRScanner.swift; sourceTree = "<group>"; };
+		D31D826E77A4275C93BACCA2 /* NivliApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NivliApp.swift; path = Nivli/NivliApp.swift; sourceTree = "<group>"; };
+		D7CA6D1398833A9030EB6226 /* SessionStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SessionStore.swift; path = Nivli/SessionStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		8243C690E996AAA5891115BB /* Frameworks */ = {
+		E3546EDAE9897E020F449562 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F72D564BFF8DFAC8E417900B /* Foundation.framework in Frameworks */,
-				7F3F2CED710D76417AA5A551 /* libsqlite3.tbd in Frameworks */,
+				A41256124BB6CB9A21F32EB1 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		837A5BA8B5DAF249CF3533D3 /* Frameworks */ = {
+		F9CF2AD1AC64D3B682EB9EF7 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0B87513924D9F5371845ECE5 /* Foundation.framework in Frameworks */,
+				5C7CA10A0FB321CBE2013E64 /* Foundation.framework in Frameworks */,
+				ED373654793972B3C62E84FB /* libsqlite3.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		25319A6A11C769D522C9E8D1 = {
+		74E52981D266C38B0F371607 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
-				4C8739EAC5CF188557174F58 /* Products */,
-				D573C66D376CE1E88D890EA7 /* Frameworks */,
-				5D59678947E78AAE3CAB85BA /* NivliApp.swift */,
-				E3ACC229F7A6FE7628C3EAF2 /* PairingView.swift */,
-				449F672D55715C8B165A0C3F /* QRScanner.swift */,
-				6999B45D4889DEC73A66684C /* SessionStore.swift */,
-				777EF8A9C2A11A60CDB31DF0 /* TaskViews.swift */,
-				97273D322E5E6E6EC2E43FB3 /* API.swift */,
-				7C20B08758D1F6C90F5FC29D /* Pairing.swift */,
-				A9C69C5BD23AF73558A619F7 /* Tasks.swift */,
-				16DCA68D1DD559F9F9CD254F /* NivliUITests.swift */,
-				37236D228B3525604E2D77EC /* libsqlite3.tbd */,
-			);
-			sourceTree = "<group>";
-		};
-		4C8739EAC5CF188557174F58 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				FBF3B015ED732C56BFE7AC4D /* Nivli.app */,
-				AAA624A4BBD44C22AE0D62B0 /* NivliUITests.xctest */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		BADFFE1A91233B0E8CEB5E4E /* iOS */ = {
-			isa = PBXGroup;
-			children = (
-				EA4C33CFDA8DD117B5776F21 /* Foundation.framework */,
+				083C2F7DA2126140B2A24B34 /* Foundation.framework */,
 			);
 			name = iOS;
 			sourceTree = "<group>";
 		};
-		D573C66D376CE1E88D890EA7 /* Frameworks */ = {
+		C66A7C1A99FFDE55F6AA4A50 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				BADFFE1A91233B0E8CEB5E4E /* iOS */,
+				74E52981D266C38B0F371607 /* iOS */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		C99CF9280F52E77E64BC0875 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				73A234CF173EF83DDBA6B05F /* Nivli.app */,
+				6CB3B184F27FF8FA99DFDBC8 /* NivliUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FEA7687F9DC48798741A6BDA = {
+			isa = PBXGroup;
+			children = (
+				C99CF9280F52E77E64BC0875 /* Products */,
+				C66A7C1A99FFDE55F6AA4A50 /* Frameworks */,
+				05E37BB6C738020A3163DC72 /* GmailView.swift */,
+				D31D826E77A4275C93BACCA2 /* NivliApp.swift */,
+				461451C876AE24B059998C69 /* PairingView.swift */,
+				B51B13F037B5DE62602485F2 /* QRScanner.swift */,
+				D7CA6D1398833A9030EB6226 /* SessionStore.swift */,
+				B4544EBB16BEEC12323B2900 /* TaskViews.swift */,
+				7F8A797CE2EDF57536D8AEEC /* API.swift */,
+				A004DA0A4A7C59659EA182CC /* GmailAPI.swift */,
+				304BF6E04805F5DC869A628D /* Pairing.swift */,
+				1388E66CCF14ADDD319F0E8B /* Tasks.swift */,
+				7ADF9063D3E22F16DDC6C98B /* NivliUITests.swift */,
+				4EEF8B1E10472720E27F4D12 /* GmailUITests.swift */,
+				6B805874891CDD66656DACC8 /* libsqlite3.tbd */,
+			);
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		223FE2F42002C090D0DB23FB /* NivliUITests */ = {
+		1C6F61CA38B933745C3D6A7D /* Nivli */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0FE9FE65718176716D7805BA /* Build configuration list for PBXNativeTarget "NivliUITests" */;
+			buildConfigurationList = 9EF49C5CBC9561131670B205 /* Build configuration list for PBXNativeTarget "Nivli" */;
 			buildPhases = (
-				125C8394EA9C0CD4A29C7713 /* Sources */,
-				837A5BA8B5DAF249CF3533D3 /* Frameworks */,
-				3FECB2702FB38A2764322B28 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				6830D211A341527DD68BED25 /* PBXTargetDependency */,
-			);
-			name = NivliUITests;
-			productName = NivliUITests;
-			productReference = AAA624A4BBD44C22AE0D62B0 /* NivliUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
-		93CB30CD5BB88367A1249E22 /* Nivli */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 1D78AB3E456565CBF11E5AB2 /* Build configuration list for PBXNativeTarget "Nivli" */;
-			buildPhases = (
-				6BD12C68482E157460BC723C /* Sources */,
-				8243C690E996AAA5891115BB /* Frameworks */,
-				3870DF1E99CF2FD313F8239D /* Resources */,
+				3321F70E17924D8AE151C0D7 /* Sources */,
+				F9CF2AD1AC64D3B682EB9EF7 /* Frameworks */,
+				043BCD7506498B77C4DCADFF /* Resources */,
 			);
 			buildRules = (
 			);
@@ -146,19 +137,37 @@
 			);
 			name = Nivli;
 			productName = Nivli;
-			productReference = FBF3B015ED732C56BFE7AC4D /* Nivli.app */;
+			productReference = 73A234CF173EF83DDBA6B05F /* Nivli.app */;
 			productType = "com.apple.product-type.application";
+		};
+		39539AE5D35F026AB331AAEF /* NivliUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F195F64EC5D09164349BD22E /* Build configuration list for PBXNativeTarget "NivliUITests" */;
+			buildPhases = (
+				FE3CF50EBFBBCE5036E280C0 /* Sources */,
+				E3546EDAE9897E020F449562 /* Frameworks */,
+				3AE9FA24C99A2E874875D157 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0B977BBC46AFC27E00D5DB1D /* PBXTargetDependency */,
+			);
+			name = NivliUITests;
+			productName = NivliUITests;
+			productReference = 6CB3B184F27FF8FA99DFDBC8 /* NivliUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		1D90201DF73A6EF601CC1338 /* Project object */ = {
+		D3F42C018CE9F7EC80F1BC81 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1500;
 			};
-			buildConfigurationList = CEFE0431B243EF7E43173936 /* Build configuration list for PBXProject "Nivli" */;
+			buildConfigurationList = 3279B1B6EF97F2B9E2D76FE2 /* Build configuration list for PBXProject "Nivli" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -166,26 +175,26 @@
 				en,
 				Base,
 			);
-			mainGroup = 25319A6A11C769D522C9E8D1;
-			productRefGroup = 4C8739EAC5CF188557174F58 /* Products */;
+			mainGroup = FEA7687F9DC48798741A6BDA;
+			productRefGroup = C99CF9280F52E77E64BC0875 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				93CB30CD5BB88367A1249E22 /* Nivli */,
-				223FE2F42002C090D0DB23FB /* NivliUITests */,
+				1C6F61CA38B933745C3D6A7D /* Nivli */,
+				39539AE5D35F026AB331AAEF /* NivliUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		3870DF1E99CF2FD313F8239D /* Resources */ = {
+		043BCD7506498B77C4DCADFF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		3FECB2702FB38A2764322B28 /* Resources */ = {
+		3AE9FA24C99A2E874875D157 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -195,42 +204,59 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		125C8394EA9C0CD4A29C7713 /* Sources */ = {
+		3321F70E17924D8AE151C0D7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				228705B3535B8C6F0FBBC8BD /* NivliUITests.swift in Sources */,
+				3B005645AA874C7D4FF9530E /* GmailView.swift in Sources */,
+				3486AFF120A930D60E8A5A5F /* NivliApp.swift in Sources */,
+				899A30E1C423B1DBE7328E73 /* PairingView.swift in Sources */,
+				1795A15B40AA5FAE39BF8FAF /* QRScanner.swift in Sources */,
+				CF9CBE4F7B9BEC2F9A02B46D /* SessionStore.swift in Sources */,
+				B64BF5CEF79B7B3342BA46AB /* TaskViews.swift in Sources */,
+				2FC1D3778CCC43EC699B2F40 /* API.swift in Sources */,
+				C39617CA2CA82C6C23AD4FA1 /* GmailAPI.swift in Sources */,
+				89889AD7E74510616C99755C /* Pairing.swift in Sources */,
+				8721CCD54DFF55F417E7C866 /* Tasks.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		6BD12C68482E157460BC723C /* Sources */ = {
+		FE3CF50EBFBBCE5036E280C0 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B6275DF84D442D88FDF6DCE4 /* NivliApp.swift in Sources */,
-				B08A69AAB67E3921AA4DF6B8 /* PairingView.swift in Sources */,
-				6FB84E0F5433F727993238ED /* QRScanner.swift in Sources */,
-				9DFD6AE981252AA4359F87F5 /* SessionStore.swift in Sources */,
-				AC5811E0F92475EF60060726 /* TaskViews.swift in Sources */,
-				355F7FEC125A41730B4BBC04 /* API.swift in Sources */,
-				8E96FD7BF171EFD607AF20E8 /* Pairing.swift in Sources */,
-				915ABFDE8C6A1C3214BAC5D3 /* Tasks.swift in Sources */,
+				3C6588739ADC87628910D5F8 /* NivliUITests.swift in Sources */,
+				46C12168936B3253919CFFC6 /* GmailUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		6830D211A341527DD68BED25 /* PBXTargetDependency */ = {
+		0B977BBC46AFC27E00D5DB1D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = Nivli;
-			target = 93CB30CD5BB88367A1249E22 /* Nivli */;
-			targetProxy = 344827B041A3DB40B51D0335 /* PBXContainerItemProxy */;
+			target = 1C6F61CA38B933745C3D6A7D /* Nivli */;
+			targetProxy = 2A5BE4156371274033E57E8D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		30433FAEECA02BCAE7DC7116 /* Debug */ = {
+		2AF1078031D574BAFE0BECA9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.nivli.NivliUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Nivli;
+			};
+			name = Debug;
+		};
+		B1F41CE00F8ED6DA78766B47 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -249,7 +275,61 @@
 			};
 			name = Debug;
 		};
-		8D421465572A104FCF3F23A4 /* Release */ = {
+		C9790293CA3708AACB4AAA8E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		D975DD89C51B0B3A103B5563 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -269,7 +349,7 @@
 			};
 			name = Release;
 		};
-		8FB169872C3445B52B13290C /* Release */ = {
+		DA657C4C7D11FBE08179018B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -284,7 +364,7 @@
 			};
 			name = Release;
 		};
-		983B2813BBB105FC66481E8F /* Debug */ = {
+		DBF8BB9AA8F1D28EDECF8B45 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -345,105 +425,37 @@
 			};
 			name = Debug;
 		};
-		CB23DFE2CD5BB229DE251898 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				MTL_FAST_MATH = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
-		EC040547B42684E03C739CA1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.nivli.NivliUITests;
-				SDKROOT = iphoneos;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-				TEST_TARGET_NAME = Nivli;
-			};
-			name = Debug;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		0FE9FE65718176716D7805BA /* Build configuration list for PBXNativeTarget "NivliUITests" */ = {
+		3279B1B6EF97F2B9E2D76FE2 /* Build configuration list for PBXProject "Nivli" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				8FB169872C3445B52B13290C /* Release */,
-				EC040547B42684E03C739CA1 /* Debug */,
+				DBF8BB9AA8F1D28EDECF8B45 /* Debug */,
+				C9790293CA3708AACB4AAA8E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1D78AB3E456565CBF11E5AB2 /* Build configuration list for PBXNativeTarget "Nivli" */ = {
+		9EF49C5CBC9561131670B205 /* Build configuration list for PBXNativeTarget "Nivli" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				8D421465572A104FCF3F23A4 /* Release */,
-				30433FAEECA02BCAE7DC7116 /* Debug */,
+				D975DD89C51B0B3A103B5563 /* Release */,
+				B1F41CE00F8ED6DA78766B47 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		CEFE0431B243EF7E43173936 /* Build configuration list for PBXProject "Nivli" */ = {
+		F195F64EC5D09164349BD22E /* Build configuration list for PBXNativeTarget "NivliUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				983B2813BBB105FC66481E8F /* Debug */,
-				CB23DFE2CD5BB229DE251898 /* Release */,
+				DA657C4C7D11FBE08179018B /* Release */,
+				2AF1078031D574BAFE0BECA9 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 1D90201DF73A6EF601CC1338 /* Project object */;
+	rootObject = D3F42C018CE9F7EC80F1BC81 /* Project object */;
 }

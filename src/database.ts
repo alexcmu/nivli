@@ -2,6 +2,7 @@ import pg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { sql } from "drizzle-orm";
 import { PgBoss } from "pg-boss";
+import { migrateGmail } from "./gmail-schema.js";
 import { migrateTasks } from "./task-schema.js";
 export const SCHEMA_VERSION = 1;
 export function connect(databaseUrl: string) {
@@ -49,6 +50,7 @@ export async function migrate(databaseUrl: string) {
  INSERT INTO schema_version(version) VALUES (1) ON CONFLICT DO NOTHING;`),
       );
     });
+    await migrateGmail(pool);
     await migrateTasks(pool);
     const boss = new PgBoss({ connectionString: databaseUrl });
     boss.on("error", () => {});
@@ -67,6 +69,11 @@ export async function verifySchema(databaseUrl: string) {
     const r = await pool.query(
       "select max(version) as version from schema_version",
     );
+    const gmail = await pool.query(
+      "select to_regclass('gmail_source') as source",
+    );
+    if (!gmail.rows[0]?.source)
+      throw new Error("Gmail schema missing; run migration before starting");
     const tasks = await pool.query(
       "SELECT to_regclass('task_command_key') AS table_name",
     );

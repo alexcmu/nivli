@@ -7,6 +7,7 @@ import {
   CredentialsDTO,
   ErrorDTO,
 } from "./contracts.js";
+import { GmailStatusDTO, GmailConsentDTO } from "./gmail-routes.js";
 import { CreateTaskDTO, TaskDTO, TaskPageDTO } from "./task-contracts.js";
 import { createApp } from "./app.js";
 const app = await createApp({
@@ -36,6 +37,8 @@ FormatRegistry.Set(
     /^\d{4}-\d\d-\d\dT/.test(value) && Number.isFinite(Date.parse(value)),
 );
 for (const [name, schema] of Object.entries({
+  "gmail-status": GmailStatusDTO,
+  "gmail-consent": GmailConsentDTO,
   task: TaskDTO,
   "task-page": TaskPageDTO,
   "task-command": CreateTaskDTO,

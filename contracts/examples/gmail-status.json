@@ -1,0 +1,14 @@
+{
+  "configured": true,
+  "state": "reauthorization_required",
+  "account": "reader@example.com",
+  "revision": 3,
+  "labelIds": ["INBOX"],
+  "initialDays": 7,
+  "retentionDays": 7,
+  "lastSuccessfulSync": "2026-10-11T09:00:00.000Z",
+  "syncError": "REAUTH_REQUIRED",
+  "nextSyncAt": null,
+  "pollIntervalMinutes": 5,
+  "modelDataDestination": "No model configured"
+}

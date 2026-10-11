@@ -1,3 +1,5 @@
+import { readGmailConfig } from "./gmail-config.js";
+import { startGmailWorker } from "./gmail-worker.js";
 import { readFile } from "node:fs/promises";
 import { createApp } from "./app.js";
 import { migrate, verifySchema, connect } from "./database.js";
@@ -15,6 +17,7 @@ if (role === "migrate") {
   if (!["self_signed", "disabled", "relay"].includes(pushMode))
     throw new Error("Invalid PUSH_MODE");
   const app = await createApp({
+    gmail: await readGmailConfig(),
     databaseUrl,
     adminSecret: (await readFile(file, "utf8")).trim(),
     publicUrl: process.env.PUBLIC_URL ?? "",
@@ -32,6 +35,14 @@ if (role === "migrate") {
     });
 } else if (role === "agent" || role === "delivery") {
   await verifySchema(databaseUrl);
+  const gmail = role === "agent" ? await readGmailConfig() : undefined;
+  const mailbox = gmail
+    ? await startGmailWorker({
+        databaseUrl,
+        gmail,
+        publicUrl: process.env.PUBLIC_URL ?? "",
+      })
+    : undefined;
   const { pool, db } = connect(databaseUrl);
   const boss = new PgBoss({ connectionString: databaseUrl, migrate: false });
   boss.on("error", () =>
@@ -55,6 +66,6 @@ if (role === "migrate") {
   for (const signal of ["SIGTERM", "SIGINT"] as const)
     process.on(signal, () => {
       clearInterval(interval);
-      void boss.stop().then(() => pool.end());
+      void Promise.all([boss.stop(), mailbox?.stop()]).then(() => pool.end());
     });
 } else throw new Error("Unknown process role");

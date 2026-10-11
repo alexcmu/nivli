@@ -1,0 +1,18 @@
+# Opt in with docker compose -f compose.yaml -f deploy/gmail.compose.yaml up -d.
+# Keep the encryption key separately from database dumps and administrator credentials.
+services:
+  api:
+    environment:
+      GMAIL_CONFIG_FILE: /run/secrets/gmail_client
+      GMAIL_TOKEN_KEY_FILE: /run/secrets/gmail_token_key
+    secrets: [admin_secret, gmail_client, gmail_token_key]
+  agent:
+    environment:
+      GMAIL_CONFIG_FILE: /run/secrets/gmail_client
+      GMAIL_TOKEN_KEY_FILE: /run/secrets/gmail_token_key
+    secrets: [admin_secret, gmail_client, gmail_token_key]
+secrets:
+  gmail_client:
+    file: ${GMAIL_CLIENT_PATH:?Set GMAIL_CLIENT_PATH to a Google web client JSON file}
+  gmail_token_key:
+    file: ${GMAIL_TOKEN_KEY_PATH:?Set GMAIL_TOKEN_KEY_PATH to an independent 32-byte hexadecimal secret}
