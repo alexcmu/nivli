@@ -13,6 +13,7 @@ private struct ConversationDraft: Codable {
 struct ConversationView: View {
     @Bindable var connection: Connection
     @Bindable var repository: TaskRepository
+    @Environment(\.scenePhase) private var scenePhase
     @State private var draft = ConversationDraft()
     @State private var busy = false
     @State private var failedRun = false
@@ -64,6 +65,8 @@ struct ConversationView: View {
                 if let session = connection.saved { model = try? await NivliAPI(server: session.server).model(token: session.credentials.accessToken) }
                 if draft.runId != nil { pollTrigger += 1 }
             }
+            .onAppear { if draft.runId != nil && !busy { pollTrigger += 1 } }
+            .onChange(of: scenePhase) { if scenePhase == .active && draft.runId != nil && !busy { pollTrigger += 1 } }
             .task(id: pollTrigger) { if pollTrigger > 0 { await process() } }
     }
     private func persist() { do { try store.save(draft) } catch { self.error = error.localizedDescription } }
@@ -98,6 +101,8 @@ struct ConversationView: View {
                 case .succeeded:
                     if let taskId = run.taskId {
                         let task = try await api.task(id: taskId, token: session.credentials.accessToken)
+                        try Task.checkCancellation()
+                        guard connection.saved?.credentials.deviceId == session.credentials.deviceId, connection.saved?.credentials.ownerId == session.credentials.ownerId, connection.saved?.server == session.server else { return }
                         saved = await repository.notifications.install(task, session: session)
                         await repository.refresh(connection)
                         message = nil; error = nil

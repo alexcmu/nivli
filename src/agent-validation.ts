@@ -56,6 +56,12 @@ export function validateProposal(p: Proposal, i: AgentInput): boolean {
     )
   )
     return false;
+  if (
+    !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,3})?(?:Z|[+-]\d\d:\d\d)$/.test(
+      p.instant,
+    )
+  )
+    return false;
   const instant = new Date(p.instant),
     now = new Date(i.now);
   if (
