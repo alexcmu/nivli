@@ -1,3 +1,4 @@
+import { dropFixtureDatabase } from "./database-cleanup.js";
 import { spawn, execFileSync } from "node:child_process";
 import { createServer } from "node:http";
 import { startAgentWorker } from "../src/agent-worker.js";
@@ -224,7 +225,7 @@ afterAll(async () => {
   await worker?.stop();
   await app?.close();
   await new Promise<void>((r) => provider.close(() => r()));
-  await maintenance.query(`DROP DATABASE ${name} WITH (FORCE)`);
+  await dropFixtureDatabase(maintenance, name);
   await maintenance.end();
 });
 async function settle(id: string) {

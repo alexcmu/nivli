@@ -36,3 +36,5 @@
 - 2026-10-11 最终合并验证：已合并 integration `84b2156`（含 09）；TypeScript 构建、53 项真实 HTTP/PG/队列测试、14 项 Swift 测试与通用 iOS Simulator 构建通过。真机受控提供方 1 项测试通过（56.039 秒）。真实 Claude 评估保持 `not_run`，IME 组合仍未验收，未宣称工单全部完成。
 
 - 2026-10-11 AI review fixes: 已修复否定/条件语句被模型误提为完成或取消、重试后再次取消沿用旧操作身份、明确 deadline 被遗漏的问题；按原始输入时刻和时区解析下一未来周五，提交时仍拒绝已过去的提醒。公开 HTTP/真实 PostgreSQL/pg-boss/Pi 全套 57 测试与最终否定语句专项、15 Swift 测试、通用 iOS Simulator 构建通过。证据见 [AI review fixes](../../../docs/ai-review-fixes-evidence.md)。新增至 51 条评估标注，真实 Claude 评估仍为 not_run，未关闭原有外部凭据或 IME 验收项。
+
+- 2026-10-11 targeted review follow-up: create 与 edit/complete/cancel 共用保守的当前指令授权校验，英文 if/unless/when 与中文 假如/若/一旦 不再变成无条件提醒；gift 等含有 if 字母的词仍可提交。原生 Stop 意图先持久化，在首次提交或 retry 回执未明时保留并延后取消，确认后用新 attempt 操作身份发送；覆盖无 runId、重启、丢失回执与真实 HTTP 延迟 retry 回执/晚到模型输出。17 Swift 测试、通用 iOS 构建及最终 58 项公开 HTTP/PG/队列测试无未处理错误通过；隔离数据库 teardown 的 pg-pool 3.14.0 关闭竞态已通过共用有界连接 drain 修复，未隐藏连接泄漏。详见 [AI review fixes](../../../docs/ai-review-fixes-evidence.md)。真实 Claude 与既有未验收项保持开放。

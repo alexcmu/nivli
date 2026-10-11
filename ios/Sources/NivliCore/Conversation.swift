@@ -45,13 +45,26 @@ public struct ConversationDraft: Codable {
     public var replyToInputId:String?
     public var taskId:String?
     public var cancelKey:String?
+    public var cancellationRequested: Bool?
     public init() {}
     public mutating func cancellationKey() -> String {
         cancelKey = cancelKey ?? UUID().uuidString
         return cancelKey!
     }
     public mutating func prepareRetry() {
-        retryKey = retryKey ?? UUID().uuidString
+        if retryKey == nil {
+            cancellationRequested = nil
+            retryKey = UUID().uuidString
+        }
+    }
+    public mutating func requestCancellation() { cancellationRequested = true }
+    public mutating func pendingCancellationKey() -> String? {
+        guard cancellationRequested == true, runId != nil, retryKey == nil else { return nil }
+        return cancellationKey()
+    }
+    public mutating func acknowledgeCancellation(key: String) {
+        guard cancelKey == key else { return }
+        cancellationRequested = nil
     }
     /// A confirmed new attempt needs a new cancellation operation. Uncertain retries keep both keys.
     public mutating func acknowledgeRetry(key: String) {

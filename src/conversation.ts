@@ -1,3 +1,4 @@
+import { hasCurrentInstructionAuthority } from "./instruction-authority.js";
 import type pg from "pg";
 import { randomUUID } from "node:crypto";
 import { PublicError } from "./app.js";
@@ -282,17 +283,8 @@ export async function applyConversationChange(
       throw new PublicError(422, "CLARIFY_CHANGE", "请明确操作。");
   } else
     throw new PublicError(422, "CLARIFY_CHANGE", "请明确修改、完成或取消。");
-  if (
-    /(?:不要|不改|别|还没|尚未|未|没|不|希望|如果|假如|假设|要是|若|一旦|也许|等到|直到|再|才|就|是否|\b(?:not|never|no|unfinished|incomplete|do not|don['’]t|isn['’]t|hasn['’]t|haven['’]t|wasn['’]t|weren['’]t|didn['’]t|won['’]t|maybe|wish|if|unless|when|once|until|after|should)\b)/i.test(
-      input.text,
-    )
-  )
-    throw new PublicError(422, "CLARIFY_CHANGE", "尚未确认操作。");
-  if (
-    /(?:吗|[?？]|^(?:is|has|was|did)\b)/i.test(input.text) &&
-    !/(?:请|帮我|\b(?:please|can you|could you|would you)\b)/i.test(input.text)
-  )
-    throw new PublicError(422, "CLARIFY_CHANGE", "请明确是否现在执行操作。");
+  if (!hasCurrentInstructionAuthority(input.text))
+    throw new PublicError(422, "CLARIFY_CHANGE", "尚未确认现在执行操作。");
   const { executeTaskAction } = await import("./task-actions.js");
   await executeTaskAction(
     c,

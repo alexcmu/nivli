@@ -1,3 +1,4 @@
+import { hasCurrentInstructionAuthority } from "./instruction-authority.js";
 import { linkedInstruction } from "./conversation.js";
 import type { AgentInput, Proposal } from "./pi-adapter.js";
 const local = (instant: Date, zone: string) =>
@@ -72,9 +73,7 @@ export function validateProposal(p: Proposal, i: AgentInput): boolean {
       !/^(?:今天|明天|后天|\d{4}[-年/]\d{1,2}[-月/]\d{1,2}).{0,30}提醒[^，,。]+/.test(
         i.text,
       )) ||
-    /(希望|要是|如果|也许|想有空|不.{0,3}提醒|不要|wish|maybe|don't|do not)/i.test(
-      i.text,
-    )
+    !hasCurrentInstructionAuthority(i.text)
   )
     return false;
   if (

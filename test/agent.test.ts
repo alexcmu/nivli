@@ -1,3 +1,4 @@
+import { dropFixtureDatabase } from "./database-cleanup.js";
 import { createServer } from "node:http";
 import { startAgentWorker } from "../src/agent-worker.js";
 import { beforeAll, afterAll, test, expect } from "vitest";
@@ -200,7 +201,7 @@ afterAll(async () => {
   await worker?.stop();
   await app?.close();
   await new Promise<void>((r) => provider.close(() => r()));
-  await maintenance.query(`DROP DATABASE ${name} WITH (FORCE)`);
+  await dropFixtureDatabase(maintenance, name);
   await maintenance.end();
 });
 test("durable instruction returns a queued run and never a fictional saved entity", async () => {
@@ -406,4 +407,4 @@ test("raw numeric values cannot be normalized into authorization and no late tas
   await new Promise((r) => setTimeout(r, 1100));
   expect((await call("/v1/runs/" + run.id)).body.status).toBe("timed_out");
   fixtureMode = "valid";
-});
+}, 15000);
