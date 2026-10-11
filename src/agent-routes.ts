@@ -1,4 +1,9 @@
-import { budgetReport, reserveRequest, settleRequest, AgentBudgetError } from "./agent-budget.js";
+import {
+  budgetReport,
+  reserveRequest,
+  settleRequest,
+  AgentBudgetError,
+} from "./agent-budget.js";
 import { acceptConversationInput, readConversation } from "./conversation.js";
 import { ConversationDTO } from "./conversation-contracts.js";
 import { validateProposal } from "./agent-validation.js";
@@ -115,7 +120,7 @@ export async function registerAgent(
           "MODEL_NOT_CONFIGURED",
           "请先配置服务端模型密钥。",
         );
-      let budgetDenied=false;
+      let budgetDenied = false;
       const input = {
         ownerId: "00000000-0000-4000-8000-000000000001",
         inputId: randomUUID(),
@@ -124,8 +129,19 @@ export async function registerAgent(
         now: ctx.now().toISOString(),
         signal: AbortSignal.timeout(60000),
         beforeRequest: async (_context: unknown, maxTokens: number) => {
-          try{return await reserveRequest(ctx.pool,null,0,ctx.model?.dailyBudgetUsd??1,maxTokens,ctx.now());}
-          catch(e){if(e instanceof AgentBudgetError)budgetDenied=true;throw e;}
+          try {
+            return await reserveRequest(
+              ctx.pool,
+              null,
+              0,
+              ctx.model?.dailyBudgetUsd ?? 1,
+              maxTokens,
+              ctx.now(),
+            );
+          } catch (e) {
+            if (e instanceof AgentBudgetError) budgetDenied = true;
+            throw e;
+          }
         },
         afterRequest: async (
           id: string,
@@ -138,7 +154,12 @@ export async function registerAgent(
         ) => settleRequest(ctx.pool, id, usage),
       };
       const r = await interpret(ctx.model, input);
-      if(budgetDenied)throw new PublicError(409,"MODEL_BUDGET_EXHAUSTED","今日 AI 额度已用完（UTC 零点重置）。");
+      if (budgetDenied)
+        throw new PublicError(
+          409,
+          "MODEL_BUDGET_EXHAUSTED",
+          "今日 AI 额度已用完（UTC 零点重置）。",
+        );
       return {
         ok:
           r.output.kind === "proposal" &&
@@ -312,8 +333,13 @@ export async function registerAgent(
       stillProcessing:
         r.status === "running" &&
         ctx.now().getTime() - new Date(r.started_at).getTime() >= 20000,
-      cost:{reservedUsd:r.reserved_usd,usageUsd:r.usage_usd,unknownRequests:r.unknown_requests,invoiceAvailable:false as const},
-      requests: Math.max(r.requests,r.request_count),
+      cost: {
+        reservedUsd: r.reserved_usd,
+        usageUsd: r.usage_usd,
+        unknownRequests: r.unknown_requests,
+        invoiceAvailable: false as const,
+      },
+      requests: Math.max(r.requests, r.request_count),
       toolCalls: r.tool_calls,
       ...(r.message ? { message: r.message } : {}),
       ...(r.task_id ? { taskId: r.task_id } : {}),

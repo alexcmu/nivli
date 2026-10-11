@@ -37,7 +37,15 @@ export const RunDTO = Type.Object(
     timeZone: Type.String(),
     stillProcessing: Type.Boolean(),
     errorCode: Type.Optional(Type.String()),
-    cost:Type.Object({reservedUsd:Type.Number(),usageUsd:Type.Number(),unknownRequests:Type.Integer(),invoiceAvailable:Type.Literal(false)},{additionalProperties:false}),
+    cost: Type.Object(
+      {
+        reservedUsd: Type.Number(),
+        usageUsd: Type.Number(),
+        unknownRequests: Type.Integer(),
+        invoiceAvailable: Type.Literal(false),
+      },
+      { additionalProperties: false },
+    ),
     requests: Type.Integer(),
     toolCalls: Type.Integer(),
     message: Type.Optional(Type.String()),

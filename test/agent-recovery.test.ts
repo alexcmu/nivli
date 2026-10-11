@@ -15,6 +15,7 @@ url.pathname = "/" + name;
 const databaseUrl = url.toString(),
   maintenance = new pg.Pool({ connectionString: rootUrl });
 const admin = "t".repeat(48);
+let currentInstant = "2026-10-11T12:00:00Z";
 const config = {
   databaseUrl,
   adminSecret: admin,
@@ -22,7 +23,7 @@ const config = {
   environmentName: "Tasks",
   pushMode: "disabled" as const,
   modelDataDestination: "None",
-  clock: () => new Date("2026-10-11T12:00:00Z"),
+  clock: () => new Date(currentInstant),
 };
 let fixtureMode = "valid",
   fixtureOverride: Record<string, unknown> | undefined;
@@ -188,7 +189,7 @@ beforeAll(async () => {
   const model = {
     model: "claude-sonnet-5-5",
     apiKey: "external-fixture-key",
-    dailyBudgetUsd:0.15,
+    dailyBudgetUsd: 0.15,
     baseUrl:
       "http://127.0.0.1:" + (provider.address() as { port: number }).port,
   };
@@ -277,9 +278,18 @@ test("daily budget serializes concurrent requests, reports estimates separately,
     admin,
   );
   expect(budget.body).toMatchObject({ invoiceAvailable: false, requests: 1 });
-  const check=await call('/v1/admin/model/test','POST',{},randomUUID(),admin);
-  expect(check).toMatchObject({status:409,body:{code:'MODEL_BUDGET_EXHAUSTED'}});
-  expect(payloads.length-before).toBe(1);
+  const check = await call(
+    "/v1/admin/model/test",
+    "POST",
+    {},
+    randomUUID(),
+    admin,
+  );
+  expect(check).toMatchObject({
+    status: 409,
+    body: { code: "MODEL_BUDGET_EXHAUSTED" },
+  });
+  expect(payloads.length - before).toBe(1);
   expect(budget.body.reservedUsd).toBeGreaterThan(0);
   expect(budget.body.usageUsd).toBeGreaterThan(0);
   expect(payloads.at(-1)?.max_tokens).toBe(512);
@@ -307,7 +317,10 @@ test("cancelled run preserves original input and prevents late provider output a
       break;
     await new Promise((r) => setTimeout(r, 50));
   }
-  for(let i=0;i<100;i++){if((await call('/v1/runs/'+queued.body.runId)).body.requests>0)break;await new Promise(r=>setTimeout(r,20));}
+  for (let i = 0; i < 100; i++) {
+    if ((await call("/v1/runs/" + queued.body.runId)).body.requests > 0) break;
+    await new Promise((r) => setTimeout(r, 20));
+  }
   const key = randomUUID();
   const cancel = await call(
     "/v1/runs/" + queued.body.runId + "/cancel",
@@ -318,8 +331,8 @@ test("cancelled run preserves original input and prevents late provider output a
   expect(cancel.status).toBe(200);
   expect(cancel.body).toMatchObject({
     status: "cancelled",
-    cost:{invoiceAvailable:false,unknownRequests:1},
-    requests:1,
+    cost: { invoiceAvailable: false, unknownRequests: 1 },
+    requests: 1,
     text: "明天上午9点提醒我提交材料",
     timeZone: "Asia/Shanghai",
   });
@@ -424,3 +437,27 @@ test("a killed worker redelivers an unconfirmed request and never duplicates the
     ),
   ).toHaveLength(1);
 }, 20000);
+
+test("the 20-second foreground target reports waiting while manual creation remains responsive", async () => {
+  fixtureMode = "late";
+  const q = await call("/v1/inputs", "POST", {
+    text: "明天上午9点提醒我提交材料",
+    timeZone: "Asia/Shanghai",
+  });
+  for (let i = 0; i < 100; i++) {
+    if ((await call("/v1/runs/" + q.body.runId)).body.requests > 0) break;
+    await new Promise((r) => setTimeout(r, 20));
+  }
+  currentInstant = "2026-10-11T12:00:21Z";
+  const run = await call("/v1/runs/" + q.body.runId);
+  expect(run.body).toMatchObject({
+    status: "running",
+    stillProcessing: true,
+    text: "明天上午9点提醒我提交材料",
+  });
+  const manual = await call("/v1/tasks", "POST", draft());
+  expect(manual.status).toBe(200);
+  await call("/v1/runs/" + q.body.runId + "/cancel", "POST", {});
+  currentInstant = "2026-10-11T12:00:00Z";
+  fixtureMode = "valid";
+});
