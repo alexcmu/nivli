@@ -2,7 +2,7 @@ import type pg from "pg";
 import { randomUUID } from "node:crypto";
 import { PublicError } from "./app.js";
 import { readTask } from "./tasks.js";
-import type { AgentInput, Proposal, ChangeProposal } from "./pi-adapter.js";
+import type { AgentInput } from "./pi-adapter.js";
 export type ConversationBody = {
   conversationId?: string;
   replyToInputId?: string;
@@ -35,12 +35,13 @@ export async function acceptConversationInput(
   if (b.replyToInputId) {
     const prior = (
       await c.query(
-        "SELECT i.id,r.status FROM input_event i JOIN agent_run r ON r.input_id=i.id WHERE i.id=$1 AND i.conversation_id=$2 AND i.owner_id=$3",
+        "SELECT i.id,i.conversation_revision,r.status FROM input_event i JOIN agent_run r ON r.input_id=i.id WHERE i.id=$1 AND i.conversation_id=$2 AND i.owner_id=$3",
         [b.replyToInputId, id, identity.ownerId],
       )
     ).rows[0];
     if (
       !prior ||
+      prior.conversation_revision !== conversation.accepted_revision ||
       !["clarification", "needs_clarification"].includes(prior.status)
     )
       throw new PublicError(409, "INVALID_REPLY", "请核对当前澄清问题。");
@@ -93,6 +94,7 @@ export async function loadConversationContext(
       replyToInputId: r.reply_to_input_id ?? undefined,
       createdAt: new Date(r.created_at).toISOString(),
       text: r.text.slice(0, 500),
+      truncated: r.text.length > 500,
       timeZone: r.time_zone,
       status: r.status,
       message: r.message?.slice(0, 500),

@@ -11,7 +11,8 @@
     "start": "node dist/main.js",
     "test": "vitest run",
     "contract": "node dist/export-contract.js",
-    "model:smoke": "node dist/model-smoke.js"
+    "model:smoke": "node dist/model-smoke.js",
+    "model:eval": "node dist/model-eval.js"
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "1.1.0",

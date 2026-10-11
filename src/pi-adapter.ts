@@ -37,6 +37,7 @@ export interface AgentInput {
       inputId: string;
       replyToInputId?: string;
       createdAt?: string;
+      truncated?: boolean;
       text: string;
       timeZone: string;
       status: string;
@@ -327,7 +328,7 @@ export async function interpret(
       invalidRaw = calls.some(
         (c) =>
           c.type === "toolCall" &&
-          c.name === "propose_reminder" &&
+          ["propose_reminder", "propose_change"].includes(c.name) &&
           (!c.arguments ||
             typeof c.arguments !== "object" ||
             Object.values(c.arguments).some(

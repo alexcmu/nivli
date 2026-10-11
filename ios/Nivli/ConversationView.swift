@@ -11,6 +11,7 @@ private struct ConversationDraft: Codable {
     var conversationId:String?
     var replyToInputId:String?
     var taskId:String?
+    var cancelKey:String?
 }
 
 struct ConversationView: View {
@@ -47,7 +48,7 @@ struct ConversationView: View {
                     GroupBox { VStack(alignment:.leading,spacing:8) {
                         Text(item.text).font(.body)
                         if let task=item.task {
-                            Text(task.title).bold();Text(task.status == "active" ? "当前事项" : task.status == "completed" ? "已完成" : "已取消")
+                            Text(task.title).bold();Text(repository.notifications.localStatus[task.id] ?? reminderStatus(task.reminder));ForEach(task.sources,id: \.id){Text("来源："+$0.text).font(.footnote)};Text(task.status == "active" ? "当前事项" : task.status == "completed" ? "已完成" : "已取消")
                             if let reminder=task.reminder {Text(taskDate(reminder.instant,zone:reminder.timeZone));Text("时区："+reminder.timeZone)}
                             if let deadline=task.deadline {Text("截止："+(deadline.date ?? deadline.instant ?? ""))}
                             NavigationLink("查看最新事项和来源") {TaskDetailView(initial:task,connection:connection)}
@@ -56,9 +57,9 @@ struct ConversationView: View {
                     }.frame(maxWidth:.infinity,alignment:.leading)}
                 }}
                 if let message { Text(message) }
-                if let cost {Text("用量估算 $\(cost.usageUsd, specifier: "%.4f") · 预算占用 $\(cost.reservedUsd, specifier: "%.4f")，不代表供应商账单。" ).font(.footnote);if cost.unknownRequests>0 {Text("有请求未返回用量，预算暂按上限计入。").font(.footnote)}}
+                if let cost {Text("已确认用量估价 $\(cost.usageUsd, specifier: "%.4f") · 请求预留估算 $\(cost.reservedUsd, specifier: "%.4f")，不代表供应商账单。" ).font(.footnote);if cost.unknownRequests>0 {Text("有请求未返回用量，预算暂按上限计入。").font(.footnote)}}
                 if let error { Text(error).foregroundStyle(.red); Text("原话已保留。重试会沿用同一次交代；再次调用模型可能产生费用。").font(.footnote) }
-                if let saved {
+                if let saved,history?.messages.contains(where:{$0.task?.id==saved.id}) != true {
                     GroupBox("已保存事项") {
                         VStack(alignment: .leading, spacing: 10) {
                             Text(saved.title).font(.headline)
@@ -95,7 +96,8 @@ struct ConversationView: View {
     }
     private func cancel() async {
         guard let session=connection.saved,let id=draft.runId else{return}
-        do {_ = try await NivliAPI(server:session.server).cancelRun(id:id,key:UUID().uuidString,token:session.credentials.accessToken)}catch{self.error=error.localizedDescription}
+        let key=draft.cancelKey ?? UUID().uuidString;draft.cancelKey=key;persist()
+        do {_ = try await NivliAPI(server:session.server).cancelRun(id:id,key:key,token:session.credentials.accessToken)}catch{self.error=error.localizedDescription}
     }
     private func persist() { do { try store.save(draft) } catch { self.error = error.localizedDescription } }
     private func submit() {
@@ -137,7 +139,7 @@ struct ConversationView: View {
                         message = nil; error = nil
                     } else { message = run.message ?? "本次没有创建事项。" }
                     await refreshHistory()
-                    draft.text="";draft.submittedText=nil;draft.key=nil;draft.runId=nil;draft.replyToInputId=nil;draft.taskId=nil;draft.timeZone=nil;persist();return
+                    draft.text="";draft.submittedText=nil;draft.key=nil;draft.runId=nil;draft.cancelKey=nil;draft.replyToInputId=nil;draft.taskId=nil;draft.timeZone=nil;persist();return
                 case .clarification,.needs_clarification:
                     message = run.message ?? "请补充具体日期、时间与事项。"
                     draft.replyToInputId=run.inputId;draft.text="";draft.submittedText=nil;draft.key = nil; draft.runId = nil;draft.timeZone=nil;try store.save(draft);await refreshHistory(); return

@@ -454,3 +454,109 @@ test("concurrently accepted conversation inputs commit strictly in their persist
   fixtureMode = "valid";
   fixtureOverride = undefined;
 });
+test("several task references require explicit identity and selected task edits preserve deadline and original timezone during travel", async () => {
+  if (!worker)
+    worker = await startAgentWorker({
+      ...config,
+      model: {
+        model: "claude-sonnet-5-5",
+        apiKey: "external-fixture-key",
+        baseUrl:
+          "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+      },
+    });
+  fixtureMode = "valid";
+  fixtureOverride = {
+    deadlineDate: "2026-10-16",
+    deadlineExpression: "截止2026-10-16",
+    instruction: "明天上午9点提醒我提交材料，截止2026-10-16",
+  };
+  const first = (
+    await call("/v1/inputs", "POST", {
+      text: "明天上午9点提醒我提交材料，截止2026-10-16",
+      timeZone: "Asia/Shanghai",
+    })
+  ).body;
+  const created = await settle(first.runId);
+  fixtureOverride = { title: "买牛奶", instruction: "明天上午9点提醒我买牛奶" };
+  const second = (
+    await call("/v1/inputs", "POST", {
+      text: "明天上午9点提醒我买牛奶",
+      timeZone: "Asia/Shanghai",
+      conversationId: first.conversationId,
+    })
+  ).body;
+  expect((await settle(second.runId)).status).toBe("succeeded");
+  fixtureMode = "modify";
+  fixtureOverride = {
+    taskId: created.taskId,
+    expectedRevision: "1",
+    operation: "edit",
+    instruction: "改成9:30",
+    timeExpression: "9:30",
+    instant: "2026-10-12T01:30:00Z",
+    localDateTime: "2026-10-12T09:30:00",
+  };
+  const ambiguous = (
+    await call("/v1/inputs", "POST", {
+      text: "改成9:30",
+      timeZone: "America/New_York",
+      conversationId: first.conversationId,
+    })
+  ).body;
+  expect((await settle(ambiguous.runId)).status).toBe("needs_clarification");
+  const selected = (
+    await call("/v1/inputs", "POST", {
+      text: "改成9:30",
+      timeZone: "America/New_York",
+      conversationId: first.conversationId,
+      taskId: created.taskId,
+    })
+  ).body;
+  expect((await settle(selected.runId)).status).toBe("succeeded");
+  const task = (await call("/v1/tasks/" + created.taskId)).body;
+  expect(task).toMatchObject({
+    revision: 2,
+    deadline: { date: "2026-10-16", timeZone: "Asia/Shanghai" },
+    reminder: {
+      instant: "2026-10-12T01:30:00.000Z",
+      timeZone: "Asia/Shanghai",
+    },
+  });
+  fixtureMode = "valid";
+  fixtureOverride = undefined;
+}, 15000);
+test("vague postponement, unspecified Friday and nonexistent DST clocks cannot create definite reminders", async () => {
+  if (!worker)
+    worker = await startAgentWorker({
+      ...config,
+      model: {
+        model: "claude-sonnet-5-5",
+        apiKey: "external-fixture-key",
+        baseUrl:
+          "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+      },
+    });
+  fixtureMode = "valid";
+  for (const [text, timeZone, override] of [
+    ["晚点提醒我提交材料", "Asia/Shanghai", { timeExpression: "晚点" }],
+    ["周五提醒我提交材料", "Asia/Shanghai", { timeExpression: "周五" }],
+    [
+      "2027-03-14 2:30提醒我检查",
+      "America/Los_Angeles",
+      {
+        title: "检查",
+        timeExpression: "2027-03-14 2:30",
+        instant: "2027-03-14T10:30:00Z",
+        localDateTime: "2027-03-14T02:30:00",
+      },
+    ],
+  ] as const) {
+    fixtureOverride = { ...override, timeZone, instruction: text };
+    const q = (await call("/v1/inputs", "POST", { text, timeZone })).body;
+    const run = await settle(q.runId);
+    expect(run.status).toBe("needs_clarification");
+    expect(run.taskId).toBeUndefined();
+  }
+  fixtureOverride = undefined;
+}, 15000);
