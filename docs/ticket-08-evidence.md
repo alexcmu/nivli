@@ -8,7 +8,7 @@ Conversation history returns the most recent 30 messages and rereads the current
 
 Public HTTP tests use real PostgreSQL 17, pg-boss and the published Pi 1.1.0 adapter, replacing only the external Anthropic SSE boundary. The conversation tests cover API/worker restart and history, linked answers and source preservation, Chinese `九点半` edits, late edits versus completion, concurrent ordered inputs, multiple task ambiguity and explicit selection during travel with an independent deadline, vague postponement, unspecified Friday and a nonexistent DST clock. Existing agent tests cover repeated DST clocks, wishes, invalid authority, request/tool limits and provider failures. Swift contract tests decode conversation history and lifecycle states.
 
-Full backend, Swift and build results are recorded in the final issue comment after integration verification. OpenAPI is generated using a fresh schema-version 4 fixture, rather than modifying a user's server.
+Final merged verification: TypeScript build passed; 53 public HTTP tests across six files passed (18.89 seconds); 14 Swift tests passed; generic iOS Simulator build passed. Conversation-specific seven HTTP tests also passed. OpenAPI is generated using a fresh schema-version 4 fixture, rather than modifying a user's server.
 
 ## Native evidence
 

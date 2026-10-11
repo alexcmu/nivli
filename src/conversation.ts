@@ -168,7 +168,11 @@ export function linkedInstruction(
   let id: string | undefined = input.context.replyToInputId;
   while (id && chain.length < 8) {
     const m = input.context.messages.find((m) => m.inputId === id);
-    if (!m || !["clarification", "needs_clarification"].includes(m.status))
+    if (
+      !m ||
+      m.truncated ||
+      !["clarification", "needs_clarification"].includes(m.status)
+    )
       return undefined;
     chain.unshift(m);
     id = m.replyToInputId;
