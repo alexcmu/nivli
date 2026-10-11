@@ -23,15 +23,21 @@ type Case = {
   reason: string;
   forbiddenActions: string[];
 };
-const cases = JSON.parse(
+const allCases = JSON.parse(
   await readFile("evals/conversation-cases.json", "utf8"),
 ) as Case[];
+const selectedIds = process.env.NIVLI_EVAL_CASE_IDS?.split(",");
+const cases = selectedIds
+  ? allCases.filter((sample) => selectedIds.includes(sample.id))
+  : allCases;
+if (selectedIds?.some((id) => !allCases.some((sample) => sample.id === id)))
+  throw new Error("Unknown evaluation case ID");
 const output =
   process.env.NIVLI_EVAL_REPORT ?? "/tmp/nivli-conversation-evaluation.json";
 const budget = Number(process.env.MODEL_DAILY_BUDGET_USD ?? "1");
-if (!Number.isFinite(budget) || budget <= 0 || budget > 10)
+if (!Number.isFinite(budget) || budget <= 0 || budget > 2)
   throw new Error(
-    "Evaluation budget must be greater than zero and at most USD 10",
+    "Evaluation budget must be greater than zero and at most USD 2",
   );
 const report: {
   status: string;
@@ -40,7 +46,10 @@ const report: {
   budgetUsd: number;
   invoiceAvailable: boolean;
   cases: number;
-  results: unknown[];
+  usageUsd: number;
+  unknownRequests: number;
+  requests: number;
+  results: any[];
 } = {
   status: "not_run",
   model: "claude-sonnet-5-5",
@@ -48,6 +57,9 @@ const report: {
   budgetUsd: budget,
   invoiceAvailable: false,
   cases: cases.length,
+  usageUsd: 0,
+  unknownRequests: 0,
+  requests: 0,
   results: [],
 };
 const model = await readModelConfig();
@@ -69,66 +81,91 @@ if (process.env.NIVLI_REAL_MODEL_EVAL !== "1" || !model) {
   const root =
     process.env.DATABASE_URL ??
     "postgres://nivli:nivli@127.0.0.1:55432/nivli_test";
-  const maintenance = new pg.Pool({ connectionString: root }),
-    name = "model_eval_" + randomUUID().replaceAll("-", ""),
-    url = new URL(root);
-  url.pathname = "/" + name;
-  let app: Awaited<ReturnType<typeof createApp>> | undefined,
-    worker: Awaited<ReturnType<typeof startAgentWorker>> | undefined;
-  try {
-    await maintenance.query("CREATE DATABASE " + name);
-    await migrate(url.toString());
-    let clock = new Date(cases[0]!.now);
-    const admin = randomBytes(32).toString("hex");
-    const config = {
-      databaseUrl: url.toString(),
-      adminSecret: admin,
-      publicUrl: "https://isolated-evaluation.invalid",
-      environmentName: "Isolated model evaluation",
-      pushMode: "disabled" as const,
-      modelDataDestination: model.baseUrl,
-      clock: () => clock,
-      model: { ...model, dailyBudgetUsd: budget },
-    };
-    app = await createApp(config);
-    const base = await app.listen({ host: "127.0.0.1", port: 0 });
-    worker = await startAgentWorker(config);
-    let token = "";
-    async function call(
-      path: string,
-      method = "GET",
-      body?: unknown,
-      authorization = token,
-    ) {
-      const r = await fetch(base + path, {
-        method,
-        headers: {
-          authorization: "Bearer " + authorization,
-          "idempotency-key": randomUUID(),
-          ...(body ? { "content-type": "application/json" } : {}),
-        },
-        ...(body ? { body: JSON.stringify(body) } : {}),
+  const maintenance = new pg.Pool({ connectionString: root });
+  let committedUsd = 0;
+  report.status = "running";
+  for (const sample of cases) {
+    if (budget - committedUsd < 0.141312) {
+      if (report.status !== "partial_failure")
+        report.status = "budget_exhausted";
+      report.results.push({
+        id: sample.id,
+        status: "unevaluated",
+        reason: "budget_exhausted",
       });
-      const value = (await r.json()) as any;
-      if (!r.ok) throw new Error("Public evaluation API failed: " + r.status);
-      return value;
+      continue;
     }
-    const pairing = await call("/v1/admin/pairings", "POST", {}, admin);
-    token = (
-      await call("/v1/pairings/claim", "POST", {
-        code: pairing.code,
-        deviceName: "Isolated evaluation",
-      })
-    ).accessToken;
-    report.status = "completed";
-    for (const sample of cases) {
-      clock = new Date(sample.now);
+    const name = "model_eval_" + randomUUID().replaceAll("-", ""),
+      url = new URL(root);
+    url.pathname = "/" + name;
+    const steps: any[] = [];
+    let account: (() => Promise<any>) | undefined;
+    let app: Awaited<ReturnType<typeof createApp>> | undefined,
+      worker: Awaited<ReturnType<typeof startAgentWorker>> | undefined;
+    try {
+      await maintenance.query("CREATE DATABASE " + name);
+      await migrate(url.toString());
+      const clock = new Date(sample.now);
+      const admin = randomBytes(32).toString("hex");
+      const config = {
+        databaseUrl: url.toString(),
+        adminSecret: admin,
+        publicUrl: "https://isolated-evaluation.invalid",
+        environmentName: "Isolated model evaluation",
+        pushMode: "disabled" as const,
+        modelDataDestination: model.baseUrl,
+        clock: () => clock,
+        model: { ...model, dailyBudgetUsd: budget - committedUsd },
+      };
+      app = await createApp(config);
+      const base = await app.listen({ host: "127.0.0.1", port: 0 });
+      worker = await startAgentWorker(config);
+      let token = "";
+      async function call(
+        path: string,
+        method = "GET",
+        body?: unknown,
+        authorization = token,
+      ) {
+        const r = await fetch(base + path, {
+          method,
+          headers: {
+            authorization: "Bearer " + authorization,
+            "idempotency-key": randomUUID(),
+            ...(body ? { "content-type": "application/json" } : {}),
+          },
+          ...(body ? { body: JSON.stringify(body) } : {}),
+        });
+        const value = (await r.json()) as any;
+        if (!r.ok) throw new Error("Public evaluation API failed: " + r.status);
+        return value;
+      }
+      account = () => call("/v1/admin/model/budget", "GET", undefined, admin);
+      const pairing = await call("/v1/admin/pairings", "POST", {}, admin);
+      token = (
+        await call("/v1/pairings/claim", "POST", {
+          code: pairing.code,
+          deviceName: "Isolated evaluation",
+        })
+      ).accessToken;
+      async function allTasks() {
+        const tasks = [];
+        let cursor: string | undefined;
+        do {
+          const page = await call(
+            "/v1/tasks?status=all&limit=100" +
+              (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""),
+          );
+          tasks.push(...page.tasks);
+          cursor = page.nextCursor ?? undefined;
+        } while (cursor);
+        return tasks;
+      }
       let conversationId: string | undefined,
         previousInputId: string | undefined,
         previousTaskId: string | undefined;
-      const steps = [];
       for (const step of sample.messages) {
-        const before = (await call("/v1/tasks")).tasks;
+        const before = await allTasks();
         const signature = (tasks: any[]) =>
           JSON.stringify(tasks.map((t) => [t.id, t.revision, t.status]).sort());
         const q = await call("/v1/inputs", "POST", {
@@ -145,7 +182,7 @@ if (process.env.NIVLI_REAL_MODEL_EVAL !== "1" || !model) {
           if (!["queued", "running"].includes(run.status)) break;
           await new Promise((r) => setTimeout(r, 500));
         }
-        const after = (await call("/v1/tasks")).tasks,
+        const after = await allTasks(),
           task = run.taskId ? await call("/v1/tasks/" + run.taskId) : undefined;
         let passed = false;
         if (step.expected === "create")
@@ -174,8 +211,14 @@ if (process.env.NIVLI_REAL_MODEL_EVAL !== "1" || !model) {
         if (step.expectedStatus)
           passed = passed && task?.status === step.expectedStatus;
         steps.push({
+          evaluated: run.errorCode !== "MODEL_BUDGET_EXHAUSTED",
+
           expected: step.expected,
+          actualInstant: task?.reminder?.instant ?? null,
+          actualDeadline: task?.deadline?.date ?? null,
+          actualTaskStatus: task?.status ?? null,
           actual: run.status,
+          publicMessage: run.message,
           passed,
           requests: run.requests,
           toolCalls: run.toolCalls,
@@ -185,27 +228,66 @@ if (process.env.NIVLI_REAL_MODEL_EVAL !== "1" || !model) {
         previousInputId = q.inputId;
         previousTaskId = run.taskId ?? previousTaskId;
       }
+      const accounting = await call(
+        "/v1/admin/model/budget",
+        "GET",
+        undefined,
+        admin,
+      );
+      report.usageUsd += accounting.usageUsd;
+      report.unknownRequests += accounting.unknownRequests;
+      report.requests += accounting.requests;
+      committedUsd += budget - committedUsd - accounting.remainingUsd;
       report.results.push({
         id: sample.id,
         language: sample.language,
-        passed: steps.every((s) => s.passed),
+        status: steps.some((s) => !s.evaluated) ? "unevaluated" : "evaluated",
+        passed: steps.every((s) => s.evaluated)
+          ? steps.every((s) => s.passed)
+          : null,
         steps,
       });
+    } catch {
+      report.status = "partial_failure";
+      report.results.push({
+        id: sample.id,
+        status: "unevaluated",
+        reason: "evaluation_api_failure",
+        steps,
+      });
+      try {
+        const accounting = await account?.();
+        if (!accounting) throw new Error("No accounting");
+        report.usageUsd += accounting.usageUsd;
+        report.unknownRequests += accounting.unknownRequests;
+        report.requests += accounting.requests;
+        committedUsd += budget - committedUsd - accounting.remainingUsd;
+      } catch {
+        // If usage cannot be observed, further paid requests are unsafe.
+        committedUsd = budget;
+      }
+    } finally {
+      await worker?.stop();
+      await app?.close();
+      for (let attempt = 0; attempt < 50; attempt++) {
+        const active = await maintenance.query(
+          "SELECT pid FROM pg_stat_activity WHERE datname=$1",
+          [name],
+        );
+        if (active.rowCount === 0) {
+          await maintenance.query('DROP DATABASE IF EXISTS "' + name + '"');
+          break;
+        }
+        if (attempt === 49)
+          throw new Error("Evaluation database did not drain after shutdown");
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+      await writeFile(output, JSON.stringify(report, null, 2) + "\n");
     }
-  } catch {
-    report.status = "failed";
-    throw new Error(
-      "Evaluation interrupted; inspect partial report, which is not a completed evaluation.",
-    );
-  } finally {
-    await worker?.stop();
-    await app?.close();
-    await maintenance.query(
-      "DROP DATABASE IF EXISTS " + name + " WITH (FORCE)",
-    );
-    await maintenance.end();
-    await writeFile(output, JSON.stringify(report, null, 2) + "\n");
   }
+  await maintenance.end();
+  if (report.status === "running") report.status = "completed";
+  await writeFile(output, JSON.stringify(report, null, 2) + "\n");
   console.log(
     "Real model evaluation report written; inspect individual labeled outcomes.",
   );
