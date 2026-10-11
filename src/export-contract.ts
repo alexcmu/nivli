@@ -8,7 +8,13 @@ import {
   ErrorDTO,
 } from "./contracts.js";
 import { GmailStatusDTO, GmailConsentDTO } from "./gmail-routes.js";
-import { CreateTaskDTO, TaskDTO, TaskPageDTO } from "./task-contracts.js";
+import {
+  CreateTaskDTO,
+  TaskDTO,
+  TaskPageDTO,
+  NotificationPlansDTO,
+  NotificationPlanCommandDTO,
+} from "./task-contracts.js";
 import { createApp } from "./app.js";
 const app = await createApp({
   databaseUrl:
@@ -40,6 +46,8 @@ for (const [name, schema] of Object.entries({
   "gmail-status": GmailStatusDTO,
   "gmail-consent": GmailConsentDTO,
   task: TaskDTO,
+  "notification-plans": NotificationPlansDTO,
+  "notification-plan-command": NotificationPlanCommandDTO,
   "task-page": TaskPageDTO,
   "task-command": CreateTaskDTO,
   environment: EnvironmentDTO,

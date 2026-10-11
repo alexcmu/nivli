@@ -58,7 +58,8 @@ struct SecureStore {
         let saved = SavedSession(server: server, credentials: credentials)
         try store.save(saved); self.saved = saved; self.environment = environment; verified = true; error = nil
     }
-    func forgetLocalCredentials() {
+    func forgetLocalCredentials() async {
+        if let saved { await NotificationCoordinator.clearLocal(saved) }
         do {
             try store.remove(); try SecureStore(account: "pairing-attempt").remove()
             saved = nil; environment = nil; verified = false; error = nil
@@ -71,6 +72,7 @@ struct SecureStore {
             saved.revocationKey = saved.revocationKey ?? UUID().uuidString
             try store.save(saved); self.saved = saved
             try await NivliAPI(server: saved.server).revoke(token: saved.credentials.accessToken, key: saved.revocationKey!)
+            await NotificationCoordinator.clearLocal(saved)
             try store.remove(); self.saved = nil; environment = nil; verified = false; error = nil
         } catch { self.error = error.localizedDescription }
     }

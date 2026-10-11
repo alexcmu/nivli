@@ -27,3 +27,9 @@
 - [ ] 公开 API 测试验证认领、旧回执拒绝及丢失回执恢复；真机验证一条本地通知、锁屏/后台/离线、权限关闭和容量处理，记录系统版本及结果。
 
 **完成条件：** 验收项全部通过并附可复核证据；需要外部凭据、真机或审核而尚未验证的项保持未完成。先满足所有 Blocked by，再开始实施；ready-for-agent 表示规格可实施，不表示依赖已经完成。
+
+## Comments
+
+- 2026-10-11: Software implementation committed on `implement/nivli-03` and merged integration `0424ac1`. Atomic local intent/identity and strict current-owner/version receipts, quiet confirmation and honest failure states are implemented. Evidence: [ticket-03-evidence](../../../docs/ticket-03-evidence.md). Post-merge backend 25 tests, Swift 11 tests and generic iOS build passed. Device validation is waiting for the connected iPhone to unlock; locked/offline display, real permission-off and measured capacity remain unchecked. Status remains `ready-for-agent`; this is not a closure claim. Accessibility audits are waived by the user.
+
+- 2026-10-11 follow-up: Real iPhone platform test passed (one test, 20.031 seconds): 16 OS-pending requests, conservative next-request capacity rejection, persistent journal reopening, actual generic background banner and delivered record. Locked/offline display and real permission-off validation remain incomplete; no closure. The user's later steering prioritizes the AI agent path, with remaining native verification continuing separately. See the same evidence document for the actual result bundle.
