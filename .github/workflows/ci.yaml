@@ -1,0 +1,55 @@
+name: Verify
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17-bookworm@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826
+        env:
+          POSTGRES_USER: nivli
+          POSTGRES_PASSWORD: nivli
+          POSTGRES_DB: nivli_test
+        ports: ["55432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U nivli -d nivli_test"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      DATABASE_URL: postgresql://nivli:nivli@127.0.0.1:55432/nivli_test
+      PUBLIC_URL: https://nivli.test
+      ENVIRONMENT_NAME: CI
+      PUSH_MODE: disabled
+      MODEL_DATA_DESTINATION: No model configured
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Temporary administrator credential
+        run: |
+          openssl rand -hex 32 > "$RUNNER_TEMP/admin-secret"
+          echo "ADMIN_SECRET_FILE=$RUNNER_TEMP/admin-secret" >> "$GITHUB_ENV"
+      - run: npm start -- migrate
+      - run: npm test
+      - run: npm run contract
+      - name: Compose deployment and migration failure checks
+        run: deploy/check-compose.sh
+  ios:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run contract
+      - name: Native build and tests
+        run: ios/ci.sh

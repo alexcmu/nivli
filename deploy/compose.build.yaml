@@ -1,0 +1,18 @@
+# Local development only. Production uses a published digest through deploy/up.sh.
+services:
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+  delivery:
+    build:
+      context: .
+      dockerfile: Dockerfile
