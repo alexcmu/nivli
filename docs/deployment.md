@@ -22,7 +22,7 @@
 
 ## 配对与客户端
 
-管理员通过受保护的 `/v1/admin/pairing-codes` 创建短时一次性配对码。凭据放在 Authorization header，禁止放到 URL 或代理访问日志中；具体请求格式与过期策略见 OpenAPI。不要在手机输入管理员凭据。客户端先读取公开环境信息并展示 HTTPS 主机、环境名称、推送模式与模型去向，经用户确认后消费配对码。手动输入始终可用；扫码只输入同等信息。设备会话保存到 Keychain，重启恢复连接，过期/吊销按照 API 契约处理。
+管理员通过受保护的 `/v1/admin/pairings` 创建短时一次性配对码。凭据放在 Authorization header，禁止放到 URL 或代理访问日志中；具体请求格式与过期策略见 OpenAPI。不要在手机输入管理员凭据。客户端先读取公开环境信息并展示 HTTPS 主机、环境名称、推送模式与模型去向，经用户确认后消费配对码。手动输入始终可用；扫码只输入同等信息。设备会话保存到 Keychain，重启恢复连接，过期/吊销按照 API 契约处理。
 
 反向代理不得记录 Authorization、Cookie、请求正文或配对码。默认应用日志避免内容与凭据，代理和外部托管平台的日志策略仍由部署者配置。
 
@@ -45,3 +45,7 @@ CI 在真实 PostgreSQL 17 上运行 `npm ci`、build、migration、API 测试�
 停止：`docker compose --env-file deploy/.env down` 保留数据库卷。卸载容器后仍有数据库卷、secret、客户端 Keychain 和外部代理记录；只有明确决定永久删除数据时才手动删除相应文件/卷。不要将 `down --volumes` 用于重启或升级。
 
 当前仅具备 ticket 01 初始迁移。完整升级、加密离机备份、恢复验证及提醒重建属于 ticket 25；尚未验收 RPO 24 小时/RTO 1 小时。生产升级前应在停止写入后独立备份数据库与配置/secret，在恢复副本验证迁移，保留旧镜像 digest 与原数据备份；不要把未经验证的升级当作无损承诺。备份包含配对与设备会话信息，应加密并限制访问。
+
+## 本次验证证据
+
+2026-10-11 在 Docker Desktop（linux/arm64）以本票真实后端源码运行 `BUILDX_BUILDER=desktop-linux deploy/check-compose.sh`，成功构建 Node 24 多阶段镜像、启动 PostgreSQL 17/迁移/API/两个 worker，API readiness 为 200；停止数据库并重启 API 后，恢复数据库再次达到 ready；替换 migration 为退出 73 的入口后，Compose 返回失败，API/agent/delivery 均未运行。测试退出已清理随机项目的数据卷。`deploy/up.sh` 另验证拒绝无 digest 的 local tag。当前证据不包含远程 GitHub Actions 执行、多架构发布、TLS 代理或真机结果。
