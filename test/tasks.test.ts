@@ -1,3 +1,4 @@
+import { dropFixtureDatabase } from "./database-cleanup.js";
 import { beforeAll, afterAll, test, expect } from "vitest";
 import pg from "pg";
 import { randomUUID } from "node:crypto";
@@ -73,7 +74,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await app?.close();
-  await maintenance.query(`DROP DATABASE ${name} WITH (FORCE)`);
+  await dropFixtureDatabase(maintenance, name);
   await maintenance.end();
 });
 test("manual task is persistent with independent deadline, evidence and truthful unscheduled reminder", async () => {

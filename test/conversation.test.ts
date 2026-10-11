@@ -1,3 +1,4 @@
+import { dropFixtureDatabase } from "./database-cleanup.js";
 import { createServer } from "node:http";
 import { startAgentWorker } from "../src/agent-worker.js";
 import { beforeAll, afterAll, test, expect } from "vitest";
@@ -231,7 +232,7 @@ afterAll(async () => {
   await worker?.stop();
   await app?.close();
   await new Promise<void>((r) => provider.close(() => r()));
-  await maintenance.query(`DROP DATABASE ${name} WITH (FORCE)`);
+  await dropFixtureDatabase(maintenance, name);
   await maintenance.end();
 });
 
@@ -757,12 +758,36 @@ test("a retried input can be cancelled again with a new operation and rejects bo
   fixtureWait = new Promise<void>((r) => {
     release = r;
   });
-  const retried = await call("/v1/runs/" + first.runId + "/retry", "POST", {});
-  expect(retried.body.runId).toBe(first.runId);
-  for (let n = 0; n < 100 && payloads.length <= requests; n++)
-    await new Promise((r) => setTimeout(r, 30));
-  // Old operation is a replay; a new attempt must use a distinct cancellation key.
+  const upstream = base;
+  let acknowledgeRetry!: () => void;
+  const delayedAcknowledgement = new Promise<void>((r) => {
+    acknowledgeRetry = r;
+  });
+  const transport = createServer(async (req, res) => {
+    let body = "";
+    for await (const chunk of req) body += chunk;
+    const response = await fetch(upstream + req.url, {
+      method: req.method,
+      headers: {
+        authorization: req.headers.authorization!,
+        "idempotency-key": req.headers["idempotency-key"] as string,
+        ...(body ? { "content-type": "application/json" } : {}),
+      },
+      ...(body ? { body } : {}),
+    });
+    const payload = await response.text();
+    if (req.url?.endsWith("/retry")) await delayedAcknowledgement;
+    res.writeHead(response.status, { "content-type": "application/json" });
+    res.end(payload);
+  });
+  await new Promise<void>((r) => transport.listen(0, "127.0.0.1", r));
+  base = "http://127.0.0.1:" + (transport.address() as { port: number }).port;
+  const pendingRetry = call("/v1/runs/" + first.runId + "/retry", "POST", {});
+  // The server commits and starts work while the transport withholds its acknowledgement.
   try {
+    for (let n = 0; n < 100 && payloads.length <= requests; n++)
+      await new Promise((r) => setTimeout(r, 30));
+    expect(payloads.length).toBeGreaterThan(requests);
     const replay = await call(
       "/v1/runs/" + first.runId + "/cancel",
       "POST",
@@ -771,12 +796,19 @@ test("a retried input can be cancelled again with a new operation and rejects bo
     );
     expect(replay.body.status).toBe("running");
     expect((await call("/v1/runs/" + first.runId)).body.status).toBe("running");
+    acknowledgeRetry();
+    const retried = await pendingRetry;
+    expect(retried.body.runId).toBe(first.runId);
     const secondKey = randomUUID();
     expect(
       (await call("/v1/runs/" + first.runId + "/cancel", "POST", {}, secondKey))
         .body.status,
     ).toBe("cancelled");
   } finally {
+    acknowledgeRetry();
+    await pendingRetry;
+    base = upstream;
+    await new Promise<void>((r) => transport.close(() => r()));
     fixtureWait = undefined;
     release();
   }
@@ -849,3 +881,66 @@ test("queued relative dates remain anchored to input receipt across local midnig
   expect((await settle(late.runId)).status).toBe("needs_clarification");
   fixtureOverride = undefined;
 }, 15000);
+
+test("conditional creation proposals clarify while explicit reminders and words containing if stay authorized", async () => {
+  currentInstant = "2026-10-11T12:00:00Z";
+  if (!worker)
+    worker = await startAgentWorker({
+      ...config,
+      model: {
+        model: "claude-sonnet-5-5",
+        apiKey: "external-fixture-key",
+        baseUrl:
+          "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+      },
+    });
+  fixtureMode = "valid";
+  const before = (await call("/v1/tasks")).body.tasks;
+  for (const text of [
+    "If it rains, remind me tomorrow at 09:00 to take an umbrella",
+    "Unless it rains, remind me tomorrow at 09:00 to take an umbrella",
+    "When it rains, remind me tomorrow at 09:00 to take an umbrella",
+    "假如下雨，明天上午9点提醒我带伞",
+    "若下雨，明天上午9点提醒我带伞",
+    "一旦下雨，明天上午9点提醒我带伞",
+  ]) {
+    fixtureOverride = {
+      instruction: text,
+      timeExpression: text.includes("tomorrow")
+        ? "tomorrow at 09:00"
+        : "明天上午9点",
+      title: "带伞",
+    };
+    const accepted = (
+      await call("/v1/inputs", "POST", { text, timeZone: "Asia/Shanghai" })
+    ).body;
+    expect((await settle(accepted.runId)).status, text).toBe(
+      "needs_clarification",
+    );
+    expect((await call("/v1/tasks")).body.tasks, text).toEqual(before);
+    const history = (await call("/v1/conversations/" + accepted.conversationId))
+      .body;
+    expect(history.messages[0].text).toBe(text);
+  }
+  for (const text of [
+    "Remind me tomorrow at 09:00 to buy a gift",
+    "明天上午9点提醒我带伞",
+  ]) {
+    fixtureOverride = {
+      instruction: text,
+      timeExpression: text.includes("tomorrow")
+        ? "tomorrow at 09:00"
+        : "明天上午9点",
+      title: text.includes("gift") ? "buy a gift" : "带伞",
+    };
+    const accepted = (
+      await call("/v1/inputs", "POST", { text, timeZone: "Asia/Shanghai" })
+    ).body;
+    const run = await settle(accepted.runId);
+    expect(run.status, text).toBe("succeeded");
+    expect((await call("/v1/tasks/" + run.taskId)).body.sources[0].text).toBe(
+      text,
+    );
+  }
+  fixtureOverride = undefined;
+}, 30000);

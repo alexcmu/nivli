@@ -65,15 +65,15 @@ struct ConversationView: View {
             }.padding()
         }.navigationTitle("交代")
             .sheet(isPresented: $manual) { NavigationStack { ManualTaskView(connection: connection, repository: repository, initialTitle: draft.text) } }
-            .onChange(of: draft.text) { if !busy && draft.text != draft.submittedText { draft.key = nil; draft.runId = nil; draft.retryKey = nil; draft.cancelKey = nil; failedRun = false; draft.submittedText = nil; draft.timeZone = nil; saved = nil; message = nil }; persist() }
+            .onChange(of: draft.text) { if !busy && draft.text != draft.submittedText { draft.key = nil; draft.runId = nil; draft.retryKey = nil; draft.cancelKey = nil; draft.cancellationRequested = nil; failedRun = false; draft.submittedText = nil; draft.timeZone = nil; saved = nil; message = nil }; persist() }
             .task {
                 do { draft = try store.read(ConversationDraft.self) ?? ConversationDraft() } catch { self.error = error.localizedDescription }
                 if let session = connection.saved { model = try? await NivliAPI(server: session.server).model(token: session.credentials.accessToken) }
                 if let session=connection.saved,let id=draft.conversationId {history=try? await NivliAPI(server:session.server).conversation(id:id,token:session.credentials.accessToken)}
-                if draft.runId != nil { pollTrigger += 1 }
+                if draft.runId != nil || (draft.cancellationRequested == true && draft.key != nil) { pollTrigger += 1 }
             }
-            .onAppear {Task {await refreshHistory()};if draft.runId != nil && !busy { pollTrigger += 1 } }
-            .onChange(of: scenePhase) {if scenePhase == .active {Task {await refreshHistory()};if draft.runId != nil && !busy {pollTrigger += 1}} }
+            .onAppear {Task {await refreshHistory()};if (draft.runId != nil || (draft.cancellationRequested == true && draft.key != nil)) && !busy { pollTrigger += 1 } }
+            .onChange(of: scenePhase) {if scenePhase == .active {Task {await refreshHistory()};if (draft.runId != nil || (draft.cancellationRequested == true && draft.key != nil)) && !busy {pollTrigger += 1}} }
             .task(id: pollTrigger) { if pollTrigger > 0 { await process() } }
     }
     private func refreshHistory() async {
@@ -83,9 +83,18 @@ struct ConversationView: View {
         history=result
     }
     private func cancel() async {
-        guard let session=connection.saved,let id=draft.runId else{return}
-        let key=draft.cancellationKey();persist()
-        do {_ = try await NivliAPI(server:session.server).cancelRun(id:id,key:key,token:session.credentials.accessToken)}catch{self.error=error.localizedDescription}
+        draft.requestCancellation()
+        do { try store.save(draft) } catch { self.error = error.localizedDescription; return }
+        guard let session = connection.saved else { return }
+        do { try await sendPendingCancellation(session) } catch { self.error = error.localizedDescription }
+    }
+    private func sendPendingCancellation(_ session: SavedSession) async throws {
+        guard let id = draft.runId, let key = draft.pendingCancellationKey() else { return }
+        try store.save(draft)
+        _ = try await NivliAPI(server:session.server).cancelRun(id:id,key:key,token:session.credentials.accessToken)
+        try Task.checkCancellation()
+        draft.acknowledgeCancellation(key: key)
+        try store.save(draft)
     }
     private func persist() { do { try store.save(draft) } catch { self.error = error.localizedDescription } }
     private func submit() {
@@ -110,6 +119,7 @@ struct ConversationView: View {
                 _ = try await api.retryRun(id: runId, key: retryKey, token: session.credentials.accessToken)
                 try Task.checkCancellation(); draft.acknowledgeRetry(key: retryKey); failedRun = false; try store.save(draft)
             }
+            try await sendPendingCancellation(session)
             while !Task.isCancelled {
                 let run = try await api.run(id: runId, token: session.credentials.accessToken)
                 try Task.checkCancellation()
@@ -127,10 +137,10 @@ struct ConversationView: View {
                         message = nil; error = nil
                     } else { message = run.message ?? "本次没有创建事项。" }
                     await refreshHistory()
-                    draft.text="";draft.submittedText=nil;draft.key=nil;draft.runId=nil;draft.cancelKey=nil;draft.replyToInputId=nil;draft.taskId=nil;draft.timeZone=nil;persist();return
+                    draft.text="";draft.submittedText=nil;draft.key=nil;draft.runId=nil;draft.cancelKey=nil;draft.cancellationRequested=nil;draft.replyToInputId=nil;draft.taskId=nil;draft.timeZone=nil;persist();return
                 case .clarification,.needs_clarification:
                     message = run.message ?? "请补充具体日期、时间与事项。"
-                    draft.replyToInputId=run.inputId;draft.text="";draft.submittedText=nil;draft.key = nil; draft.runId = nil;draft.timeZone=nil;try store.save(draft);await refreshHistory(); return
+                    draft.replyToInputId=run.inputId;draft.text="";draft.submittedText=nil;draft.key = nil; draft.runId = nil;draft.cancelKey=nil;draft.cancellationRequested=nil;draft.timeZone=nil;try store.save(draft);await refreshHistory(); return
                 case .failed,.cancelled,.timed_out:
                     await refreshHistory()
                     failedRun = true; error = run.message ?? "模型暂时无法处理，请手动设置或稍后再试。"; return

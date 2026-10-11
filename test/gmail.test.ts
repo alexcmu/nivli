@@ -1,3 +1,4 @@
+import { dropFixtureDatabase } from "./database-cleanup.js";
 import { beforeAll, afterAll, test, expect } from "vitest";
 import pg from "pg";
 import { randomUUID } from "node:crypto";
@@ -178,7 +179,7 @@ afterAll(async () => {
   await worker?.stop();
   await app?.close();
   provider.close();
-  await maintenance.query(`DROP DATABASE ${name} WITH (FORCE)`);
+  await dropFixtureDatabase(maintenance, name);
   await maintenance.end();
 });
 test("Gmail consent uses readonly OAuth bound state; wrong callback and revoked session cannot connect", async () => {

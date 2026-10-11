@@ -45,3 +45,42 @@ final class ConversationRetryTests: XCTestCase {
         XCTAssertEqual(draft.text, "明天提醒我提交材料")
     }
 }
+
+final class PendingStopTests: XCTestCase {
+    func testStopDuringUnknownInitialAndRetryAcknowledgementsSurvivesRelaunchAndTargetsAcceptedAttempt() throws {
+        var draft = ConversationDraft()
+        draft.text = "明天提醒我提交材料"
+        draft.key = "initial-input"
+        draft.requestCancellation()
+        XCTAssertNil(draft.pendingCancellationKey()) // No run acknowledgement yet.
+        draft = try JSONDecoder().decode(ConversationDraft.self, from: JSONEncoder().encode(draft))
+        draft.runId = "accepted-run"
+        let firstStop = try XCTUnwrap(draft.pendingCancellationKey())
+        draft.acknowledgeCancellation(key: firstStop)
+        XCTAssertNil(draft.pendingCancellationKey())
+        draft.prepareRetry()
+        let retry = try XCTUnwrap(draft.retryKey)
+        draft.requestCancellation() // Server accepted retry, response is delayed or lost.
+        XCTAssertNil(draft.pendingCancellationKey()) // Must not replay the first attempt's stop.
+        draft = try JSONDecoder().decode(ConversationDraft.self, from: JSONEncoder().encode(draft))
+        draft.prepareRetry() // Uncertain acknowledgement must preserve Stop intent.
+        XCTAssertEqual(draft.retryKey, retry)
+        XCTAssertEqual(draft.cancellationRequested, true)
+        draft.acknowledgeRetry(key: retry)
+        let secondStop = try XCTUnwrap(draft.pendingCancellationKey())
+        XCTAssertNotEqual(secondStop, firstStop)
+        draft = try JSONDecoder().decode(ConversationDraft.self, from: JSONEncoder().encode(draft))
+        XCTAssertEqual(draft.pendingCancellationKey(), secondStop) // Lost cancel response replays safely.
+        draft.acknowledgeCancellation(key: secondStop)
+        XCTAssertNil(draft.pendingCancellationKey())
+        draft.prepareRetry() // An explicit new retry resets prior stop intent.
+        XCTAssertNil(draft.cancellationRequested)
+        XCTAssertEqual(draft.text, "明天提醒我提交材料")
+    }
+    func testOldDraftWithoutStopIntentStillDecodes() throws {
+        let old = Data(#"{"text":"原话","runId":"existing","cancelKey":"previous"}"#.utf8)
+        var draft = try JSONDecoder().decode(ConversationDraft.self, from: old)
+        XCTAssertNil(draft.cancellationRequested)
+        XCTAssertNil(draft.pendingCancellationKey())
+    }
+}

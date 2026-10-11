@@ -1,3 +1,4 @@
+import { dropFixtureDatabase } from "./database-cleanup.js";
 import { describe, test, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { randomUUID } from "node:crypto";
@@ -57,7 +58,7 @@ describe("personal environment pairing over HTTP with PostgreSQL", () => {
   });
   afterAll(async () => {
     await app?.close();
-    await maintenance.query(`DROP DATABASE ${fixtureName} WITH (FORCE)`);
+    await dropFixtureDatabase(maintenance, fixtureName);
     await maintenance.end();
   });
   test("public environment excludes private data and business access requires device credentials", async () => {
