@@ -26,6 +26,7 @@ const config = {
 let fixtureMode = "clarification",
   fixtureOverride: Record<string, unknown> | undefined;
 let fixtureWait: Promise<void> | undefined;
+let fixtureSequence: Record<string, unknown>[] = [];
 let provider: ReturnType<typeof createServer>,
   worker: Awaited<ReturnType<typeof startAgentWorker>> | undefined,
   payloads: Record<string, unknown>[] = [];
@@ -83,6 +84,7 @@ beforeAll(async () => {
       setTimeout(() => res.end(), 1000);
       return;
     }
+    if (fixtureSequence.length) fixtureOverride = fixtureSequence.shift();
     const args = {
       title: "提交材料",
       instant: "2026-10-12T01:00:00Z",
@@ -302,6 +304,7 @@ test("linked time answer uses original instruction without creating duplicate ta
   expect(run.status).toBe("succeeded");
   const task = (await call("/v1/tasks/" + run.taskId)).body;
   expect(task.reminder.instant).toBe("2026-10-12T01:00:00.000Z");
+  expect(task.reminder.originalExpression).toContain("明天提醒我提交材料");
   expect(task.sources[0].text).toContain("明天提醒我提交材料");
   expect(task.sources[0].text).toContain("上午9点");
   expect(JSON.stringify(payloads.at(-1))).toContain(first.inputId);
@@ -404,6 +407,50 @@ test("a persisted expected revision rejects a late edit and preserves original w
     .body;
   expect(history.messages.at(-1).text).toBe("改成9:30");
   expect(history.messages[0].task.status).toBe("completed");
+  fixtureMode = "valid";
+  fixtureOverride = undefined;
+});
+
+test("concurrently accepted conversation inputs commit strictly in their persisted revision order", async () => {
+  fixtureMode = "valid";
+  fixtureOverride = undefined;
+  const first = (
+    await call("/v1/inputs", "POST", {
+      text: "明天上午9点提醒我提交材料",
+      timeZone: "Asia/Shanghai",
+    })
+  ).body;
+  const created = await settle(first.runId);
+  const change = {
+    taskId: created.taskId,
+    operation: "edit",
+    instruction: "改成9:30",
+    timeExpression: "9:30",
+    instant: "2026-10-12T01:30:00Z",
+    localDateTime: "2026-10-12T09:30:00",
+  };
+  fixtureMode = "modify";
+  fixtureSequence = [
+    { ...change, expectedRevision: "1" },
+    { ...change, expectedRevision: "2" },
+  ];
+  const inputs = await Promise.all(
+    [1, 2].map(() =>
+      call("/v1/inputs", "POST", {
+        text: "改成9:30",
+        timeZone: "Asia/Shanghai",
+        conversationId: first.conversationId,
+      }),
+    ),
+  );
+  const runs = await Promise.all(inputs.map((q) => settle(q.body.runId)));
+  expect(runs.map((r) => r.status)).toEqual(["succeeded", "succeeded"]);
+  const history = (await call("/v1/conversations/" + first.conversationId))
+    .body;
+  expect(history.revision).toBe(3);
+  expect(history.acceptedRevision).toBe(3);
+  expect(history.messages.map((m: any) => m.revision)).toEqual([1, 2, 3]);
+  expect(history.messages[0].task.revision).toBe(3);
   fixtureMode = "valid";
   fixtureOverride = undefined;
 });

@@ -1,6 +1,13 @@
 import XCTest
 @testable import NivliCore
 final class ConversationTests: XCTestCase {
+    func testLinkedConversationAndLifecycleDecoding() throws {
+        let data=Data(#"{"id":"conversation","revision":1,"acceptedRevision":2,"messages":[{"inputId":"original","runId":"run","revision":1,"text":"明天提醒我提交材料","timeZone":"Asia/Shanghai","status":"needs_clarification","message":"几点？"}]}"#.utf8)
+        let history=try JSONDecoder().decode(ConversationHistory.self,from:data)
+        XCTAssertEqual(history.messages.first?.text,"明天提醒我提交材料")
+        let run=try JSONDecoder().decode(ConversationRun.self,from:Data(#"{"id":"run","inputId":"original","status":"timed_out","stillProcessing":false}"#.utf8))
+        XCTAssertEqual(run.status,.timed_out)
+    }
     func testQueuedInputIsNotASavedTaskAndRunReturnsRealEntityIdentity() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let accepted = try JSONDecoder().decode(AcceptedInput.self, from: Data(contentsOf: root.appendingPathComponent("contracts/examples/input-accepted.json")))
