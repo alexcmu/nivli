@@ -1,3 +1,5 @@
+import { acceptConversationInput, readConversation } from "./conversation.js";
+import { ConversationDTO } from "./conversation-contracts.js";
 import { validateProposal } from "./agent-validation.js";
 import type { FastifyInstance } from "fastify";
 import type pg from "pg";
@@ -29,6 +31,20 @@ export async function registerAgent(
       503: ErrorDTO,
     },
     security = [{ bearerAuth: [] }];
+  app.get(
+    "/v1/conversations/:id",
+    {
+      schema: {
+        security,
+        params: Type.Object({ id: Type.String({ format: "uuid" }) }),
+        response: { 200: ConversationDTO, ...errors },
+      },
+    },
+    async (req) => {
+      const i = await ctx.session(req.headers.authorization);
+      return readConversation(ctx.pool, i.ownerId, req.params.id);
+    },
+  );
   app.get(
     "/v1/model",
     { schema: { security, response: { 200: ModelDTO, ...errors } } },
@@ -126,17 +142,36 @@ export async function registerAgent(
           )
         ).rows[0];
         if (old) {
-          if (old.text !== b.text || old.time_zone !== b.timeZone)
+          if (
+            old.text !== b.text ||
+            old.time_zone !== b.timeZone ||
+            (b.conversationId && old.conversation_id !== b.conversationId) ||
+            (old.reply_to_input_id ?? undefined) !== b.replyToInputId ||
+            (old.selected_task_id ?? undefined) !== b.taskId
+          )
             throw new PublicError(
               409,
               "IDEMPOTENCY_CONFLICT",
               "相同操作标识的内容不同。",
             );
           await c.query("COMMIT");
-          return reply.code(202).send({ inputId: old.id, runId: old.run_id });
+          return reply
+            .code(202)
+            .send({
+              inputId: old.id,
+              runId: old.run_id,
+              conversationId: old.conversation_id,
+              conversationRevision: old.conversation_revision,
+            });
         }
         const inputId = randomUUID(),
           runId = randomUUID();
+        const conversation = await acceptConversationInput(
+          c,
+          identity,
+          b,
+          ctx.now(),
+        );
         await c.query(
           "INSERT INTO input_event(id,owner_id,device_id,session_id,idempotency_key,text,time_zone,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
           [
@@ -151,11 +186,21 @@ export async function registerAgent(
           ],
         );
         await c.query(
+          "UPDATE input_event SET conversation_id=$2,conversation_revision=$3,reply_to_input_id=$4,selected_task_id=$5 WHERE id=$1",
+          [
+            inputId,
+            conversation.conversationId,
+            conversation.conversationRevision,
+            b.replyToInputId ?? null,
+            b.taskId ?? null,
+          ],
+        );
+        await c.query(
           "INSERT INTO agent_run(id,input_id,owner_id,status) VALUES($1,$2,$3,'queued')",
           [runId, inputId, identity.ownerId],
         );
         await c.query("COMMIT");
-        return reply.code(202).send({ inputId, runId });
+        return reply.code(202).send({ inputId, runId, ...conversation });
       } catch (e) {
         await c.query("ROLLBACK");
         throw e;
