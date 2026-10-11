@@ -34,3 +34,5 @@
 - 2026-10-11: 软件与受控外部提供方真机闭环已实现。详见 [验收证据](../../../docs/ticket-08-evidence.md)。已建立 50 条中英文标注样本与隔离数据库的 opt-in 真实模型评估入口；没有真实 Claude 凭据，报告为 `not_run`，不能将样本或受控提供方结果算作真实模型评估。中文提交文字已验证，IME 标记文本组合尚未观察；最后一项保持未完成。
 
 - 2026-10-11 最终合并验证：已合并 integration `84b2156`（含 09）；TypeScript 构建、53 项真实 HTTP/PG/队列测试、14 项 Swift 测试与通用 iOS Simulator 构建通过。真机受控提供方 1 项测试通过（56.039 秒）。真实 Claude 评估保持 `not_run`，IME 组合仍未验收，未宣称工单全部完成。
+
+- 2026-10-11 AI review fixes: 已修复否定/条件语句被模型误提为完成或取消、重试后再次取消沿用旧操作身份、明确 deadline 被遗漏的问题；按原始输入时刻和时区解析下一未来周五，提交时仍拒绝已过去的提醒。公开 HTTP/真实 PostgreSQL/pg-boss/Pi 全套 57 测试与最终否定语句专项、15 Swift 测试、通用 iOS Simulator 构建通过。证据见 [AI review fixes](../../../docs/ai-review-fixes-evidence.md)。新增至 51 条评估标注，真实 Claude 评估仍为 not_run，未关闭原有外部凭据或 IME 验收项。

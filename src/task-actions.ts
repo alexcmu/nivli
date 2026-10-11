@@ -1,3 +1,4 @@
+import { isQuiet } from "./quiet-hours.js";
 import type pg from "pg";
 import type { FastifyInstance } from "fastify";
 import { Type, type Static } from "@sinclair/typebox";
@@ -222,15 +223,8 @@ export async function executeTaskAction(
   if (state.status === "active" && state.reminder) {
     const reminderId = existing?.id ?? randomUUID(),
       reminderRevision = existing ? existing.revision + 1 : 1;
-    const hour = Number(
-      new Intl.DateTimeFormat("en", {
-        timeZone: state.reminder.timeZone,
-        hour: "2-digit",
-        hourCycle: "h23",
-      }).format(new Date(state.reminder.instant)),
-    );
     const confirmed =
-      !(hour >= 22 || hour < 8) ||
+      !isQuiet(state.reminder.instant, state.reminder.timeZone) ||
       b.quietHoursConfirmed === true ||
       (before.reminder?.instant === state.reminder.instant &&
         before.reminder?.timeZone === state.reminder.timeZone &&

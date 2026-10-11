@@ -14,6 +14,7 @@ url.pathname = "/" + name;
 const databaseUrl = url.toString(),
   maintenance = new pg.Pool({ connectionString: rootUrl });
 const admin = "t".repeat(48);
+let currentInstant = "2026-10-11T12:00:00Z";
 const config = {
   databaseUrl,
   adminSecret: admin,
@@ -21,7 +22,7 @@ const config = {
   environmentName: "Tasks",
   pushMode: "disabled" as const,
   modelDataDestination: "None",
-  clock: () => new Date("2026-10-11T12:00:00Z"),
+  clock: () => new Date(currentInstant),
 };
 let fixtureMode = "clarification",
   fixtureOverride: Record<string, unknown> | undefined;
@@ -33,6 +34,7 @@ let provider: ReturnType<typeof createServer>,
 let app: Awaited<ReturnType<typeof createApp>>,
   base = "",
   token = "",
+  refreshToken = "",
   deviceId = "";
 async function call(
   path: string,
@@ -222,6 +224,7 @@ beforeAll(async () => {
     await call("/v1/pairings/claim", "POST", { code, deviceName: "test" })
   ).body;
   token = session.accessToken;
+  refreshToken = session.refreshToken;
   deviceId = session.deviceId;
 });
 afterAll(async () => {
@@ -558,5 +561,291 @@ test("vague postponement, unspecified Friday and nonexistent DST clocks cannot c
     expect(run.status).toBe("needs_clarification");
     expect(run.taskId).toBeUndefined();
   }
+  fixtureOverride = undefined;
+}, 15000);
+
+test("negated and conditional instructions cannot authorize provider-proposed mutations, while factual completion can", async () => {
+  if (!worker)
+    worker = await startAgentWorker({
+      ...config,
+      model: {
+        model: "claude-sonnet-5-5",
+        apiKey: "external-fixture-key",
+        baseUrl:
+          "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+      },
+    });
+  fixtureMode = "valid";
+  fixtureOverride = undefined;
+  const first = (
+    await call("/v1/inputs", "POST", {
+      text: "明天上午9点提醒我提交材料",
+      timeZone: "Asia/Shanghai",
+    })
+  ).body;
+  const created = await settle(first.runId);
+  const original = (await call("/v1/tasks/" + created.taskId)).body;
+  fixtureMode = "modify";
+  for (const [text, operation] of [
+    ["这个还没完成", "complete"],
+    ["尚未取消", "cancel"],
+    ["如果下雨再取消", "cancel"],
+    ["not completed", "complete"],
+    ["unfinished", "complete"],
+    ["If it rains cancel it", "cancel"],
+    ["如果下雨改成9:30", "edit"],
+    ["未做完", "complete"],
+    ["没完成", "complete"],
+    ["It isn't completed", "complete"],
+    ["下雨了就取消", "cancel"],
+    ["取消了吗？", "cancel"],
+  ]) {
+    fixtureOverride = {
+      taskId: created.taskId,
+      expectedRevision: "1",
+      operation,
+      instruction: text,
+      timeExpression: "9:30",
+      instant: "2026-10-12T01:30:00Z",
+      localDateTime: "2026-10-12T09:30:00",
+    };
+    const input = (
+      await call("/v1/inputs", "POST", {
+        text,
+        timeZone: "Asia/Shanghai",
+        conversationId: first.conversationId,
+        taskId: created.taskId,
+      })
+    ).body;
+    expect((await settle(input.runId)).status, text).toBe(
+      "needs_clarification",
+    );
+    expect((await call("/v1/tasks/" + created.taskId)).body, text).toEqual(
+      original,
+    );
+  }
+  for (const text of [
+    "已完成",
+    "already completed",
+    "Can you complete this task?",
+  ]) {
+    const manual = draft();
+    const task = (await call("/v1/tasks", "POST", manual)).body;
+    fixtureOverride = {
+      taskId: task.id,
+      expectedRevision: "1",
+      operation: "complete",
+      instruction: text,
+    };
+    const input = (
+      await call("/v1/inputs", "POST", {
+        text,
+        timeZone: "Asia/Shanghai",
+        taskId: task.id,
+      })
+    ).body;
+    expect((await settle(input.runId)).status).toBe("succeeded");
+    expect((await call("/v1/tasks/" + task.id)).body.status).toBe("completed");
+  }
+  fixtureMode = "valid";
+  fixtureOverride = undefined;
+}, 50000);
+
+test("an explicit deadline cannot disappear and Friday resolves independently from tomorrow's reminder", async () => {
+  if (!worker)
+    worker = await startAgentWorker({
+      ...config,
+      model: {
+        model: "claude-sonnet-5-5",
+        apiKey: "external-fixture-key",
+        baseUrl:
+          "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+      },
+    });
+  fixtureMode = "valid";
+  const text = "明天上午9点提醒我提交材料，周五截止";
+  fixtureOverride = { instruction: text };
+  const omitted = (
+    await call("/v1/inputs", "POST", { text, timeZone: "Asia/Shanghai" })
+  ).body;
+  const unresolved = await settle(omitted.runId);
+  expect(unresolved.status).toBe("needs_clarification");
+  expect(unresolved.taskId).toBeUndefined();
+  for (const [instruction, expression] of [
+    [text, "周五截止"],
+    ["明天九点提醒提交材料，周五截止", "周五截止"],
+    ["明天上午9点提醒我提交材料，截止2026-10-16", "截止2026-10-16"],
+  ]) {
+    fixtureOverride = {
+      instruction,
+      deadlineDate: "2026-10-16",
+      deadlineExpression: expression,
+      timeExpression: instruction.includes("明天九点")
+        ? "明天九点"
+        : "明天上午9点",
+    };
+    const accepted = (
+      await call("/v1/inputs", "POST", {
+        text: instruction,
+        timeZone: "Asia/Shanghai",
+      })
+    ).body;
+    const run = await settle(accepted.runId);
+    expect(run.status).toBe("succeeded");
+    expect((await call("/v1/tasks/" + run.taskId)).body).toMatchObject({
+      deadline: { kind: "date", date: "2026-10-16", timeZone: "Asia/Shanghai" },
+      reminder: {
+        instant: "2026-10-12T01:00:00.000Z",
+        timeZone: "Asia/Shanghai",
+      },
+    });
+  }
+  fixtureOverride = {
+    instruction: "明天上午9点提醒我提交材料，月底截止",
+    deadlineDate: "2026-10-16",
+    deadlineExpression: "月底截止",
+  };
+  const vague = (
+    await call("/v1/inputs", "POST", {
+      text: fixtureOverride.instruction,
+      timeZone: "Asia/Shanghai",
+    })
+  ).body;
+  expect((await settle(vague.runId)).status).toBe("needs_clarification");
+  fixtureOverride = undefined;
+}, 20000);
+
+test("a retried input can be cancelled again with a new operation and rejects both late proposals", async () => {
+  if (!worker)
+    worker = await startAgentWorker({
+      ...config,
+      model: {
+        model: "claude-sonnet-5-5",
+        apiKey: "external-fixture-key",
+        baseUrl:
+          "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+      },
+    });
+  fixtureMode = "valid";
+  fixtureOverride = undefined;
+  const count = (await call("/v1/tasks")).body.tasks.length;
+  let release!: () => void;
+  fixtureWait = new Promise<void>((r) => {
+    release = r;
+  });
+  const first = (
+    await call("/v1/inputs", "POST", {
+      text: "明天上午9点提醒我提交材料",
+      timeZone: "Asia/Shanghai",
+    })
+  ).body;
+  let requests = payloads.length;
+  for (
+    let n = 0;
+    n < 100 && (await call("/v1/runs/" + first.runId)).body.requests !== 1;
+    n++
+  )
+    await new Promise((r) => setTimeout(r, 30));
+  const firstKey = randomUUID();
+  expect(
+    (await call("/v1/runs/" + first.runId + "/cancel", "POST", {}, firstKey))
+      .body.status,
+  ).toBe("cancelled");
+  fixtureWait = undefined;
+  release();
+  requests = payloads.length;
+  fixtureWait = new Promise<void>((r) => {
+    release = r;
+  });
+  const retried = await call("/v1/runs/" + first.runId + "/retry", "POST", {});
+  expect(retried.body.runId).toBe(first.runId);
+  for (let n = 0; n < 100 && payloads.length <= requests; n++)
+    await new Promise((r) => setTimeout(r, 30));
+  // Old operation is a replay; a new attempt must use a distinct cancellation key.
+  try {
+    const replay = await call(
+      "/v1/runs/" + first.runId + "/cancel",
+      "POST",
+      {},
+      firstKey,
+    );
+    expect(replay.body.status).toBe("running");
+    expect((await call("/v1/runs/" + first.runId)).body.status).toBe("running");
+    const secondKey = randomUUID();
+    expect(
+      (await call("/v1/runs/" + first.runId + "/cancel", "POST", {}, secondKey))
+        .body.status,
+    ).toBe("cancelled");
+  } finally {
+    fixtureWait = undefined;
+    release();
+  }
+  await new Promise((r) => setTimeout(r, 150));
+  expect((await call("/v1/runs/" + first.runId)).body.status).toBe("cancelled");
+  expect((await call("/v1/tasks")).body.tasks).toHaveLength(count);
+}, 15000);
+
+test("queued relative dates remain anchored to input receipt across local midnight and past reminders cannot save", async () => {
+  await worker?.stop();
+  worker = undefined;
+  currentInstant = "2026-10-11T15:59:00Z"; // Sunday 23:59 Shanghai.
+  const session = (await call("/v1/session/renew", "POST", { refreshToken }))
+    .body;
+  token = session.accessToken;
+  refreshToken = session.refreshToken;
+  fixtureMode = "valid";
+  fixtureOverride = {
+    instruction: "明天上午9点提醒我提交材料，周五截止",
+    deadlineDate: "2026-10-16",
+    deadlineExpression: "周五截止",
+  };
+  const first = (
+    await call("/v1/inputs", "POST", {
+      text: fixtureOverride.instruction,
+      timeZone: "Asia/Shanghai",
+    })
+  ).body;
+  currentInstant = "2026-10-11T16:01:00Z"; // Monday 00:01, only two minutes later.
+  worker = await startAgentWorker({
+    ...config,
+    model: {
+      model: "claude-sonnet-5-5",
+      apiKey: "external-fixture-key",
+      baseUrl:
+        "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+    },
+  });
+  const run = await settle(first.runId);
+  expect(run.status).toBe("succeeded");
+  expect((await call("/v1/tasks/" + run.taskId)).body).toMatchObject({
+    deadline: { date: "2026-10-16" },
+    reminder: { instant: "2026-10-12T01:00:00.000Z" },
+  });
+  await worker.stop();
+  worker = undefined;
+  currentInstant = "2026-10-11T16:02:00Z";
+  fixtureOverride = {
+    instruction: "今天00:03提醒我提交材料",
+    timeExpression: "今天00:03",
+    instant: "2026-10-11T16:03:00Z",
+    localDateTime: "2026-10-12T00:03:00",
+  };
+  const late = (
+    await call("/v1/inputs", "POST", {
+      text: fixtureOverride.instruction,
+      timeZone: "Asia/Shanghai",
+    })
+  ).body;
+  currentInstant = "2026-10-11T16:04:00Z";
+  worker = await startAgentWorker({
+    ...config,
+    model: {
+      model: "claude-sonnet-5-5",
+      apiKey: "external-fixture-key",
+      baseUrl:
+        "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+    },
+  });
+  expect((await settle(late.runId)).status).toBe("needs_clarification");
   fixtureOverride = undefined;
 }, 15000);
