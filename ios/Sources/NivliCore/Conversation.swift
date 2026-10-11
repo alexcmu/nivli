@@ -7,6 +7,11 @@ public struct ConversationRun: Codable, Sendable {
     public let message: String?; public let taskId: String?
     public let cost:RunCost?
     public let stillProcessing:Bool?; public let errorCode:String?;public let text:String?;public let timeZone:String?
+    /// A provider refusal is feedback, never authorization for a linked clarification answer.
+    public var clarificationReplyInputId: String? {
+        guard status == .clarification || status == .needs_clarification, errorCode != "MODEL_REFUSED" else { return nil }
+        return inputId
+    }
 }
 public struct ModelConfiguration: Codable, Sendable {
     public let configured: Bool; public let provider: String; public let model: String; public let dataDestination: String
@@ -16,7 +21,7 @@ public struct ConversationHistory:Codable,Sendable {
     public let id:String; public let revision:Int;public let acceptedRevision:Int;public let messages:[ConversationMessage]
 }
 public struct ConversationMessage:Codable,Sendable,Identifiable {
-    public var id:String {inputId};public let inputId:String;public let runId:String;public let revision:Int;public let text:String;public let timeZone:String;public let status:String;public let message:String?;public let replyToInputId:String?;public let task:TaskRecord?
+    public var id:String {inputId};public let inputId:String;public let runId:String;public let revision:Int;public let text:String;public let timeZone:String;public let status:String;public let message:String?;public let errorCode:String?;public let replyToInputId:String?;public let task:TaskRecord?
 }
 extension NivliAPI {
     public func submitInput(text: String, timeZone: String, key: String, token: String, conversationId:String?=nil,replyToInputId:String?=nil,taskId:String?=nil) async throws -> AcceptedInput {

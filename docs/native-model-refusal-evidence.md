@@ -1,0 +1,5 @@
+# Native model-refusal follow-up
+
+2026-10-11: a provider refusal marked `MODEL_REFUSED` remains visible as static feedback in conversation history, retaining the original input. The native conversation view no longer turns that refusal into an automatic linked clarification answer: its next submitted instruction has no refusal `replyToInputId`. Genuine `needs_clarification` responses continue to link their input identity. The optional history `errorCode` survives decoding and re-encoding; older responses without that field remain compatible. A refusal continues through the existing feedback path, without being presented as a retryable outage.
+
+Two public Swift DTO/lifecycle regression slices failed before implementation and passed afterward. All **19 Swift tests** passed, and the generic iOS Simulator build succeeded. This focused change made no paid model call and did not use the phone. It changes reply eligibility and contract retention, not native rendering; previous signed live-Claude device evidence remains recorded separately. Chinese IME composition and physical Shift+Enter acceptance are still open.
