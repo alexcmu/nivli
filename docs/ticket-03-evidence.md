@@ -28,4 +28,3 @@ The dedicated `migrateLocalNotifications` migration upgrades the original restri
 - The same device test scheduled a generic notification, backgrounded the app, observed the actual `Nivli 提醒` banner (`NIVLI_NOTIFICATION_BANNER_OBSERVED true` in `/tmp/nivli-03-device.log`), then verified the request left pending state and appeared in delivered state.
 - Locked/offline display and real permission-off behavior remain unverified. A Settings toggle attempt did not yet establish the expected denied result, so it is not reported as passing. The native agent continues this evidence work separately while the user prioritizes the AI agent path. Ticket 03 is not closed.
 - Accessibility audits are waived by the user's explicit scope adjustment. Functional and privacy acceptance remain.
-
