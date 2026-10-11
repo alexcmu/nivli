@@ -944,3 +944,51 @@ test("conditional creation proposals clarify while explicit reminders and words 
   }
   fixtureOverride = undefined;
 }, 30000);
+
+test("change tool advertises executable operation names and accepts an elliptical explicit clock edit", async () => {
+  if (!worker)
+    worker = await startAgentWorker({
+      ...config,
+      model: {
+        model: "claude-sonnet-5-5",
+        apiKey: "external-fixture-key",
+        baseUrl:
+          "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+      },
+    });
+  const created = await call("/v1/tasks", "POST", {
+    ...draft(),
+    reminder: { instant: "2026-10-12T01:00:00Z", timeZone: "Asia/Shanghai" },
+  });
+  const task = created.body;
+  fixtureMode = "modify";
+  fixtureOverride = {
+    taskId: task.id,
+    expectedRevision: String(task.revision),
+    operation: "edit",
+    instruction: "Make that 09:30",
+    instant: "2026-10-12T01:30:00Z",
+    timeZone: "Asia/Shanghai",
+    timeExpression: "09:30",
+    localDateTime: "2026-10-12T09:30:00",
+  };
+  const submitted = await call("/v1/inputs", "POST", {
+    text: "Make that 09:30",
+    timeZone: "Asia/Shanghai",
+    taskId: task.id,
+  });
+  const run = await settle(submitted.body.runId);
+  expect(run.status).toBe("succeeded");
+  expect((await call("/v1/tasks/" + task.id)).body.reminder.instant).toBe(
+    "2026-10-12T01:30:00.000Z",
+  );
+  const tools = payloads.at(-1)!.tools as any[];
+  const change = tools.find((tool) => tool.name === "propose_change");
+  expect(change.input_schema.properties.operation.enum).toEqual([
+    "edit",
+    "complete",
+    "cancel",
+  ]);
+  expect(change.description).toContain("edit");
+  fixtureOverride = undefined;
+});

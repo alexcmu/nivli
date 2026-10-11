@@ -213,7 +213,9 @@ export async function applyConversationChange(
   let reminder: { instant: string; timeZone: string } | undefined;
   if (change.operation === "edit") {
     if (
-      !/(改|推迟|移到|调整|change|move|reschedul)/i.test(input.text) ||
+      !/(改|推迟|移到|调整|change|move|reschedul|\bmake\s+(?:that|it)\b)/i.test(
+        input.text,
+      ) ||
       !change.timeExpression ||
       !input.text.includes(change.timeExpression) ||
       !change.instant ||

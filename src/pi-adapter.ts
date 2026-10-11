@@ -142,7 +142,9 @@ export async function interpret(
       description:
         kind === "proposal"
           ? "Propose one reminder ONLY when current user explicitly instructs creation and exact unambiguous date/time is known. instruction must exactly equal the entire current user message. Quote timeExpression verbatim. localDateTime is YYYY-MM-DDTHH:mm:ss in the supplied timezone. Never invent evidence, owner, permission or successful persistence."
-          : "Return a short question or ordinary reply; do not claim anything was saved.",
+          : kind === "change"
+            ? "Propose a change to exactly one identified active task from context. operation must be edit (change reminder date/time), complete (mark done), or cancel. instruction must exactly equal the entire current user message. expectedRevision must equal the provided task revision as a string. For edit, quote timeExpression verbatim and supply instant, timeZone, and localDateTime. Tools do not save; never claim persistence."
+            : "Return a short question or ordinary reply; do not claim anything was saved.",
       parameters,
       constrainedSampling: { type: "json_schema", strict: "require" },
       execute: async (_id, args) => {
@@ -186,7 +188,9 @@ export async function interpret(
                   {
                     taskId: Type.String(),
                     expectedRevision: Type.String(),
-                    operation: Type.String(),
+                    operation: Type.String({
+                      enum: ["edit", "complete", "cancel"],
+                    }),
                     instruction: Type.String(),
                     instant: Type.Optional(Type.String()),
                     timeZone: Type.Optional(Type.String()),
