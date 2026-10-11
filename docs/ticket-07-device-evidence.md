@@ -21,3 +21,7 @@
 ## 重复运行入口
 
 `AgentUITests.swift` 默认在没有私有 `AgentFixture.json` 时跳过。隔离 fixture 的字段为 `serverUrl`、一次性 `code`、合成 `instruction`、合成 `title`、`proofUrl`。`proofUrl` 只对该独立 fixture 暴露公开任务读取的结果 `{requests,tasks}`；测试不直接读取数据库。为 fixture 配置独立 app bundle 后，通过现有 `generate-project.rb` 把临时 JSON 包入测试 bundle，再运行上述单个测试。结束时移除 JSON、生成默认项目并清理测试资源；不要提交凭据或复用真实用户环境。
+
+## 真实 Claude 补充验收
+
+2026-10-11 管理员提供服务端密钥后，已在独立数据库、HTTPS 环境和临时原生 bundle 上，用真实 Claude Sonnet 5.5 / Pi 1.1.0 完成缺时间澄清、重启恢复、关联回答保存、同一事项时间修改、当前历史重启恢复、实际 OS pending=1 与 `local_installed`。修复工具 operation 契约后聚焦真机测试 1 项通过（70.212 秒），3 个 run 各 1 次请求与 1 次工具，用量估价 USD 0.0164388。首次实际模型失败和隔离 Keychain 的测试问题均如实记录；完整路径、费用及清理见 [真实模型真机证据](live-ai-device-evidence.md)。此前“真实模型凭据尚缺”的描述是当时状态；IME composition 和 Shift+Enter 仍未验收。

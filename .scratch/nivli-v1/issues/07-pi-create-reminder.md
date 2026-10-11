@@ -25,11 +25,13 @@
 - [x] 业务操作键来自输入身份、目标和操作种类，不能依赖模型 tool-call ID；重复输入提交或重试不复制任务。模型原文和隐藏推理不写常规日志。
 - [ ] 前台提交保留草稿；支持中文输入法组合、Enter/Shift+Enter、处理中和失败重试。确认卡显示当前标题、日期/时区、deadline、来源与真实排程状态。
 - [x] 实现初始每 run 3 次模型请求、6 次工具调用及硬超时上限的执行约束，模型不可用时仍可使用手动路径；09 扩展完整取消/预算和恢复体验。
-- [ ] 公开 API 测试用受控模型贯通输入→业务结果→本地排程回执，覆盖非法/越权 proposal；另对锁定 Pi 版本做一次显式配置的真实模型 schema/工具契约冒烟。
+- [x] 公开 API 测试用受控模型贯通输入→业务结果→本地排程回执，覆盖非法/越权 proposal；另对锁定 Pi 版本做一次显式配置的真实模型 schema/工具契约冒烟。
 
 **完成条件：** 验收项全部通过并附可复核证据；需要外部凭据、真机或审核而尚未验证的项保持未完成。先满足所有 Blocked by，再开始实施；ready-for-agent 表示规格可实施，不表示依赖已经完成。
 
 ## Comments
+
+- 2026-10-11 真实模型冒烟：用户提供服务端 key 文件后，`NIVLI_REAL_MODEL_SMOKE=1 npm run model:smoke` 使用官方 Anthropic endpoint 和实际 Claude Sonnet 5.5、Pi 1.1.0 成功。一次请求、一次工具调用，proposal 通过 schema 与独立业务时间/授权校验；未写业务实体。独立测试预算 0.5 USD，报告 usage 估价 0.0072955 USD（不是供应商账单）。密钥未输出、未复制到仓库或客户端；IME 及其他尚未观察的验收仍保持开放。
 
 - 2026-10-11：按用户“AI agent 先走通、email connection 最后”及父规格顺序调整实现 07。服务端真实 Pi 1.1.0 adapter、Anthropic Claude Sonnet 5.5 受控 HTTP serializer/工具测试、InputEvent durable outbox、真实 pg-boss worker、独立业务验证及本地 occurrence 回执已实现。`npm test`：4 文件、34 测试通过（其中 07 为 9 个公开 HTTP 行为测试）；`npm run build` 通过；隔离 PostgreSQL 数据库导出/校验 OpenAPI 与共享 JSON fixture 通过。
 - 原生交代已实现 Keychain 草稿、排队查询、幂等失败重试、真实事项确认与通知安装、原话手动回退；12 Swift contract 测试与模拟器构建通过。Enter/Shift+Enter/中文组合及 AI 新事项通知的完整真机操作尚未验收，因此该 UI 验收项保持未完成。
