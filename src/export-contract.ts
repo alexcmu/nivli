@@ -7,6 +7,7 @@ import {
   CredentialsDTO,
   ErrorDTO,
 } from "./contracts.js";
+import { CreateTaskDTO, TaskDTO, TaskPageDTO } from "./task-contracts.js";
 import { createApp } from "./app.js";
 const app = await createApp({
   databaseUrl:
@@ -35,6 +36,9 @@ FormatRegistry.Set(
     /^\d{4}-\d\d-\d\dT/.test(value) && Number.isFinite(Date.parse(value)),
 );
 for (const [name, schema] of Object.entries({
+  task: TaskDTO,
+  "task-page": TaskPageDTO,
+  "task-command": CreateTaskDTO,
   environment: EnvironmentDTO,
   session: SessionDTO,
   credentials: CredentialsDTO,

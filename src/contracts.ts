@@ -5,6 +5,7 @@ export const ErrorDTO = Type.Object(
     message: Type.String(),
     requestId: Type.String(),
     retryable: Type.Boolean(),
+    resource: Type.Optional(Type.String()),
   },
   { additionalProperties: false },
 );
