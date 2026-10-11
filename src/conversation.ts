@@ -273,15 +273,26 @@ export async function applyConversationChange(
       );
     reminder = { instant: change.instant, timeZone: change.timeZone };
   } else if (change.operation === "complete") {
-    if (!/(完成|做完|办完|complete|done|finished)/i.test(input.text))
+    if (
+      !/(完成|做完|办完|\b(?:complete(?:d)?|done|finished)\b)/i.test(input.text)
+    )
       throw new PublicError(422, "CLARIFY_CHANGE", "请明确操作。");
   } else if (change.operation === "cancel") {
-    if (!/(取消|cancel)/i.test(input.text))
+    if (!/(取消|\bcancel(?:led|ed)?\b)/i.test(input.text))
       throw new PublicError(422, "CLARIFY_CHANGE", "请明确操作。");
   } else
     throw new PublicError(422, "CLARIFY_CHANGE", "请明确修改、完成或取消。");
-  if (/不要|不改|别|do not|don't|maybe|wish|希望/i.test(input.text))
+  if (
+    /(?:不要|不改|别|还没|尚未|未|没|不|希望|如果|假如|假设|要是|若|一旦|也许|等到|直到|再|才|就|是否|\b(?:not|never|no|unfinished|incomplete|do not|don['’]t|isn['’]t|hasn['’]t|haven['’]t|wasn['’]t|weren['’]t|didn['’]t|won['’]t|maybe|wish|if|unless|when|once|until|after|should)\b)/i.test(
+      input.text,
+    )
+  )
     throw new PublicError(422, "CLARIFY_CHANGE", "尚未确认操作。");
+  if (
+    /(?:吗|[?？]|^(?:is|has|was|did)\b)/i.test(input.text) &&
+    !/(?:请|帮我|\b(?:please|can you|could you|would you)\b)/i.test(input.text)
+  )
+    throw new PublicError(422, "CLARIFY_CHANGE", "请明确是否现在执行操作。");
   const { executeTaskAction } = await import("./task-actions.js");
   await executeTaskAction(
     c,

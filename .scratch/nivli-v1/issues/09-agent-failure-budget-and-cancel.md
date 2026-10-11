@@ -32,3 +32,5 @@
 ## Comments
 
 2026-10-11: 本票有界生命周期与预算恢复已实现并通过受控外部 Anthropic 服务、真实 Pi/PostgreSQL/pg-boss 验证。公开 HTTP 测试覆盖预算竞争、取消后晚到、硬超时、20 秒等待、SIGKILL 提交前后恢复、真实请求数和唯一事项；Swift 14 项及原生通用设备构建通过。完整证据见 [ticket-09-evidence](../../../docs/ticket-09-evidence.md)。原话/输入身份留在持久化 run/history，手动设置保留输入草稿；手动创建是用户另行确认的操作。已安装本地提醒的锁屏离线真机结果引用 03 用户确认，不宣称 APNs 或尚未实施的后续 delivery 功能。真实 Claude API 凭据缺失，07 的 live smoke 验收仍保留未完成；此处仅关闭本票可替代外部模型的生命周期验收。Status 保持 ready-for-agent，完成以清单及证据评论记录。
+
+- 2026-10-11 AI review fixes: 已修复否定/条件语句被模型误提为完成或取消、重试后再次取消沿用旧操作身份、明确 deadline 被遗漏的问题；按原始输入时刻和时区解析下一未来周五，提交时仍拒绝已过去的提醒。公开 HTTP/真实 PostgreSQL/pg-boss/Pi 全套 57 测试与最终否定语句专项、15 Swift 测试、通用 iOS Simulator 构建通过。证据见 [AI review fixes](../../../docs/ai-review-fixes-evidence.md)。新增至 51 条评估标注，真实 Claude 评估仍为 not_run，未关闭原有外部凭据或 IME 验收项。

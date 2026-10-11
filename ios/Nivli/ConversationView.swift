@@ -1,18 +1,6 @@
 import SwiftUI
 import UIKit
 
-private struct ConversationDraft: Codable {
-    var text = ""
-    var submittedText: String?
-    var timeZone: String?
-    var key: String?
-    var runId: String?
-    var retryKey: String?
-    var conversationId:String?
-    var replyToInputId:String?
-    var taskId:String?
-    var cancelKey:String?
-}
 
 struct ConversationView: View {
     @Bindable var connection: Connection
@@ -77,7 +65,7 @@ struct ConversationView: View {
             }.padding()
         }.navigationTitle("交代")
             .sheet(isPresented: $manual) { NavigationStack { ManualTaskView(connection: connection, repository: repository, initialTitle: draft.text) } }
-            .onChange(of: draft.text) { if !busy && draft.text != draft.submittedText { draft.key = nil; draft.runId = nil; draft.retryKey = nil; failedRun = false; draft.submittedText = nil; draft.timeZone = nil; saved = nil; message = nil }; persist() }
+            .onChange(of: draft.text) { if !busy && draft.text != draft.submittedText { draft.key = nil; draft.runId = nil; draft.retryKey = nil; draft.cancelKey = nil; failedRun = false; draft.submittedText = nil; draft.timeZone = nil; saved = nil; message = nil }; persist() }
             .task {
                 do { draft = try store.read(ConversationDraft.self) ?? ConversationDraft() } catch { self.error = error.localizedDescription }
                 if let session = connection.saved { model = try? await NivliAPI(server: session.server).model(token: session.credentials.accessToken) }
@@ -96,14 +84,14 @@ struct ConversationView: View {
     }
     private func cancel() async {
         guard let session=connection.saved,let id=draft.runId else{return}
-        let key=draft.cancelKey ?? UUID().uuidString;draft.cancelKey=key;persist()
+        let key=draft.cancellationKey();persist()
         do {_ = try await NivliAPI(server:session.server).cancelRun(id:id,key:key,token:session.credentials.accessToken)}catch{self.error=error.localizedDescription}
     }
     private func persist() { do { try store.save(draft) } catch { self.error = error.localizedDescription } }
     private func submit() {
         guard !busy, !draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         draft.key = draft.key ?? UUID().uuidString
-        if failedRun { draft.retryKey = draft.retryKey ?? UUID().uuidString }
+        if failedRun { draft.prepareRetry() }
         draft.submittedText = draft.text
         draft.timeZone = draft.timeZone ?? TimeZone.current.identifier
         do { try store.save(draft); busy = true; error = nil; pollTrigger += 1 } catch { self.error = error.localizedDescription }
@@ -120,7 +108,7 @@ struct ConversationView: View {
             guard let runId = draft.runId else { return }
             if let retryKey = draft.retryKey {
                 _ = try await api.retryRun(id: runId, key: retryKey, token: session.credentials.accessToken)
-                try Task.checkCancellation(); draft.retryKey = nil; failedRun = false; try store.save(draft)
+                try Task.checkCancellation(); draft.acknowledgeRetry(key: retryKey); failedRun = false; try store.save(draft)
             }
             while !Task.isCancelled {
                 let run = try await api.run(id: runId, token: session.credentials.accessToken)

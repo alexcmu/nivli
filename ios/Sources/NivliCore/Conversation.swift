@@ -33,3 +33,30 @@ extension NivliAPI {
     public func cancelRun(id:String,key:String,token:String) async throws -> ConversationRun {try await request("v1/runs/"+id+"/cancel",method:"POST",body:Data("{}".utf8),token:token,key:key,as:ConversationRun.self)}
     public func model(token: String) async throws -> ModelConfiguration { try await request("v1/model", token: token, as: ModelConfiguration.self) }
 }
+
+public struct ConversationDraft: Codable {
+    public var text = ""
+    public var submittedText: String?
+    public var timeZone: String?
+    public var key: String?
+    public var runId: String?
+    public var retryKey: String?
+    public var conversationId:String?
+    public var replyToInputId:String?
+    public var taskId:String?
+    public var cancelKey:String?
+    public init() {}
+    public mutating func cancellationKey() -> String {
+        cancelKey = cancelKey ?? UUID().uuidString
+        return cancelKey!
+    }
+    public mutating func prepareRetry() {
+        retryKey = retryKey ?? UUID().uuidString
+    }
+    /// A confirmed new attempt needs a new cancellation operation. Uncertain retries keep both keys.
+    public mutating func acknowledgeRetry(key: String) {
+        guard retryKey == key else { return }
+        retryKey = nil
+        cancelKey = nil
+    }
+}

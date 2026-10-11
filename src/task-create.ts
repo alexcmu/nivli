@@ -1,3 +1,4 @@
+import { isQuiet } from "./quiet-hours.js";
 import type pg from "pg";
 import { randomUUID } from "node:crypto";
 import type { Static } from "@sinclair/typebox";
@@ -72,15 +73,4 @@ export async function createTaskInTransaction(
     "INSERT INTO task_change_log(owner_id,task_id,revision,command_id,kind,created_at) VALUES($1,$2,1,$3,'created',$4)",
     [identity.ownerId, input.taskId, input.commandId, time],
   );
-}
-
-function isQuiet(instant: string, zone: string) {
-  const hour = Number(
-    new Intl.DateTimeFormat("en", {
-      timeZone: zone,
-      hour: "2-digit",
-      hourCycle: "h23",
-    }).format(new Date(instant)),
-  );
-  return hour >= 22 || hour < 8;
 }

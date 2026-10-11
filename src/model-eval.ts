@@ -9,6 +9,7 @@ type Step = {
   text: string;
   expected: "create" | "change" | "clarify" | "prohibited";
   expectedInstant?: string;
+  expectedDeadline?: string;
   expectedStatus?: string;
   replyToPrevious?: boolean;
   selectPreviousTask?: boolean;
@@ -168,6 +169,8 @@ if (process.env.NIVLI_REAL_MODEL_EVAL !== "1" || !model) {
             passed &&
             task?.reminder?.instant ===
               new Date(step.expectedInstant).toISOString();
+        if (step.expectedDeadline)
+          passed = passed && task?.deadline?.date === step.expectedDeadline;
         if (step.expectedStatus)
           passed = passed && task?.status === step.expectedStatus;
         steps.push({

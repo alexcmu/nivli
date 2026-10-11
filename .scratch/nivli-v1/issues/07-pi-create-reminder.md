@@ -37,3 +37,5 @@
 - 日期校验支持明确年月日、今天/明天/后天与数字时刻；其他表达安全停在澄清。原始工具调用计数含非法工具；超过 6 的整批中止，3 请求/1024 输出 token/60 秒上限、无 SDK 重试、attempt fencing 阻止已失效执行提交。普通模型文字不作为事项保存证据。
 - 2026-10-11 合并 04 和最新 integration 后复核：服务端 39 测试通过，Swift 13 测试通过，隔离数据库重新导出共享契约通过；SCHEMA_VERSION=3 保留 04 行为和 agent 表验证。设备 AI 交代验收需新建隔离 HTTPS/受控 provider fixture，未用模拟器结果冒充真机验收。
 - 2026-10-11 聚焦真机补充：临时独立 app bundle 与 HTTPS/数据库 fixture 已贯通生产交代 Enter 提交、处理中终止并重开恢复、真实 Pi/pg-boss 业务保存、当前确认卡、一次任务/一次请求、真实 OS pending=1 与通用隐私预览、重开与断开清理。正确构建测试通过，证据见 `docs/ticket-07-device-evidence.md`。中文输入法组合和 Shift+Enter 未由程序化 Unicode 测试代验，该 UI 项仍未勾选；真实 Claude 凭据冒烟项仍未完成。
+
+- 2026-10-11 AI review fixes: 已修复否定/条件语句被模型误提为完成或取消、重试后再次取消沿用旧操作身份、明确 deadline 被遗漏的问题；按原始输入时刻和时区解析下一未来周五，提交时仍拒绝已过去的提醒。公开 HTTP/真实 PostgreSQL/pg-boss/Pi 全套 57 测试与最终否定语句专项、15 Swift 测试、通用 iOS Simulator 构建通过。证据见 [AI review fixes](../../../docs/ai-review-fixes-evidence.md)。新增至 51 条评估标注，真实 Claude 评估仍为 not_run，未关闭原有外部凭据或 IME 验收项。

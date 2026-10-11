@@ -22,3 +22,26 @@ final class ConversationTests: XCTestCase {
         XCTAssertEqual(model.dataDestination, "https://api.anthropic.com")
     }
 }
+
+final class ConversationRetryTests: XCTestCase {
+    func testPersistedCancellationIdentitySurvivesUncertainRetryButChangesAfterAcknowledgement() throws {
+        var draft = ConversationDraft()
+        draft.text = "明天提醒我提交材料"
+        draft.runId = "same-run"
+        let firstCancellation = draft.cancellationKey()
+        draft.prepareRetry()
+        let retry = try XCTUnwrap(draft.retryKey)
+        // Relaunch after transport loss must replay the same operations.
+        draft = try JSONDecoder().decode(ConversationDraft.self, from: JSONEncoder().encode(draft))
+        draft.prepareRetry()
+        XCTAssertEqual(draft.retryKey, retry)
+        XCTAssertEqual(draft.cancellationKey(), firstCancellation)
+        draft.acknowledgeRetry(key: retry)
+        let secondCancellation = draft.cancellationKey()
+        XCTAssertNotEqual(secondCancellation, firstCancellation)
+        draft.acknowledgeRetry(key: retry) // A duplicate old acknowledgement cannot discard the new cancel.
+        XCTAssertEqual(draft.cancellationKey(), secondCancellation)
+        XCTAssertEqual(draft.runId, "same-run")
+        XCTAssertEqual(draft.text, "明天提醒我提交材料")
+    }
+}

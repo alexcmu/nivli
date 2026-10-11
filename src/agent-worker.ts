@@ -71,7 +71,7 @@ export async function startAgentWorker(config: {
         inputId: input.id,
         text: input.text,
         timeZone: input.time_zone,
-        now: now().toISOString(),
+        now: new Date(input.created_at).toISOString(),
         signal: AbortSignal.any([shutdown.signal, runAbort.signal]),
         context: await loadConversationContext(pool, input),
         assertActive: async () => {
@@ -174,7 +174,10 @@ export async function startAgentWorker(config: {
                 e instanceof Error ? e.message : "事项状态已变化，请核对。";
             }
           } else if (result.output.kind === "proposal") {
-            if (validateProposal(result.output.proposal, owned)) {
+            if (
+              validateProposal(result.output.proposal, owned) &&
+              new Date(result.output.proposal.instant) > now()
+            ) {
               const p = result.output.proposal;
               taskId = input.id;
               await createTaskInTransaction(

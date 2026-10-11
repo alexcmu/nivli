@@ -66,9 +66,12 @@ export function validateProposal(p: Proposal, i: AgentInput): boolean {
   )
     return false;
   if (
-    !/(提醒我|提醒一下|帮我.{0,10}提醒|设置.{0,8}提醒|记得提醒|remind me|set.{0,12}reminder)/i.test(
+    (!/(提醒我|提醒一下|帮我.{0,10}提醒|设置.{0,8}提醒|记得提醒|remind me|set.{0,12}reminder)/i.test(
       i.text,
-    ) ||
+    ) &&
+      !/^(?:今天|明天|后天|\d{4}[-年/]\d{1,2}[-月/]\d{1,2}).{0,30}提醒[^，,。]+/.test(
+        i.text,
+      )) ||
     /(希望|要是|如果|也许|想有空|不.{0,3}提醒|不要|wish|maybe|don't|do not)/i.test(
       i.text,
     )
@@ -142,17 +145,74 @@ export function validateProposal(p: Proposal, i: AgentInput): boolean {
       `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
   )
     return false;
-  if (p.deadlineDate !== undefined) {
+  const hasDeadline = /截止|\b(?:deadline|due)\b/i.test(i.text);
+  if (
+    hasDeadline ||
+    p.deadlineDate !== undefined ||
+    p.deadlineExpression !== undefined
+  ) {
     if (
+      !hasDeadline ||
       typeof p.deadlineDate !== "string" ||
       typeof p.deadlineExpression !== "string" ||
       !i.text.includes(p.deadlineExpression) ||
-      !p.deadlineExpression.includes(p.deadlineDate) ||
-      !/\d{4}-\d\d-\d\d/.test(p.deadlineDate) ||
-      new Date(p.deadlineDate + "T00:00:00Z").toISOString().slice(0, 10) !==
-        p.deadlineDate
+      !/截止|\b(?:deadline|due)\b/i.test(p.deadlineExpression)
+    )
+      return false;
+    const clauses = i.text
+      .split(/[，,。;；\n]/)
+      .filter((part) => /截止|\b(?:deadline|due)\b/i.test(part));
+    if (clauses.length !== 1) return false;
+    const expectedDeadline = deadlineCalendarDate(clauses[0]!, today);
+    if (
+      !expectedDeadline ||
+      p.deadlineDate !== expectedDeadline ||
+      deadlineCalendarDate(p.deadlineExpression, today) !== expectedDeadline
     )
       return false;
   }
   return true;
+}
+
+// Deadline dates are independent calendar dates in the original instruction timezone.
+function deadlineCalendarDate(
+  expression: string,
+  today: string,
+): string | undefined {
+  // A date-only proposal cannot preserve an explicitly timed deadline.
+  if (
+    /\d{1,2}[:：点时]|[一二三四五六七八九十]+点|\b(?:am|pm)\b/i.test(expression)
+  )
+    return;
+  const absolute = expression.match(/(\d{4})[-年/](\d{1,2})[-月/](\d{1,2})日?/);
+  if (absolute) {
+    const date = `${absolute[1]}-${absolute[2]!.padStart(2, "0")}-${absolute[3]!.padStart(2, "0")}`;
+    const parsed = new Date(date + "T00:00:00Z");
+    return Number.isFinite(parsed.getTime()) &&
+      parsed.toISOString().slice(0, 10) === date
+      ? date
+      : undefined;
+  }
+  if (/本周|这周|下周|next|this|月底/i.test(expression)) return;
+  const chinese = expression.match(/(?:周|星期)([日天一二三四五六])/);
+  const english = expression.match(
+    /\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i,
+  );
+  const weekday = chinese
+    ? "日一二三四五六".indexOf(chinese[1]!.replace("天", "日"))
+    : english
+      ? [
+          "sunday",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+        ].indexOf(english[1]!.toLowerCase())
+      : undefined;
+  if (weekday === undefined) return;
+  const date = new Date(today + "T00:00:00Z");
+  const days = (weekday - date.getUTCDay() + 7) % 7 || 7;
+  return new Date(date.getTime() + days * 86400000).toISOString().slice(0, 10);
 }
