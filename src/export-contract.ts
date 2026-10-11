@@ -8,6 +8,7 @@ import {
   ErrorDTO,
 } from "./contracts.js";
 import { GmailStatusDTO, GmailConsentDTO } from "./gmail-routes.js";
+import { CreateTaskDTO, TaskDTO, TaskPageDTO } from "./task-contracts.js";
 import { createApp } from "./app.js";
 const app = await createApp({
   databaseUrl:
@@ -38,6 +39,9 @@ FormatRegistry.Set(
 for (const [name, schema] of Object.entries({
   "gmail-status": GmailStatusDTO,
   "gmail-consent": GmailConsentDTO,
+  task: TaskDTO,
+  "task-page": TaskPageDTO,
+  "task-command": CreateTaskDTO,
   environment: EnvironmentDTO,
   session: SessionDTO,
   credentials: CredentialsDTO,

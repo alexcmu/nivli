@@ -1,3 +1,4 @@
+import { registerTasks } from "./tasks.js";
 import Fastify, { LogController } from "fastify";
 import swagger from "@fastify/swagger";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
@@ -36,12 +37,13 @@ export interface Config {
   logStream?: { write: (message: string) => void };
   pairingTtlSeconds?: number;
 }
-class PublicError extends Error {
+export class PublicError extends Error {
   constructor(
     readonly status: number,
     readonly code: string,
     message: string,
     readonly retryable = false,
+    readonly resource?: string,
   ) {
     super(message);
   }
@@ -49,7 +51,7 @@ class PublicError extends Error {
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");
 const unauthorized = () =>
   new PublicError(401, "UNAUTHENTICATED", "身份无效，请重新连接。");
-const capabilities = ["pairing", "session"];
+const capabilities = ["pairing", "session", "tasks"];
 export async function createApp(config: Config) {
   if (
     config.pairingTtlSeconds !== undefined &&
@@ -148,6 +150,7 @@ export async function createApp(config: Config) {
       message: e.message,
       requestId: request.id,
       retryable: e.retryable,
+      ...(e.resource ? { resource: e.resource } : {}),
     });
   });
   app.setNotFoundHandler((req, reply) =>
@@ -506,5 +509,6 @@ export async function createApp(config: Config) {
     modelDataDestination: config.modelDataDestination,
     clock: config.clock,
   });
+  await registerTasks(app, { pool, session, now });
   return app;
 }

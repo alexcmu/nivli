@@ -21,7 +21,10 @@ public struct NivliAPI: Sendable {
     private let transport: URLSession
     public init(server: URL, session: URLSession? = nil) { self.server = server; self.transport = session ?? Self.transport }
     func request<T: Decodable>(_ path: String, method: String = "GET", body: Data? = nil, token: String? = nil, key: String? = nil, as: T.Type) async throws -> T {
-        var request = URLRequest(url: server.appendingPathComponent(path))
+        let pieces = path.split(separator: "?", maxSplits: 1).map(String.init)
+        var components = URLComponents(url: server.appendingPathComponent(pieces[0]), resolvingAgainstBaseURL: false)!
+        if pieces.count > 1 { components.percentEncodedQuery = pieces[1] }
+        var request = URLRequest(url: components.url!)
         request.httpMethod = method; request.httpBody = body; request.timeoutInterval = 20
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
@@ -48,4 +51,16 @@ public struct NivliAPI: Sendable {
         let (data, response) = try await transport.data(for: request)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { throw (try? JSONDecoder().decode(APIError.self, from: data)) ?? PairingError.invalidResponse }
     }
+}
+
+extension NivliAPI {
+    public func createTask(_ command: ManualTaskCommand, token: String) async throws -> TaskRecord {
+        try await request("v1/tasks", method: "POST", body: JSONEncoder().encode(command), token: token, key: command.commandId, as: TaskRecord.self)
+    }
+    public func tasks(token: String, status: String = "active", cursor: String? = nil) async throws -> TaskPage {
+        var query = URLComponents(); query.queryItems = [URLQueryItem(name: "status", value: status), URLQueryItem(name: "limit", value: "50")]
+        if let cursor { query.queryItems?.append(URLQueryItem(name: "cursor", value: cursor)) }
+        return try await request("v1/tasks?" + (query.percentEncodedQuery ?? ""), token: token, as: TaskPage.self)
+    }
+    public func task(id: String, token: String) async throws -> TaskRecord { try await request("v1/tasks/" + id, token: token, as: TaskRecord.self) }
 }
