@@ -1,4 +1,4 @@
-import { budgetReport, reserveRequest, settleRequest } from "./agent-budget.js";
+import { budgetReport, reserveRequest, settleRequest, AgentBudgetError } from "./agent-budget.js";
 import { acceptConversationInput, readConversation } from "./conversation.js";
 import { ConversationDTO } from "./conversation-contracts.js";
 import { validateProposal } from "./agent-validation.js";
@@ -115,6 +115,7 @@ export async function registerAgent(
           "MODEL_NOT_CONFIGURED",
           "请先配置服务端模型密钥。",
         );
+      let budgetDenied=false;
       const input = {
         ownerId: "00000000-0000-4000-8000-000000000001",
         inputId: randomUUID(),
@@ -122,15 +123,10 @@ export async function registerAgent(
         timeZone: "Asia/Shanghai",
         now: ctx.now().toISOString(),
         signal: AbortSignal.timeout(60000),
-        beforeRequest: async (_context: unknown, maxTokens: number) =>
-          reserveRequest(
-            ctx.pool,
-            null,
-            0,
-            ctx.model?.dailyBudgetUsd ?? 1,
-            maxTokens,
-            ctx.now(),
-          ),
+        beforeRequest: async (_context: unknown, maxTokens: number) => {
+          try{return await reserveRequest(ctx.pool,null,0,ctx.model?.dailyBudgetUsd??1,maxTokens,ctx.now());}
+          catch(e){if(e instanceof AgentBudgetError)budgetDenied=true;throw e;}
+        },
         afterRequest: async (
           id: string,
           usage: {
@@ -142,6 +138,7 @@ export async function registerAgent(
         ) => settleRequest(ctx.pool, id, usage),
       };
       const r = await interpret(ctx.model, input);
+      if(budgetDenied)throw new PublicError(409,"MODEL_BUDGET_EXHAUSTED","今日 AI 额度已用完（UTC 零点重置）。");
       return {
         ok:
           r.output.kind === "proposal" &&
@@ -301,7 +298,7 @@ export async function registerAgent(
   async function readRun(id: string, ownerId: string) {
     const r = (
       await ctx.pool.query(
-        "SELECT r.*,i.text,i.time_zone FROM agent_run r JOIN input_event i ON i.id=r.input_id WHERE r.id=$1 AND r.owner_id=$2",
+        "SELECT r.*,i.text,i.time_zone,(SELECT count(*)::int FROM model_request m WHERE m.run_id=r.id) request_count,(SELECT COALESCE(sum(reserved_usd),0)::float FROM model_request m WHERE m.run_id=r.id) reserved_usd,(SELECT COALESCE(sum(usage_usd) FILTER(WHERE settled),0)::float FROM model_request m WHERE m.run_id=r.id) usage_usd,(SELECT count(*) FILTER(WHERE NOT settled)::int FROM model_request m WHERE m.run_id=r.id) unknown_requests FROM agent_run r JOIN input_event i ON i.id=r.input_id WHERE r.id=$1 AND r.owner_id=$2",
         [id, ownerId],
       )
     ).rows[0];
@@ -315,7 +312,8 @@ export async function registerAgent(
       stillProcessing:
         r.status === "running" &&
         ctx.now().getTime() - new Date(r.started_at).getTime() >= 20000,
-      requests: r.requests,
+      cost:{reservedUsd:r.reserved_usd,usageUsd:r.usage_usd,unknownRequests:r.unknown_requests,invoiceAvailable:false as const},
+      requests: Math.max(r.requests,r.request_count),
       toolCalls: r.tool_calls,
       ...(r.message ? { message: r.message } : {}),
       ...(r.task_id ? { taskId: r.task_id } : {}),

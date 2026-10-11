@@ -188,6 +188,7 @@ beforeAll(async () => {
   const model = {
     model: "claude-sonnet-5-5",
     apiKey: "external-fixture-key",
+    dailyBudgetUsd:0.15,
     baseUrl:
       "http://127.0.0.1:" + (provider.address() as { port: number }).port,
   };
@@ -276,6 +277,9 @@ test("daily budget serializes concurrent requests, reports estimates separately,
     admin,
   );
   expect(budget.body).toMatchObject({ invoiceAvailable: false, requests: 1 });
+  const check=await call('/v1/admin/model/test','POST',{},randomUUID(),admin);
+  expect(check).toMatchObject({status:409,body:{code:'MODEL_BUDGET_EXHAUSTED'}});
+  expect(payloads.length-before).toBe(1);
   expect(budget.body.reservedUsd).toBeGreaterThan(0);
   expect(budget.body.usageUsd).toBeGreaterThan(0);
   expect(payloads.at(-1)?.max_tokens).toBe(512);
@@ -303,6 +307,7 @@ test("cancelled run preserves original input and prevents late provider output a
       break;
     await new Promise((r) => setTimeout(r, 50));
   }
+  for(let i=0;i<100;i++){if((await call('/v1/runs/'+queued.body.runId)).body.requests>0)break;await new Promise(r=>setTimeout(r,20));}
   const key = randomUUID();
   const cancel = await call(
     "/v1/runs/" + queued.body.runId + "/cancel",
@@ -313,6 +318,8 @@ test("cancelled run preserves original input and prevents late provider output a
   expect(cancel.status).toBe(200);
   expect(cancel.body).toMatchObject({
     status: "cancelled",
+    cost:{invoiceAvailable:false,unknownRequests:1},
+    requests:1,
     text: "明天上午9点提醒我提交材料",
     timeZone: "Asia/Shanghai",
   });

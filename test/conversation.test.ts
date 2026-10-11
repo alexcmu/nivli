@@ -23,7 +23,7 @@ const config = {
   modelDataDestination: "None",
   clock: () => new Date("2026-10-11T12:00:00Z"),
 };
-let fixtureMode = "clarification",
+let fixtureMode = "needs_clarification",
   fixtureOverride: Record<string, unknown> | undefined;
 let fixtureWait: Promise<void> | undefined;
 let provider: ReturnType<typeof createServer>,
@@ -120,7 +120,7 @@ beforeAll(async () => {
             name:
               fixtureMode === "modify"
                 ? "propose_change"
-                : fixtureMode === "clarification"
+                : fixtureMode === "needs_clarification"
                   ? "ask_clarification"
                   : "propose_reminder",
             input: {},
@@ -146,7 +146,7 @@ beforeAll(async () => {
                     timeExpression: fixtureOverride?.timeExpression,
                     localDateTime: fixtureOverride?.localDateTime,
                   }
-                : fixtureMode === "clarification"
+                : fixtureMode === "needs_clarification"
                   ? { message: "请问几点提醒？" }
                   : args,
             ),
@@ -190,7 +190,7 @@ beforeAll(async () => {
               delta: {
                 type: "input_json_delta",
                 partial_json: JSON.stringify(
-                  fixtureMode === "clarification"
+                  fixtureMode === "needs_clarification"
                     ? { message: "请问几点提醒？" }
                     : args,
                 ),
@@ -253,7 +253,7 @@ test("clarification answers preserve a durable bounded conversation across serve
     timeZone: "Asia/Shanghai",
   });
   const run = await settle(first.body.runId);
-  expect(["clarification", "needs_clarification"]).toContain(run.status);
+  expect(["needs_clarification", "needs_clarification"]).toContain(run.status);
   expect(first.body.conversationId).toBeTypeOf("string");
   const history = await call("/v1/conversations/" + first.body.conversationId);
   expect(history.body.messages).toMatchObject([
@@ -280,7 +280,7 @@ test("linked time answer uses original instruction without creating duplicate ta
       "http://127.0.0.1:" + (provider.address() as { port: number }).port,
   };
   worker = await startAgentWorker({ ...config, model });
-  fixtureMode = "clarification";
+  fixtureMode = "needs_clarification";
   const first = (
     await call("/v1/inputs", "POST", {
       text: "明天提醒我提交材料",
@@ -395,7 +395,7 @@ test("a persisted expected revision rejects a late edit and preserves original w
   fixtureWait = undefined;
   release();
   const stale = await settle(q.runId);
-  expect(["clarification", "needs_clarification"]).toContain(stale.status);
+  expect(["needs_clarification", "needs_clarification"]).toContain(stale.status);
   expect((await call("/v1/tasks/" + created.taskId)).body).toMatchObject({
     status: "completed",
     revision: 2,
