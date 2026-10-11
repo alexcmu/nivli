@@ -58,6 +58,12 @@ struct SecureStore {
         let saved = SavedSession(server: server, credentials: credentials)
         try store.save(saved); self.saved = saved; self.environment = environment; verified = true; error = nil
     }
+    func forgetLocalCredentials() {
+        do {
+            try store.remove(); try SecureStore(account: "pairing-attempt").remove()
+            saved = nil; environment = nil; verified = false; error = nil
+        } catch { self.error = error.localizedDescription }
+    }
     func disconnect() async {
         guard var saved, !busy else { return }
         busy = true; defer { busy = false }

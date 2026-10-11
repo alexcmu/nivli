@@ -7,7 +7,8 @@ Date: 2026-10-11. Toolchain: Xcode 27.0; minimum supported OS: iOS 26.
 - Public XCTest package: four tests passed. Includes HTTPS/QR input validation, non-default port authority, public JSON DTOs, inspection without credential transmission, public claim error/idempotency contract, and decoding exact backend versioned `contracts/examples` files. Backend separately validates those examples against its schemas.
 - iOS 26.5 iPhone 17 Pro simulator: signed native initial navigation/manual failure test passed. Unsigned simulator builds cannot exercise Keychain; CI uses ad-hoc signing.
 - Connected physical Alchemist iPhone: signed app built, installed and launched. Native live test passed on a real HTTPS tunnel backed by the real PostgreSQL fixture: inspect metadata, explicitly confirm host/data destinations, pair, store credentials in Keychain, terminate/relaunch, verify authenticated session identity, revoke, return to unpaired form. One test, zero failures, 27.140 seconds. Private result: `/tmp/nivli-device-build/Logs/Test/Test-Nivli-2026.10.11_14-27-46--0700.xcresult`.
-- Physical camera-denial/unavailable flow returned to manual pairing; test passed. Initial launch requested no permissions.
+- Final physical functional regression: three tests, zero failures (camera denial/unavailable → manual pairing; dark navigation/manual failure; light navigation/manual failure). Initial launch requested no permissions. Retained pending pairing input is explicitly replaced with an invalid HTTP address by the failure tests, so their result is independent of Keychain state.
+- Local credential removal/re-pair recovery is available with an explicit distinction from server revocation; the final signed build includes this control.
 
 ## Scope and limitations
 

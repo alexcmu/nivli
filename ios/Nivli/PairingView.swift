@@ -21,8 +21,8 @@ struct PairingView: View {
     }
     var body: some View {
         Section("连接个人环境") {
-            LabeledContent("HTTPS 地址") { TextField("HTTPS 地址", text: $server, prompt: Text("https://服务器主机").foregroundStyle(.primary)).keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("serverAddress").disabled(busy) }
-            LabeledContent("一次性配对码") { SecureField("一次性配对码", text: $code, prompt: Text("配对码").foregroundStyle(.primary)).accessibilityIdentifier("pairingCode").disabled(busy) }
+            VStack(alignment: .leading, spacing: 8) { Text("HTTPS 地址"); TextField("HTTPS 地址", text: $server, prompt: Text("https://服务器主机").foregroundStyle(.primary)).keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("serverAddress").disabled(busy) }
+            VStack(alignment: .leading, spacing: 8) { Text("一次性配对码"); SecureField("一次性配对码", text: $code, prompt: Text("配对码").foregroundStyle(.primary)).accessibilityIdentifier("pairingCode").disabled(busy) }
             Text("先查看环境和数据去向，确认后才会发送配对码。").foregroundStyle(.primary)
             Button("查看环境") { Task { await inspect() } }.disabled(busy).accessibilityIdentifier("inspectEnvironment")
             Button("扫描配对二维码") { scanning = true }.disabled(busy).accessibilityFocused($scanFocused)

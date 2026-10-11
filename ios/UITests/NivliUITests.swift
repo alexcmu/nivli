@@ -12,9 +12,14 @@ final class NivliUITests: XCTestCase {
         app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "环境连接")).firstMatch.tap()
         XCTAssertTrue(app.textFields["serverAddress"].exists)
         XCTAssertTrue(app.secureTextFields["pairingCode"].exists)
+        let address = app.textFields["serverAddress"]
+        address.tap()
+        if !app.keyboards.firstMatch.waitForExistence(timeout: 2) { address.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap() }
+        address.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: (address.value as? String ?? "").count))
+        address.typeText("http://invalid.example")
         if !app.buttons["inspectEnvironment"].isHittable { app.swipeUp() }
         app.buttons["inspectEnvironment"].tap()
-        app.swipeUp()
+        if !app.staticTexts["pairingError"].waitForExistence(timeout: 2) { app.swipeUp() }
         XCTAssertTrue(app.staticTexts["pairingError"].waitForExistence(timeout: 3))
     }
     @MainActor func testCameraFallbackPreservesManualPairing() {
