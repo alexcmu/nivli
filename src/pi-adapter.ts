@@ -11,6 +11,8 @@ export interface ModelConfig {
   baseUrl: string;
   apiKey: string;
   timeoutMs?: number;
+  maxOutputTokens?: number;
+  dailyBudgetUsd?: number;
 }
 export interface AgentInput {
   ownerId: string;
@@ -19,6 +21,17 @@ export interface AgentInput {
   timeZone: string;
   now: string;
   signal: AbortSignal;
+  assertActive?: () => Promise<void>;
+  beforeRequest?: (context: unknown, maxTokens: number) => Promise<string>;
+  afterRequest?: (
+    reservation: string,
+    usage: {
+      input: number;
+      output: number;
+      totalTokens: number;
+      costTotal: number;
+    },
+  ) => Promise<void>;
   context?: {
     messages: Array<{
       inputId: string;
@@ -61,6 +74,8 @@ export async function interpret(
     costTotal: number;
   };
 }> {
+  const maxTokens = Math.max(1, Math.min(config.maxOutputTokens ?? 1024, 1024));
+  let reservation: string | undefined;
   const models = createModels({
     authContext: { env: async () => undefined, fileExists: async () => false },
   });
@@ -118,6 +133,7 @@ export async function interpret(
       constrainedSampling: { type: "json_schema", strict: "require" },
       execute: async (_id, args) => {
         signal.throwIfAborted();
+        await input.assertActive?.();
         if (budgetFailed || terminal) throw new Error("Run terminated");
         terminal =
           kind === "proposal"
@@ -162,7 +178,9 @@ export async function interpret(
         : undefined,
     finishTurn: () =>
       terminal || budgetFailed ? { action: "end" } : undefined,
-    streamFn: (m, context, options) => {
+    streamFn: async (m, context, options) => {
+      await input.assertActive?.();
+      reservation = await input.beforeRequest?.(context, maxTokens);
       if (
         signal.aborted ||
         requests >= 3 ||
@@ -206,7 +224,7 @@ export async function interpret(
       return models.streamSimple(m, context, {
         ...options,
         apiKey: config.apiKey,
-        maxTokens: 1024,
+        maxTokens,
         maxRetries: 0,
         timeoutMs: Math.min(config.timeoutMs ?? 60000, 60000),
         signal: AbortSignal.any([
@@ -232,7 +250,7 @@ export async function interpret(
             thinking: { type: "between_tools" },
             output_config: { effort: "low" },
             tool_choice: { type: "auto" },
-            max_tokens: 1024,
+            max_tokens: maxTokens,
           };
           for (const k of ["temperature", "top_p", "top_k"])
             delete (p as Record<string, unknown>)[k];
@@ -241,11 +259,24 @@ export async function interpret(
       });
     },
   });
-  agent.subscribe((event) => {
+  agent.subscribe(async (event) => {
     if (event.type === "message_end" && event.message.role === "assistant") {
       const message = event.message as AssistantMessage;
       if (message.stopReason === "error" || message.stopReason === "aborted")
         providerFailed = true;
+      if (
+        reservation &&
+        message.stopReason !== "error" &&
+        message.stopReason !== "aborted"
+      ) {
+        await input.afterRequest?.(reservation, {
+          input: message.usage.input,
+          output: message.usage.output,
+          totalTokens: message.usage.totalTokens,
+          costTotal: message.usage.cost.total,
+        });
+        reservation = undefined;
+      }
       usage.input += message.usage.input;
       usage.output += message.usage.output;
       usage.totalTokens += message.usage.totalTokens;
