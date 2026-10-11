@@ -21,7 +21,10 @@ import {
   RenewDTO,
   MutationHeaders,
 } from "./contracts.js";
+import { registerGmail } from "./gmail-routes.js";
+import type { GmailConfig } from "./gmail.js";
 export interface Config {
+  gmail?: GmailConfig;
   databaseUrl: string;
   adminSecret: string;
   publicUrl: string;
@@ -123,17 +126,23 @@ export async function createApp(config: Config) {
     const e =
       error instanceof PublicError
         ? error
-        : typeof error === "object" &&
-            error !== null &&
-            ("validation" in error ||
-              ("statusCode" in error && Number(error.statusCode) < 500))
-          ? new PublicError(422, "INVALID_INPUT", "输入格式不正确。")
-          : new PublicError(
-              503,
-              "SERVICE_UNAVAILABLE",
-              "服务暂时不可用，请重试。",
-              true,
-            );
+        : error instanceof Error &&
+            "publicFailure" in error &&
+            "statusCode" in error &&
+            "code" in error &&
+            typeof error.code === "string"
+          ? new PublicError(Number(error.statusCode), error.code, error.message)
+          : typeof error === "object" &&
+              error !== null &&
+              ("validation" in error ||
+                ("statusCode" in error && Number(error.statusCode) < 500))
+            ? new PublicError(422, "INVALID_INPUT", "输入格式不正确。")
+            : new PublicError(
+                503,
+                "SERVICE_UNAVAILABLE",
+                "服务暂时不可用，请重试。",
+                true,
+              );
     reply.code(e.status).send({
       code: e.code,
       message: e.message,
@@ -489,5 +498,13 @@ export async function createApp(config: Config) {
       );
     },
   );
+  await registerGmail(app, {
+    pool,
+    session,
+    gmail: config.gmail,
+    publicUrl: config.publicUrl,
+    modelDataDestination: config.modelDataDestination,
+    clock: config.clock,
+  });
   return app;
 }

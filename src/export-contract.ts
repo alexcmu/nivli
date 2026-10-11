@@ -7,6 +7,7 @@ import {
   CredentialsDTO,
   ErrorDTO,
 } from "./contracts.js";
+import { GmailStatusDTO, GmailConsentDTO } from "./gmail-routes.js";
 import { createApp } from "./app.js";
 const app = await createApp({
   databaseUrl:
@@ -35,6 +36,8 @@ FormatRegistry.Set(
     /^\d{4}-\d\d-\d\dT/.test(value) && Number.isFinite(Date.parse(value)),
 );
 for (const [name, schema] of Object.entries({
+  "gmail-status": GmailStatusDTO,
+  "gmail-consent": GmailConsentDTO,
   environment: EnvironmentDTO,
   session: SessionDTO,
   credentials: CredentialsDTO,

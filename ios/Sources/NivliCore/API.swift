@@ -20,7 +20,7 @@ public struct NivliAPI: Sendable {
     public let server: URL
     private let transport: URLSession
     public init(server: URL, session: URLSession? = nil) { self.server = server; self.transport = session ?? Self.transport }
-    private func request<T: Decodable>(_ path: String, method: String = "GET", body: Data? = nil, token: String? = nil, key: String? = nil, as: T.Type) async throws -> T {
+    func request<T: Decodable>(_ path: String, method: String = "GET", body: Data? = nil, token: String? = nil, key: String? = nil, as: T.Type) async throws -> T {
         var request = URLRequest(url: server.appendingPathComponent(path))
         request.httpMethod = method; request.httpBody = body; request.timeoutInterval = 20
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")

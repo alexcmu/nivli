@@ -12,8 +12,7 @@ Dir.glob(File.join(__dir__, 'UITests/*.swift')).each { |path| ui.add_file_refere
 end
 app.build_configurations.each { |c| c.build_settings['CODE_SIGN_ENTITLEMENTS'] = 'Nivli/Nivli.entitlements'; c.build_settings['INFOPLIST_KEY_NSCameraUsageDescription'] = '扫描一次性配对二维码。你也可以手动输入，无需摄像头。'; c.build_settings['INFOPLIST_KEY_UILaunchScreen_Generation'] = 'YES' }
 ui.build_configurations.each { |c| c.build_settings['TEST_TARGET_NAME'] = 'Nivli' }
-fixture = File.join(__dir__, "UITests/LiveFixture.json")
-ui.resources_build_phase.add_file_reference(project.main_group.new_file("UITests/LiveFixture.json")) if File.exist?(fixture)
+Dir.glob(File.join(__dir__, "UITests/*Fixture.json")).each { |fixture| ui.resources_build_phase.add_file_reference(project.main_group.new_file("UITests/" + File.basename(fixture))) }
 project.save
 scheme = Xcodeproj::XCScheme.new
 scheme.add_build_target(app)
