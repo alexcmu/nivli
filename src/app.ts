@@ -1,3 +1,5 @@
+import { registerAgent } from "./agent-routes.js";
+import type { ModelConfig } from "./pi-adapter.js";
 import { registerTasks } from "./tasks.js";
 import Fastify, { LogController } from "fastify";
 import swagger from "@fastify/swagger";
@@ -25,6 +27,7 @@ import {
 import { registerGmail } from "./gmail-routes.js";
 import type { GmailConfig } from "./gmail.js";
 export interface Config {
+  model?: ModelConfig;
   gmail?: GmailConfig;
   databaseUrl: string;
   adminSecret: string;
@@ -215,7 +218,8 @@ export async function createApp(config: Config) {
       name: config.environmentName,
       host: url.host,
       pushMode: config.pushMode,
-      modelDataDestination: config.modelDataDestination,
+      modelDataDestination:
+        config.model?.baseUrl ?? config.modelDataDestination,
       capabilities,
     }),
   );
@@ -510,5 +514,6 @@ export async function createApp(config: Config) {
     clock: config.clock,
   });
   await registerTasks(app, { pool, session, now });
+  await registerAgent(app, { pool, session, admin, now, model: config.model });
   return app;
 }

@@ -10,9 +10,12 @@
     "build": "tsc",
     "start": "node dist/main.js",
     "test": "vitest run",
-    "contract": "node dist/export-contract.js"
+    "contract": "node dist/export-contract.js",
+    "model:smoke": "node dist/model-smoke.js"
   },
   "dependencies": {
+    "@earendil-works/pi-agent-core": "1.1.0",
+    "@earendil-works/pi-ai": "1.1.0",
     "@fastify/swagger": "9.9.2",
     "@fastify/type-provider-typebox": "6.2.0",
     "@sinclair/typebox": "0.34.52",

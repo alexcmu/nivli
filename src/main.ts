@@ -1,3 +1,5 @@
+import { readModelConfig } from "./model-config.js";
+import { startAgentWorker } from "./agent-worker.js";
 import { readGmailConfig } from "./gmail-config.js";
 import { startGmailWorker } from "./gmail-worker.js";
 import { readFile } from "node:fs/promises";
@@ -18,6 +20,7 @@ if (role === "migrate") {
     throw new Error("Invalid PUSH_MODE");
   const app = await createApp({
     gmail: await readGmailConfig(),
+    model: await readModelConfig(),
     databaseUrl,
     adminSecret: (await readFile(file, "utf8")).trim(),
     publicUrl: process.env.PUBLIC_URL ?? "",
@@ -35,6 +38,10 @@ if (role === "migrate") {
     });
 } else if (role === "agent" || role === "delivery") {
   await verifySchema(databaseUrl);
+  const agent =
+    role === "agent"
+      ? await startAgentWorker({ databaseUrl, model: await readModelConfig() })
+      : undefined;
   const gmail = role === "agent" ? await readGmailConfig() : undefined;
   const mailbox = gmail
     ? await startGmailWorker({
@@ -66,6 +73,8 @@ if (role === "migrate") {
   for (const signal of ["SIGTERM", "SIGINT"] as const)
     process.on(signal, () => {
       clearInterval(interval);
-      void Promise.all([boss.stop(), mailbox?.stop()]).then(() => pool.end());
+      void Promise.all([boss.stop(), mailbox?.stop(), agent?.stop()]).then(() =>
+        pool.end(),
+      );
     });
 } else throw new Error("Unknown process role");

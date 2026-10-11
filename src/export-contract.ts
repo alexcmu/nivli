@@ -1,3 +1,4 @@
+import { QueuedDTO, RunDTO, ModelDTO } from "./agent-contracts.js";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { Value } from "@sinclair/typebox/value";
 import { FormatRegistry } from "@sinclair/typebox";
@@ -43,6 +44,9 @@ FormatRegistry.Set(
     /^\d{4}-\d\d-\d\dT/.test(value) && Number.isFinite(Date.parse(value)),
 );
 for (const [name, schema] of Object.entries({
+  "input-accepted": QueuedDTO,
+  "run-succeeded": RunDTO,
+  "model-status": ModelDTO,
   "gmail-status": GmailStatusDTO,
   "gmail-consent": GmailConsentDTO,
   task: TaskDTO,
