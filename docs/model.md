@@ -35,3 +35,5 @@ API 与 agent 配置同一 `MODEL_DAILY_BUDGET_USD`（默认 1 USD，范围 0–
 任务比较通过公开 API 的 `status=all` 分页进行，包含完成和取消事项，避免默认 active 筛选伪造数量变化。报告完成前为 `running`，完成后才为 `completed`；其含义是评估已执行，逐例 `passed` 才表示标注达成。`NIVLI_EVAL_REPORT` 指定报告路径；修复后可用 `NIVLI_EVAL_CASE_IDS=eval-08,eval-09` 进行聚焦重跑，必须保留原始失败结果。跨 CLI 调用的费用不会自动共享数据库，执行者必须累计各次 usage 与未知预留，确保合计不超过授权限额。
 
 2026-10-11 的真实 Anthropic Claude Sonnet 5.5 结果见 [评估证据](evals/claude-sonnet-5-5-evidence.md)。这些数值是 usage/估价与保守预留，不是供应商账单；常规 CI 使用受控外部提供方，不随机调用付费模型。
+
+明确的提供方 refusal 使用 `MODEL_REFUSED` 与静态“不受支持”反馈，不当作可重试服务故障；原始 provider 文本不会进入业务消息。它不具备澄清回答授权，服务端拒绝 replyTo 指向该输入；用户可重新提交完整交代或手动设置。只有明确拒绝的非零 usage 可确认结算，缺失用量仍保留完整预留。

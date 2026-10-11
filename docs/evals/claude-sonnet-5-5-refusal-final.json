@@ -1,0 +1,42 @@
+{
+  "status": "completed",
+  "model": "claude-sonnet-5-5",
+  "piVersion": "1.1.0",
+  "budgetUsd": 0.2,
+  "invoiceAvailable": false,
+  "cases": 1,
+  "usageUsd": 0.004093,
+  "unknownRequests": 0,
+  "requests": 1,
+  "results": [
+    {
+      "id": "eval-50",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "prohibited",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "这条请求不受支持，未创建或修改事项。请重新明确交代，或手动设置。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 0,
+          "errorCode": "MODEL_REFUSED",
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.004093,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    }
+  ],
+  "cleanupFailures": [],
+  "sourceRevision": "344fb71"
+}
