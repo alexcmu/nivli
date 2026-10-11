@@ -1,0 +1,7 @@
+{
+  "name": "My Nivli",
+  "host": "nivli.example",
+  "pushMode": "disabled",
+  "modelDataDestination": "No model configured",
+  "capabilities": ["pairing", "session"]
+}

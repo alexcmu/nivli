@@ -1,4 +1,12 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, readFile } from "node:fs/promises";
+import { Value } from "@sinclair/typebox/value";
+import { FormatRegistry } from "@sinclair/typebox";
+import {
+  EnvironmentDTO,
+  SessionDTO,
+  CredentialsDTO,
+  ErrorDTO,
+} from "./contracts.js";
 import { createApp } from "./app.js";
 const app = await createApp({
   databaseUrl:
@@ -17,3 +25,24 @@ await writeFile(
   JSON.stringify(app.swagger(), null, 2) + "\n",
 );
 await app.close();
+
+FormatRegistry.Set("uuid", (value) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value),
+);
+FormatRegistry.Set(
+  "date-time",
+  (value) =>
+    /^\d{4}-\d\d-\d\dT/.test(value) && Number.isFinite(Date.parse(value)),
+);
+for (const [name, schema] of Object.entries({
+  environment: EnvironmentDTO,
+  session: SessionDTO,
+  credentials: CredentialsDTO,
+  error: ErrorDTO,
+})) {
+  const example = JSON.parse(
+    await readFile(`contracts/examples/${name}.json`, "utf8"),
+  );
+  if (!Value.Check(schema, example))
+    throw new Error(`Public ${name} example no longer matches API contract`);
+}
