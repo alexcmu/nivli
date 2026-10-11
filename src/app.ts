@@ -297,7 +297,12 @@ export async function createApp(config: Config) {
   ) =>
     db.transaction(async (tx) => {
       await tx.execute(sql`SELECT id FROM owner FOR UPDATE`);
-      const digest = hash(JSON.stringify(body));
+      const digest = hash(
+        JSON.stringify(
+          body,
+          Object.keys(body as Record<string, unknown>).sort(),
+        ),
+      );
       const previous = await tx.execute(
         sql`SELECT body_hash,encrypted_result,expires_at FROM identity_operation WHERE scope=${scope} AND key=${idempotencyKey}`,
       );

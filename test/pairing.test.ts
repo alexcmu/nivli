@@ -381,4 +381,32 @@ describe("personal environment pairing over HTTP with PostgreSQL", () => {
       ).status,
     ).toBe(409);
   });
+  test("retry bodies with different JSON key order recover the original credentials", async () => {
+    clock += 60000;
+    const code = (await call("/v1/admin/pairings", "POST", {}, admin)).body
+      .code;
+    const key = randomUUID();
+    const original = await call(
+      "/v1/pairings/claim",
+      "POST",
+      { code, deviceName: "phone" },
+      undefined,
+      key,
+    );
+    const replay = await call(
+      "/v1/pairings/claim",
+      "POST",
+      { deviceName: "phone", code },
+      undefined,
+      key,
+    );
+    expect(replay.status).toBe(200);
+    expect(replay.body).toEqual(original.body);
+    await call(
+      "/v1/admin/devices/" + original.body.deviceId,
+      "DELETE",
+      undefined,
+      admin,
+    );
+  });
 });
