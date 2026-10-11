@@ -2,6 +2,8 @@ import { reserveRequest, settleRequest } from "./agent-budget.js";
 import {
   commitConversationResult,
   loadConversationContext,
+  linkedInstruction,
+  applyConversationChange,
 } from "./conversation.js";
 import pg from "pg";
 import { PgBoss } from "pg-boss";
@@ -152,7 +154,27 @@ export async function startAgentWorker(config: {
         message =
           "今日 AI 额度已用完（UTC 零点重置）。原话已保留，可手动设置或稍后重试。";
       } else if (auth) {
-        if (result.output.kind === "proposal") {
+        if (result.output.kind === "change") {
+          try {
+            taskId = await applyConversationChange(
+              c,
+              {
+                ownerId: input.owner_id,
+                deviceId: input.device_id,
+                sessionId: input.session_id,
+              },
+              owned,
+              result.output.change,
+              now(),
+            );
+            status = "succeeded";
+            message = "事项已更新，请核对最新提醒安排。";
+          } catch (e) {
+            status = "needs_clarification";
+            message =
+              e instanceof Error ? e.message : "事项状态已变化，请核对。";
+          }
+        } else if (result.output.kind === "proposal") {
           if (validateProposal(result.output.proposal, owned)) {
             const p = result.output.proposal;
             taskId = input.id;
@@ -177,7 +199,10 @@ export async function startAgentWorker(config: {
                   : {}),
               },
               now(),
-              { kind: "instruction", text: input.text },
+              {
+                kind: "instruction",
+                text: linkedInstruction(owned)?.text ?? input.text,
+              },
             );
             status = "succeeded";
             message = "事项已保存，请查看手机的实际提醒安排状态。";

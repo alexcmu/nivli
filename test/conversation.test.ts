@@ -25,6 +25,7 @@ const config = {
 };
 let fixtureMode = "clarification",
   fixtureOverride: Record<string, unknown> | undefined;
+let fixtureWait: Promise<void> | undefined;
 let provider: ReturnType<typeof createServer>,
   worker: Awaited<ReturnType<typeof startAgentWorker>> | undefined,
   payloads: Record<string, unknown>[] = [];
@@ -72,6 +73,7 @@ beforeAll(async () => {
     for await (const chunk of req) body += chunk;
     const p = JSON.parse(body);
     payloads.push(p);
+    if (fixtureWait) await fixtureWait;
     if (fixtureMode === "unavailable") {
       res.writeHead(503);
       res.end();
@@ -116,9 +118,11 @@ beforeAll(async () => {
             type: "tool_use",
             id: "call_test",
             name:
-              fixtureMode === "clarification"
-                ? "ask_clarification"
-                : "propose_reminder",
+              fixtureMode === "modify"
+                ? "propose_change"
+                : fixtureMode === "clarification"
+                  ? "ask_clarification"
+                  : "propose_reminder",
             input: {},
           },
         },
@@ -131,9 +135,20 @@ beforeAll(async () => {
           delta: {
             type: "input_json_delta",
             partial_json: JSON.stringify(
-              fixtureMode === "clarification"
-                ? { message: "请问几点提醒？" }
-                : args,
+              fixtureMode === "modify"
+                ? {
+                    taskId: fixtureOverride?.taskId,
+                    expectedRevision: fixtureOverride?.expectedRevision,
+                    operation: fixtureOverride?.operation,
+                    instruction: fixtureOverride?.instruction,
+                    instant: fixtureOverride?.instant,
+                    timeZone: fixtureOverride?.timeZone ?? "Asia/Shanghai",
+                    timeExpression: fixtureOverride?.timeExpression,
+                    localDateTime: fixtureOverride?.localDateTime,
+                  }
+                : fixtureMode === "clarification"
+                  ? { message: "请问几点提醒？" }
+                  : args,
             ),
           },
         },
@@ -255,4 +270,140 @@ test("clarification answers preserve a durable bounded conversation across serve
   base = await app.listen({ host: "127.0.0.1", port: 0 });
   const restored = await call("/v1/conversations/" + first.body.conversationId);
   expect(restored.body).toEqual(history.body);
+});
+
+test("linked time answer uses original instruction without creating duplicate tasks", async () => {
+  const model = {
+    model: "claude-sonnet-5-5",
+    apiKey: "external-fixture-key",
+    baseUrl:
+      "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+  };
+  worker = await startAgentWorker({ ...config, model });
+  fixtureMode = "clarification";
+  const first = (
+    await call("/v1/inputs", "POST", {
+      text: "明天提醒我提交材料",
+      timeZone: "Asia/Shanghai",
+    })
+  ).body;
+  await settle(first.runId);
+  fixtureMode = "valid";
+  fixtureOverride = { instruction: "上午9点", timeExpression: "上午9点" };
+  const answer = (
+    await call("/v1/inputs", "POST", {
+      text: "上午9点",
+      timeZone: "Asia/Shanghai",
+      conversationId: first.conversationId,
+      replyToInputId: first.inputId,
+    })
+  ).body;
+  const run = await settle(answer.runId);
+  expect(run.status).toBe("succeeded");
+  const task = (await call("/v1/tasks/" + run.taskId)).body;
+  expect(task.reminder.instant).toBe("2026-10-12T01:00:00.000Z");
+  expect(task.sources[0].text).toContain("明天提醒我提交材料");
+  expect(task.sources[0].text).toContain("上午9点");
+  expect(JSON.stringify(payloads.at(-1))).toContain(first.inputId);
+  fixtureOverride = undefined;
+});
+
+test("serial conversation changes target the latest committed revision and old cards read current state", async () => {
+  fixtureMode = "valid";
+  fixtureOverride = undefined;
+  const first = (
+    await call("/v1/inputs", "POST", {
+      text: "明天上午9点提醒我提交材料",
+      timeZone: "Asia/Shanghai",
+    })
+  ).body;
+  const created = await settle(first.runId);
+  fixtureMode = "modify";
+  fixtureOverride = {
+    taskId: created.taskId,
+    expectedRevision: "1",
+    operation: "edit",
+    instruction: "改成九点半",
+    timeExpression: "九点半",
+    instant: "2026-10-12T01:30:00Z",
+    localDateTime: "2026-10-12T09:30:00",
+  };
+  const q = (
+    await call("/v1/inputs", "POST", {
+      text: "改成九点半",
+      timeZone: "Asia/Shanghai",
+      conversationId: first.conversationId,
+    })
+  ).body;
+  const changed = await settle(q.runId);
+  expect(changed.status).toBe("succeeded");
+  expect(changed.taskId).toBe(created.taskId);
+  const history = (await call("/v1/conversations/" + first.conversationId))
+    .body;
+  expect(history.messages[0].task).toMatchObject({
+    revision: 2,
+    reminder: { instant: "2026-10-12T01:30:00.000Z" },
+  });
+  fixtureMode = "valid";
+  fixtureOverride = undefined;
+});
+
+test("a persisted expected revision rejects a late edit and preserves original words with current terminal state", async () => {
+  fixtureMode = "valid";
+  fixtureOverride = undefined;
+  const first = (
+    await call("/v1/inputs", "POST", {
+      text: "明天上午9点提醒我提交材料",
+      timeZone: "Asia/Shanghai",
+    })
+  ).body;
+  const created = await settle(first.runId);
+  let release!: () => void;
+  fixtureWait = new Promise<void>((r) => (release = r));
+  fixtureMode = "modify";
+  fixtureOverride = {
+    taskId: created.taskId,
+    expectedRevision: "1",
+    operation: "edit",
+    instruction: "改成9:30",
+    timeExpression: "9:30",
+    instant: "2026-10-12T01:30:00Z",
+    localDateTime: "2026-10-12T09:30:00",
+  };
+  const before = payloads.length;
+  const q = (
+    await call("/v1/inputs", "POST", {
+      text: "改成9:30",
+      timeZone: "Asia/Shanghai",
+      conversationId: first.conversationId,
+    })
+  ).body;
+  for (let n = 0; n < 100 && payloads.length === before; n++)
+    await new Promise((r) => setTimeout(r, 30));
+  expect(payloads.length).toBeGreaterThan(before);
+  const completed = await call(
+    "/v1/tasks/" + created.taskId + "/commands",
+    "POST",
+    {
+      commandId: randomUUID(),
+      clientMutationId: randomUUID(),
+      expectedRevision: 1,
+      operation: "complete",
+    },
+  );
+  expect(completed.status).toBe(200);
+  fixtureWait = undefined;
+  release();
+  const stale = await settle(q.runId);
+  expect(["clarification", "needs_clarification"]).toContain(stale.status);
+  expect((await call("/v1/tasks/" + created.taskId)).body).toMatchObject({
+    status: "completed",
+    revision: 2,
+  });
+  const history = (await call("/v1/conversations/" + first.conversationId))
+    .body;
+  expect(history.messages.at(-1).text).toBe("改成9:30");
+  expect(history.messages[0].task.status).toBe("completed");
+  fixtureMode = "valid";
+  fixtureOverride = undefined;
 });
