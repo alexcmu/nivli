@@ -27,3 +27,13 @@ API 与 agent 配置同一 `MODEL_DAILY_BUDGET_USD`（默认 1 USD，范围 0–
 管理员 `GET /v1/admin/model/budget` 返回 UTC 日期、额度、预留估算、已确认 usage、usage 未确认的请求数量和剩余可用额度。运行结果 `cost` 同样区分预留、usage 与未知请求；`invoiceAvailable:false` 明确这些都不是 provider 账单。管理员 `/v1/admin/model/test` 使用同一生产预算，预算不足返回 `MODEL_BUDGET_EXHAUSTED`。CLI smoke 则是显式启用的独立测试：`MODEL_SMOKE_BUDGET_USD` 默认为 0.5 USD、最高 1 USD，每次请求预留后才发送；它会产生模型费用，**不共享生产每日预算**，输出注明独立预算与账单不可用。
 
 运行 lease 用数据库时间更新。进程被终止后未确认请求由队列重新执行，可能再次产生模型费用；原业务操作使用稳定 InputEvent UUID，且业务写入与运行成功在同一事务提交。旧尝试的晚到结果不能提交。API、agent 和 delivery 分开运行，agent 单个 worker 的并发额度为 1；模型阻塞或预算耗尽不会占用 API 或 delivery 配额，也不会影响设备已安装的离线提醒。
+
+## 真实模型评估
+
+`npm run model:eval` 默认只写 `not_run`，必须显式设置 `NIVLI_REAL_MODEL_EVAL=1` 与服务端模型配置才调用付费模型。`MODEL_DAILY_BUDGET_USD` 是本次评估的全局上限，默认 1 USD、最高 2 USD；每个标注案例使用独立 PostgreSQL 数据库、实际 API 和 pg-boss worker，累计已确认 usage 与未知请求的完整预留后，才允许下一案例请求。模型失败仍记录为失败；没有足够预算执行的案例记录为 `unevaluated`，不能视作语义通过或失败。
+
+任务比较通过公开 API 的 `status=all` 分页进行，包含完成和取消事项，避免默认 active 筛选伪造数量变化。报告完成前为 `running`，完成后才为 `completed`；其含义是评估已执行，逐例 `passed` 才表示标注达成。`NIVLI_EVAL_REPORT` 指定报告路径；修复后可用 `NIVLI_EVAL_CASE_IDS=eval-08,eval-09` 进行聚焦重跑，必须保留原始失败结果。跨 CLI 调用的费用不会自动共享数据库，执行者必须累计各次 usage 与未知预留，确保合计不超过授权限额。
+
+2026-10-11 的真实 Anthropic Claude Sonnet 5.5 结果见 [评估证据](evals/claude-sonnet-5-5-evidence.md)。这些数值是 usage/估价与保守预留，不是供应商账单；常规 CI 使用受控外部提供方，不随机调用付费模型。
+
+明确的提供方 refusal 使用 `MODEL_REFUSED` 与静态“不受支持”反馈，不当作可重试服务故障；原始 provider 文本不会进入业务消息。它不具备澄清回答授权，服务端拒绝 replyTo 指向该输入；用户可重新提交完整交代或手动设置。只有明确拒绝的非零 usage 可确认结算，缺失用量仍保留完整预留。

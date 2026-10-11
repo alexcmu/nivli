@@ -1,0 +1,190 @@
+{
+  "status": "completed",
+  "model": "claude-sonnet-5-5",
+  "piVersion": "1.1.0",
+  "budgetUsd": 0.3,
+  "invoiceAvailable": false,
+  "cases": 4,
+  "usageUsd": 0.0522258,
+  "unknownRequests": 0,
+  "requests": 8,
+  "results": [
+    {
+      "id": "eval-08",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T16:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.005296800000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "change",
+          "actualInstant": "2026-10-12T16:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.009958000000000002,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-09",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T16:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0053968,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "change",
+          "actualInstant": "2026-10-12T16:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0066277,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-33",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T13:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.005701800000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "change",
+          "actualInstant": "2026-10-12T13:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0069052,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-34",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T13:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.005556800000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "change",
+          "actualInstant": "2026-10-12T13:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.006782700000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    }
+  ],
+  "sourceRevision": "d58e8d1"
+}

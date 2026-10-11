@@ -7640,6 +7640,9 @@
                           "message": {
                             "type": "string"
                           },
+                          "errorCode": {
+                            "type": "string"
+                          },
                           "replyToInputId": {
                             "format": "uuid",
                             "type": "string"

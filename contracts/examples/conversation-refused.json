@@ -1,0 +1,17 @@
+{
+  "id": "00000000-0000-4000-8000-000000000001",
+  "revision": 1,
+  "acceptedRevision": 1,
+  "messages": [
+    {
+      "inputId": "00000000-0000-4000-8000-000000000002",
+      "runId": "00000000-0000-4000-8000-000000000003",
+      "revision": 1,
+      "text": "unsupported synthetic request",
+      "timeZone": "America/Los_Angeles",
+      "status": "needs_clarification",
+      "errorCode": "MODEL_REFUSED",
+      "message": "这条请求不受支持，未创建或修改事项。请重新明确交代，或手动设置。"
+    }
+  ]
+}

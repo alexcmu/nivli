@@ -16,6 +16,7 @@ export const ConversationDTO = Type.Object(
           timeZone: Type.String(),
           status: Type.String(),
           message: Type.Optional(Type.String()),
+          errorCode: Type.Optional(Type.String()),
           replyToInputId: Type.Optional(uuid),
           task: Type.Optional(TaskDTO),
         },

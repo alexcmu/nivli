@@ -1,0 +1,43 @@
+{
+  "status": "budget_exhausted",
+  "model": "claude-sonnet-5-5",
+  "piVersion": "1.1.0",
+  "budgetUsd": 1,
+  "invoiceAvailable": false,
+  "cases": 1,
+  "usageUsd": 0,
+  "unknownRequests": 0,
+  "requests": 0,
+  "results": [
+    {
+      "id": "eval-01",
+      "language": "zh",
+      "status": "unevaluated",
+      "passed": null,
+      "steps": [
+        {
+          "evaluated": false,
+          "expected": "create",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "failed",
+          "publicMessage": "今日 AI 额度已用完（UTC 零点重置）。原话已保留，可手动设置或稍后重试。",
+          "passed": false,
+          "requests": 0,
+          "toolCalls": 0,
+          "errorCode": "MODEL_BUDGET_EXHAUSTED",
+          "cost": {
+            "reservedUsd": 0,
+            "usageUsd": 0,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    }
+  ],
+  "cleanupFailures": [],
+  "verification": "Temporary compiled CLI fault injection, controlled fake key, no provider requests",
+  "sourceRevision": "e5de12d"
+}

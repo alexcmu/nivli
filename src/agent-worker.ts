@@ -225,7 +225,7 @@ export async function startAgentWorker(config: {
           }
         }
         await c.query(
-          "UPDATE agent_run SET status=$2,message=$3,task_id=$4,requests=$5,tool_calls=$6,finished_at=$7 WHERE id=$1",
+          "UPDATE agent_run SET status=$2,message=$3,task_id=$4,requests=$5,tool_calls=$6,finished_at=$7,error_code=COALESCE($8,error_code) WHERE id=$1",
           [
             id,
             status,
@@ -234,6 +234,9 @@ export async function startAgentWorker(config: {
             result.requests,
             result.toolCalls,
             now(),
+            status === "needs_clarification" && result.output.kind === "refused"
+              ? "MODEL_REFUSED"
+              : null,
           ],
         );
         await commitConversationResult(c, input);

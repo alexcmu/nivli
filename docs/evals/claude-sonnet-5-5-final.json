@@ -1,0 +1,1733 @@
+{
+  "status": "completed",
+  "model": "claude-sonnet-5-5",
+  "piVersion": "1.1.0",
+  "budgetUsd": 1,
+  "invoiceAvailable": false,
+  "cases": 51,
+  "usageUsd": 0.36690749999999983,
+  "unknownRequests": 1,
+  "requests": 69,
+  "results": [
+    {
+      "id": "eval-01",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-11T16:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.005956800000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-02",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T16:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.006001800000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-03",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T01:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0061768000000000005,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-04",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-13T21:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0062468,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-05",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T16:00:00.000Z",
+          "actualDeadline": "2026-10-16",
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0062368,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-06",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "好的,我可以帮您设置买牛奶的提醒。请问您希望在什么时间提醒您?(例如:今天下午5点、明天早上8点)",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0037568000000000002,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T16:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0066868000000000006,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-07",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "好的,明天(2026年10月12日)几点提醒您买牛奶呢?请告诉我具体时间,例如\"上午9点\"或\"下午6点\"。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0035943,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T16:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0069693,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-08",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T16:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.005811800000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "change",
+          "actualInstant": "2026-10-12T16:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已更新，请核对最新提醒安排。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.007362700000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-09",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T16:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.006039300000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "change",
+          "actualInstant": "2026-10-12T16:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已更新，请核对最新提醒安排。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0071377,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-10",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T16:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.006039300000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "change",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": "completed",
+          "actual": "succeeded",
+          "publicMessage": "事项已更新，请核对最新提醒安排。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0062002,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "prohibited",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "AI 未创建事项。请明确日期和时间，或手动设置。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0051477,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-11",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "好的,请问具体想在什么时候提醒你打电话?比如今天晚上8点,或者明天上午10点。另外如果有要打给谁,也可以告诉我。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0036118,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-12",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "请问周五几点提醒您交材料?(例如:周五上午9点)",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0031018,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-13",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "请问\"那个\"具体指什么事项?告诉我需要处理的具体内容后,我就为您设置明天09:00的提醒。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0037943,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-14",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T16:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.005859300000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T17:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.007150200000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "你想把哪一个提醒改到明天11:00？目前有两个：买牛奶（明天09:00）和买面包（明天10:00）。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0065827,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-15",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "2027-03-14 02:30 在洛杉矶时区并不存在(当天凌晨 2:00 会直接跳到 3:00,夏令时开始)。你想改成哪个时间?例如 03:30(跳时后),或者 01:30(跳时前),也可以换成其他时间。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0044943000000000006,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-16",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "2026年11月1日凌晨1:30在洛杉矶时间会出现两次(夏令时回拨:先是 PDT,即 UTC-7;之后是 PST,即 UTC-8)。请问您想要哪一个?第一次的 1:30(PDT)还是第二次的 1:30(PST)?",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.004854300000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-17",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2027-03-14T10:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0064868,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-18",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-11-01T10:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0069343,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-19",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "prohibited",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "你是想让我在明天 09:00(洛杉矶时间)提醒你去跑步吗?如果是,请明确告诉我“请提醒我明天09:00跑步”,我就为你创建提醒。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0038167999999999995,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-20",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "prohibited",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "AI 未创建事项。请明确日期和时间，或手动设置。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0037793,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-21",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "AI 未创建事项。请明确日期和时间，或手动设置。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 0,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0030168,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-22",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T16:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.005999300000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "请确认：是要把\"交材料\"这条提醒改成东京当地时间吗？请告诉我具体的东京日期和时间（例如\"东京时间10月13日09:00\"），我再为您调整。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.006652700000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-23",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "我没有找到明天09:00的提醒（当前没有任何已保存的提醒）。请告诉我是哪一个提醒，或者我可以帮你新建一个明天09:30的提醒，请告诉我提醒内容。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0038967999999999997,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-24",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "prohibited",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "抱歉,我无法修改该事项:它不在当前对话可识别的事项中(也不属于当前用户)。如果你想修改自己的某个提醒,请告诉我是哪一个;或者如果想新建提醒,请说明提醒内容和具体时间(例如“明天09:00提醒我……”)。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0040292999999999995,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-25",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "prohibited",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "AI 未创建事项。请明确日期和时间，或手动设置。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0044043,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-26",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-11T13:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0057593,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-27",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T13:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.005994300000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-28",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-13T21:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.005971800000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-29",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T01:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0061568000000000005,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-30",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T13:00:00.000Z",
+          "actualDeadline": "2026-10-16",
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0062343,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-31",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "When would you like to be reminded to buy milk? Please give a date and time (e.g., tomorrow at 5pm).",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0032817999999999996,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T13:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.006556800000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-32",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "What time tomorrow would you like to be reminded to call Sam?",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0032093,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T13:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0068368000000000005,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-33",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T13:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0059418000000000006,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "change",
+          "actualInstant": "2026-10-12T13:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已更新，请核对最新提醒安排。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.007590200000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-34",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T13:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0061168,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "change",
+          "actualInstant": "2026-10-12T13:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已更新，请核对最新提醒安排。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0072277,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-35",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T16:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0059868000000000005,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "change",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": "cancelled",
+          "actual": "succeeded",
+          "publicMessage": "事项已更新，请核对最新提醒安排。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0068577,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "prohibited",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "AI 未创建事项。请明确日期和时间，或手动设置。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0053676999999999996,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-36",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "What exact date and time would you like to be reminded to call Sam?",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0030543,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-37",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "What time on Friday should I remind you to submit the form?",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0031768000000000005,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-38",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "What would you like to be reminded to handle tomorrow at 09:00? \"That\" isn't specified yet.",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0033217999999999998,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-39",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T13:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0059893,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T14:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.007105200000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "Which reminder should I move to tomorrow at 11:00: \"Buy milk\" (currently 09:00) or \"Buy bread\" (currently 10:00)?",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0062477,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-40",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "2:30 AM doesn't exist on 2027-03-14 in New York, because clocks jump from 2:00 to 3:00 AM that morning. Would you like the reminder at 3:30 AM instead, or a different time or date?",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0039568,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-41",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "1:30 AM on 2026-11-01 happens twice in New York because clocks fall back that night. Do you mean the first 1:30 AM (EDT, UTC-4) or the second 1:30 AM (EST, UTC-5)?",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.004079300000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-42",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2027-03-14T07:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0062118,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-43",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-11-01T07:30:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.005976800000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-44",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "prohibited",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "Would you like me to create a reminder to start running tomorrow (October 12) at 9:00 AM Eastern? If so, please say so explicitly, e.g. \"Remind me to start running tomorrow at 09:00.\"",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0036467999999999995,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-45",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "prohibited",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "Your message looks like a request not to be reminded, and it's cut off after \"to run\". Do you want me to create a reminder? If so, please tell me exactly what and when, e.g. \"Remind me tomorrow at 09:00 to run.\"",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.004379300000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-46",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "Which date do you want this reminder for? \"When I travel to Tokyo\" doesn't give me a specific day, so please tell me the exact date of the trip. I'll also need to know whether 09:00 means Tokyo time (Asia/Tokyo) or your current timezone (America/New_York).",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.004616800000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-47",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T13:00:00.000Z",
+          "actualDeadline": null,
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.006001800000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        },
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "Which time and date should the \"Submit the form\" reminder use in Tokyo? It's currently set for Oct 12 at 9:00 AM New York time. Should I move it to 9:00 AM Tokyo time (Asia/Tokyo) on Oct 12, or to a different date or time? Please tell me the exact date and time you want.",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0053952,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-48",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "clarify",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "No reminders are saved in this conversation, so I can't tell which one to change. Which reminder do you want moved to tomorrow at 09:30? If you give me its title or details, I can go from there.",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0039468,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-49",
+      "language": "en",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "prohibited",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "needs_clarification",
+          "publicMessage": "AI 未创建事项。请明确日期和时间，或手动设置。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.004594300000000001,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-50",
+      "language": "en",
+      "status": "evaluated",
+      "passed": false,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "prohibited",
+          "actualInstant": null,
+          "actualDeadline": null,
+          "actualTaskStatus": null,
+          "actual": "failed",
+          "publicMessage": "AI 暂时无法处理，原话已保留。可重试或手动设置。",
+          "passed": false,
+          "requests": 1,
+          "toolCalls": 0,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0,
+            "unknownRequests": 1,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "eval-51",
+      "language": "zh",
+      "status": "evaluated",
+      "passed": true,
+      "steps": [
+        {
+          "evaluated": true,
+          "expected": "create",
+          "actualInstant": "2026-10-12T01:00:00.000Z",
+          "actualDeadline": "2026-10-16",
+          "actualTaskStatus": "active",
+          "actual": "succeeded",
+          "publicMessage": "事项已保存，请查看手机的实际提醒安排状态。",
+          "passed": true,
+          "requests": 1,
+          "toolCalls": 1,
+          "errorCode": null,
+          "cost": {
+            "reservedUsd": 0.141312,
+            "usageUsd": 0.0062868,
+            "unknownRequests": 0,
+            "invoiceAvailable": false
+          }
+        }
+      ]
+    }
+  ],
+  "sourceRevision": "ac9d741 (model prompt/domain/adapter); later e5de12d only hardens CLI reporting/cleanup"
+}

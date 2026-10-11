@@ -1,4 +1,5 @@
 import { QueuedDTO, RunDTO, ModelDTO } from "./agent-contracts.js";
+import { ConversationDTO } from "./conversation-contracts.js";
 import { TaskActionDTO } from "./task-action-contracts.js";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { Value } from "@sinclair/typebox/value";
@@ -46,6 +47,7 @@ FormatRegistry.Set(
 );
 for (const [name, schema] of Object.entries({
   "input-accepted": QueuedDTO,
+  "conversation-refused": ConversationDTO,
   "run-succeeded": RunDTO,
   "model-status": ModelDTO,
   "gmail-status": GmailStatusDTO,
