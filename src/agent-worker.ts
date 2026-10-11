@@ -19,8 +19,8 @@ export async function startAgentWorker(config: {
   async function processRun(id: string) {
     const claimed = (
       await pool.query(
-        "UPDATE agent_run SET status='running',started_at=$2,attempt=attempt+1 WHERE id=$1 AND status='queued' RETURNING *",
-        [id, now()],
+        "UPDATE agent_run SET status='running',started_at=$2,deadline_at=$3,attempt=attempt+1 WHERE id=$1 AND status='queued' RETURNING *",
+        [id, now(),new Date(now().getTime()+Math.min(config.model?.timeoutMs??60000,60000))],
       )
     ).rows[0];
     if (!claimed) return;
@@ -29,13 +29,16 @@ export async function startAgentWorker(config: {
         claimed.input_id,
       ])
     ).rows[0];
+    const runAbort=new AbortController();
+    const monitor=setInterval(()=>{void pool.query("SELECT status,attempt,deadline_at FROM agent_run WHERE id=$1",[id]).then(({rows})=>{const r=rows[0];if(!r||r.status!=='running'||r.attempt!==claimed.attempt||new Date(r.deadline_at).getTime()<=now().getTime())runAbort.abort();}).catch(()=>runAbort.abort());},50);
+    const hard=setTimeout(()=>runAbort.abort(),Math.min(config.model?.timeoutMs??60000,60000));
     const owned: AgentInput = {
       ownerId: input.owner_id,
       inputId: input.id,
       text: input.text,
       timeZone: input.time_zone,
       now: now().toISOString(),
-      signal: shutdown.signal,
+      signal: AbortSignal.any([shutdown.signal,runAbort.signal]),
     };
     const permitted = (
       await pool.query(
@@ -54,6 +57,7 @@ export async function startAgentWorker(config: {
             requests: 0,
             toolCalls: 0,
           };
+    clearInterval(monitor);clearTimeout(hard);
     const c = await pool.connect();
     try {
       await c.query("BEGIN");
@@ -62,13 +66,17 @@ export async function startAgentWorker(config: {
       ]);
       const active = (
         await c.query(
-          "SELECT id FROM agent_run WHERE id=$1 AND status='running' AND attempt=$2 FOR UPDATE",
+          "SELECT * FROM agent_run WHERE id=$1 AND status='running' AND attempt=$2 FOR UPDATE",
           [id, claimed.attempt],
         )
-      ).rowCount;
+      ).rows[0];
       if (!active || shutdown.signal.aborted) {
         await c.query("ROLLBACK");
         return;
+      }
+      if (owned.signal.aborted || new Date(active.deadline_at).getTime()<=now().getTime()) {
+        await c.query("UPDATE agent_run SET status='timed_out',error_code='MODEL_TIMEOUT',message='处理已超时，原话已保留。重试可能再次产生模型费用。',finished_at=$2 WHERE id=$1",[id,now()]);
+        await c.query("COMMIT");return;
       }
       const auth = (
         await c.query(
@@ -110,12 +118,12 @@ export async function startAgentWorker(config: {
             status = "succeeded";
             message = "事项已保存，请查看手机的实际提醒安排状态。";
           } else {
-            status = "clarification";
+            status = "needs_clarification";
             message =
               "请补充明确的日期、时间和要提醒的事项；当前交代尚未创建事项。";
           }
         } else {
-          status = result.output.kind === "failed" ? "failed" : "clarification";
+          status = result.output.kind === "failed" ? "failed" : "needs_clarification";
           message =
             result.output.kind === "reply"
               ? "AI 未创建事项。请明确日期和时间，或手动设置。"
