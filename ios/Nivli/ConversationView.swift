@@ -1,0 +1,147 @@
+import SwiftUI
+import UIKit
+
+private struct ConversationDraft: Codable {
+    var text = ""
+    var submittedText: String?
+    var timeZone: String?
+    var key: String?
+    var runId: String?
+    var retryKey: String?
+}
+
+struct ConversationView: View {
+    @Bindable var connection: Connection
+    @Bindable var repository: TaskRepository
+    @State private var draft = ConversationDraft()
+    @State private var busy = false
+    @State private var failedRun = false
+    @State private var message: String?
+    @State private var error: String?
+    @State private var saved: TaskRecord?
+    @State private var model: ModelConfiguration?
+    @State private var manual = false
+    @State private var pollTrigger = 0
+    private var store: SecureStore {
+        let session = connection.saved
+        return SecureStore(account: "conversation-draft/" + (session?.server.absoluteString ?? "") + "/" + (session?.credentials.ownerId ?? "") + "/" + (session?.credentials.deviceId ?? ""))
+    }
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("交代一次，记住要做的事。").font(.title2).bold()
+                Text("请说明事项与具体提醒时间；日期不明确时会请你补充。").foregroundStyle(.secondary)
+                ConversationEditor(text: $draft.text, disabled: busy, submit: { submit() }).frame(minHeight: 140)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(.secondary.opacity(0.3)))
+                if let model {
+                    Text(model.configured ? "\(model.provider) · \(model.model)\n内容将发送至：\(model.dataDestination)" : "模型尚未配置，仍可手动设置。").font(.footnote).foregroundStyle(.secondary)
+                }
+                if busy { ProgressView("正在处理，原话已保留…") }
+                if let message { Text(message) }
+                if let error { Text(error).foregroundStyle(.red); Text("原话已保留。重试会沿用同一次交代，不重复保存事项。").font(.footnote) }
+                if let saved {
+                    GroupBox("已保存事项") {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text(saved.title).font(.headline)
+                            if let reminder = saved.reminder { Text(taskDate(reminder.instant, zone: reminder.timeZone)); Text("时区：\(reminder.timeZone)") }
+                            if let deadline = saved.deadline { Text("截止：" + (deadline.kind == "date" ? (deadline.date ?? "") : taskDate(deadline.instant ?? "", zone: deadline.timeZone))) }
+                            Text(repository.notifications.localStatus[saved.id] ?? reminderStatus(saved.reminder))
+                            ForEach(saved.sources, id: \.id) { Text("来源：\($0.text)").font(.footnote) }
+                            NavigationLink("查看当前事项与提醒设置") { TaskDetailView(initial: saved, connection: connection) }
+                            Button("再交代一件事") { draft = ConversationDraft(); self.saved = nil; message = nil; error = nil; persist() }
+                        }.frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                } else {
+                    Button(error == nil ? "交代" : "重试") { submit() }.buttonStyle(.borderedProminent).disabled(busy || draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+                Button("手动设置提醒") { manual = true }.disabled(busy)
+            }.padding()
+        }.navigationTitle("交代")
+            .sheet(isPresented: $manual) { NavigationStack { ManualTaskView(connection: connection, repository: repository, initialTitle: draft.text) } }
+            .onChange(of: draft.text) { if !busy && draft.text != draft.submittedText { draft.key = nil; draft.runId = nil; draft.retryKey = nil; failedRun = false; draft.submittedText = nil; draft.timeZone = nil; saved = nil; message = nil }; persist() }
+            .task {
+                do { draft = try store.read(ConversationDraft.self) ?? ConversationDraft() } catch { self.error = error.localizedDescription }
+                if let session = connection.saved { model = try? await NivliAPI(server: session.server).model(token: session.credentials.accessToken) }
+                if draft.runId != nil { pollTrigger += 1 }
+            }
+            .task(id: pollTrigger) { if pollTrigger > 0 { await process() } }
+    }
+    private func persist() { do { try store.save(draft) } catch { self.error = error.localizedDescription } }
+    private func submit() {
+        guard !busy, saved == nil, !draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        draft.key = draft.key ?? UUID().uuidString
+        if failedRun { draft.retryKey = draft.retryKey ?? UUID().uuidString }
+        draft.submittedText = draft.text
+        draft.timeZone = draft.timeZone ?? TimeZone.current.identifier
+        do { try store.save(draft); busy = true; error = nil; pollTrigger += 1 } catch { self.error = error.localizedDescription }
+    }
+    private func process() async {
+        guard let session = connection.saved else { busy = false; return }
+        busy = true; defer { busy = false }
+        let api = NivliAPI(server: session.server)
+        do {
+            if draft.runId == nil {
+                let accepted = try await api.submitInput(text: draft.text, timeZone: draft.timeZone ?? TimeZone.current.identifier, key: draft.key ?? UUID().uuidString, token: session.credentials.accessToken)
+                try Task.checkCancellation(); draft.runId = accepted.runId; try store.save(draft)
+            }
+            guard let runId = draft.runId else { return }
+            if let retryKey = draft.retryKey {
+                _ = try await api.retryRun(id: runId, key: retryKey, token: session.credentials.accessToken)
+                try Task.checkCancellation(); draft.retryKey = nil; failedRun = false; try store.save(draft)
+            }
+            while !Task.isCancelled {
+                let run = try await api.run(id: runId, token: session.credentials.accessToken)
+                try Task.checkCancellation()
+                guard connection.saved?.credentials.deviceId == session.credentials.deviceId, connection.saved?.credentials.ownerId == session.credentials.ownerId, connection.saved?.server == session.server else { return }
+                switch run.status {
+                case .queued, .running: try await Task.sleep(for: .seconds(1))
+                case .succeeded:
+                    if let taskId = run.taskId {
+                        let task = try await api.task(id: taskId, token: session.credentials.accessToken)
+                        saved = await repository.notifications.install(task, session: session)
+                        await repository.refresh(connection)
+                        message = nil; error = nil
+                    } else { message = run.message ?? "本次没有创建事项。" }
+                    return
+                case .clarification:
+                    message = run.message ?? "请补充具体日期、时间与事项。"
+                    draft.key = nil; draft.runId = nil; try store.save(draft); return
+                case .failed:
+                    failedRun = true; error = run.message ?? "模型暂时无法处理，请手动设置或稍后再试。"; return
+                }
+            }
+        } catch is CancellationError { } catch { self.error = error.localizedDescription }
+    }
+}
+
+/// UITextView keeps IME composition native; only committed Return submits.
+private struct ConversationEditor: UIViewRepresentable {
+    @Binding var text: String
+    let disabled: Bool
+    let submit: () -> Void
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+    func makeUIView(context: Context) -> ComposerTextView {
+        let view = ComposerTextView(); view.delegate = context.coordinator; view.font = .preferredFont(forTextStyle: .body)
+        view.backgroundColor = .clear; view.textContainerInset = UIEdgeInsets(top: 12, left: 8, bottom: 12, right: 8)
+        view.returnKeyType = .send; view.accessibilityLabel = "交代内容"; return view
+    }
+    func updateUIView(_ view: ComposerTextView, context: Context) {
+        context.coordinator.parent = self
+        if view.text != text && view.markedTextRange == nil { view.text = text }
+        view.isEditable = !disabled
+    }
+    final class Coordinator: NSObject, UITextViewDelegate {
+        var parent: ConversationEditor
+        init(_ parent: ConversationEditor) { self.parent = parent }
+        func textViewDidChange(_ textView: UITextView) { parent.text = textView.text }
+        func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+            guard text == "\n", textView.markedTextRange == nil, !((textView as? ComposerTextView)?.insertingLineBreak ?? false) else { return true }
+            parent.submit(); return false
+        }
+    }
+}
+private final class ComposerTextView: UITextView {
+    var insertingLineBreak = false
+    override var keyCommands: [UIKeyCommand]? { [UIKeyCommand(input: "\r", modifierFlags: .shift, action: #selector(lineBreak))] }
+    @objc private func lineBreak() { insertingLineBreak = true; insertText("\n"); insertingLineBreak = false }
+}

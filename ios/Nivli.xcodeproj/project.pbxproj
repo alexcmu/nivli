@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		13AD02EF1E8C7E06C3D744C9 /* TaskViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A6EF25C73650FFED8011D1 /* TaskViews.swift */; };
 		1B768C56D65E8A7269BAD053 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E0E04BFC0E9F1FEEA6F41516 /* libsqlite3.tbd */; };
+		210B5D3E2815046E889599F8 /* ConversationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A0E09AD9A704BD772112641 /* ConversationView.swift */; };
 		2E00ED64CFF64D3CA3BA11D9 /* NivliApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201F836F0DB0938D0C312B2D /* NivliApp.swift */; };
 		32D2765F9FE440B737E5DCF3 /* LocalNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE0F0D41946887F556E8CBF /* LocalNotifications.swift */; };
 		391BCBD6D7EA22A6211C38EF /* GmailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB57D0A3E531EB81A3E01BD0 /* GmailView.swift */; };
@@ -19,6 +20,7 @@
 		8D41A58A82A267A1E8DBADE6 /* PairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09EA74B9621FA58B056F54F4 /* PairingView.swift */; };
 		9D903FAB873CEDC1FBF0743F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E76B37822B2D1B53BAD474A /* Foundation.framework */; };
 		9E42D05B7521A1061F58DD5C /* NotificationValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 706E82D4074FE193B2407E2C /* NotificationValidation.swift */; };
+		A9D19C817BAE4588222BEF50 /* Conversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A433BF7C1C129E3507D9A365 /* Conversation.swift */; };
 		ABE94BDE4D63BEC08288F8F8 /* QRScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4776CED553C11CAC9268D2E1 /* QRScanner.swift */; };
 		BA289E8DEDBBB5943414AB69 /* Pairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC0ADEE0D6050916052B800C /* Pairing.swift */; };
 		C183A47FCEC01695EA2F73FF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E76B37822B2D1B53BAD474A /* Foundation.framework */; };
@@ -50,7 +52,9 @@
 		45BD366D42FAE7209F508438 /* NivliUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NivliUITests.swift; path = UITests/NivliUITests.swift; sourceTree = "<group>"; };
 		4776CED553C11CAC9268D2E1 /* QRScanner.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = QRScanner.swift; path = Nivli/QRScanner.swift; sourceTree = "<group>"; };
 		4A4E46B5C9BFDF6F62A2987D /* Tasks.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Tasks.swift; path = Sources/NivliCore/Tasks.swift; sourceTree = "<group>"; };
+		6A0E09AD9A704BD772112641 /* ConversationView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConversationView.swift; path = Nivli/ConversationView.swift; sourceTree = "<group>"; };
 		706E82D4074FE193B2407E2C /* NotificationValidation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NotificationValidation.swift; path = Nivli/NotificationValidation.swift; sourceTree = "<group>"; };
+		A433BF7C1C129E3507D9A365 /* Conversation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Conversation.swift; path = Sources/NivliCore/Conversation.swift; sourceTree = "<group>"; };
 		A6A6EF25C73650FFED8011D1 /* TaskViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TaskViews.swift; path = Nivli/TaskViews.swift; sourceTree = "<group>"; };
 		BB57D0A3E531EB81A3E01BD0 /* GmailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GmailView.swift; path = Nivli/GmailView.swift; sourceTree = "<group>"; };
 		BC0ADEE0D6050916052B800C /* Pairing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Pairing.swift; path = Sources/NivliCore/Pairing.swift; sourceTree = "<group>"; };
@@ -110,6 +114,8 @@
 				45BD366D42FAE7209F508438 /* NivliUITests.swift */,
 				0DE71F1E762F8E928EF80C13 /* GmailUITests.swift */,
 				E0E04BFC0E9F1FEEA6F41516 /* libsqlite3.tbd */,
+				6A0E09AD9A704BD772112641 /* ConversationView.swift */,
+				A433BF7C1C129E3507D9A365 /* Conversation.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -230,6 +236,8 @@
 				3AF0C896FC6589081B6B6282 /* Notifications.swift in Sources */,
 				BA289E8DEDBBB5943414AB69 /* Pairing.swift in Sources */,
 				CD23E00205AA16C61ABEC029 /* Tasks.swift in Sources */,
+				210B5D3E2815046E889599F8 /* ConversationView.swift in Sources */,
+				A9D19C817BAE4588222BEF50 /* Conversation.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
