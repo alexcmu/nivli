@@ -41,6 +41,7 @@ export interface AgentInput {
       text: string;
       timeZone: string;
       status: string;
+      errorCode?: string;
       message?: string;
       taskId?: string;
     }>;
@@ -73,7 +74,7 @@ export type AgentOutput =
   | { kind: "change"; change: ChangeProposal }
   | { kind: "proposal"; proposal: Proposal }
   | { kind: "clarification" | "reply"; message: string }
-  | { kind: "failed"; message: string };
+  | { kind: "failed" | "refused"; message: string };
 export async function interpret(
   config: ModelConfig,
   input: AgentInput,
@@ -309,12 +310,27 @@ export async function interpret(
   agent.subscribe(async (event) => {
     if (event.type === "message_end" && event.message.role === "assistant") {
       const message = event.message as AssistantMessage;
-      if (message.stopReason === "error" || message.stopReason === "aborted")
+      const refused =
+        message.stopReason === "error" &&
+        ["refusal", "sensitive"].includes(message.rawStopReason ?? "") &&
+        !signal.aborted;
+      if (refused) {
+        // Pi maps explicit provider refusal to error. Discard every partial
+        // proposal and provider text; this is not a retryable transport outage.
+        terminal = {
+          kind: "refused",
+          message:
+            "这条请求不受支持，未创建或修改事项。请重新明确交代，或手动设置。",
+        };
+      } else if (
+        message.stopReason === "error" ||
+        message.stopReason === "aborted"
+      )
         providerFailed = true;
       if (
         reservation &&
-        message.stopReason !== "error" &&
-        message.stopReason !== "aborted"
+        (refused ||
+          (message.stopReason !== "error" && message.stopReason !== "aborted"))
       ) {
         await input.afterRequest?.(reservation, {
           input: message.usage.input,
@@ -329,16 +345,18 @@ export async function interpret(
       usage.totalTokens += message.usage.totalTokens;
       usage.costTotal += message.usage.cost.total;
       const calls = message.content.filter((c) => c.type === "toolCall");
-      invalidRaw = calls.some(
-        (c) =>
-          c.type === "toolCall" &&
-          ["propose_reminder", "propose_change"].includes(c.name) &&
-          (!c.arguments ||
-            typeof c.arguments !== "object" ||
-            Object.values(c.arguments).some(
-              (v) => v !== null && typeof v !== "string",
-            )),
-      );
+      invalidRaw =
+        !refused &&
+        calls.some(
+          (c) =>
+            c.type === "toolCall" &&
+            ["propose_reminder", "propose_change"].includes(c.name) &&
+            (!c.arguments ||
+              typeof c.arguments !== "object" ||
+              Object.values(c.arguments).some(
+                (v) => v !== null && typeof v !== "string",
+              )),
+        );
       toolCalls += calls.length;
       if (toolCalls > 6) {
         budgetFailed = true;

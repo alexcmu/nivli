@@ -36,13 +36,14 @@ export async function acceptConversationInput(
   if (b.replyToInputId) {
     const prior = (
       await c.query(
-        "SELECT i.id,i.conversation_revision,r.status FROM input_event i JOIN agent_run r ON r.input_id=i.id WHERE i.id=$1 AND i.conversation_id=$2 AND i.owner_id=$3",
+        "SELECT i.id,i.conversation_revision,r.status,r.error_code FROM input_event i JOIN agent_run r ON r.input_id=i.id WHERE i.id=$1 AND i.conversation_id=$2 AND i.owner_id=$3",
         [b.replyToInputId, id, identity.ownerId],
       )
     ).rows[0];
     if (
       !prior ||
       prior.conversation_revision !== conversation.accepted_revision ||
+      prior.error_code === "MODEL_REFUSED" ||
       !["clarification", "needs_clarification"].includes(prior.status)
     )
       throw new PublicError(409, "INVALID_REPLY", "请核对当前澄清问题。");
@@ -68,7 +69,7 @@ export async function loadConversationContext(
   if (stored) return stored as NonNullable<AgentInput["context"]>;
   const recent = (
     await pool.query(
-      `SELECT i.id,i.text,i.time_zone,i.reply_to_input_id,i.created_at,r.status,r.message,r.task_id FROM input_event i JOIN agent_run r ON r.input_id=i.id WHERE i.conversation_id=$1 AND i.owner_id=$2 AND i.conversation_revision<$3 ORDER BY i.conversation_revision DESC LIMIT 8`,
+      `SELECT i.id,i.text,i.time_zone,i.reply_to_input_id,i.created_at,r.status,r.error_code,r.message,r.task_id FROM input_event i JOIN agent_run r ON r.input_id=i.id WHERE i.conversation_id=$1 AND i.owner_id=$2 AND i.conversation_revision<$3 ORDER BY i.conversation_revision DESC LIMIT 8`,
       [input.conversation_id, input.owner_id, input.conversation_revision],
     )
   ).rows.reverse();
@@ -98,6 +99,7 @@ export async function loadConversationContext(
       truncated: r.text.length > 500,
       timeZone: r.time_zone,
       status: r.status,
+      errorCode: r.error_code ?? undefined,
       message: r.message?.slice(0, 500),
       taskId: r.task_id,
     })),
@@ -136,7 +138,7 @@ export async function readConversation(
     throw new PublicError(404, "CONVERSATION_NOT_FOUND", "此会话不存在。");
   const rows = (
     await pool.query(
-      `SELECT i.id,i.text,i.time_zone,i.reply_to_input_id,i.conversation_revision,r.id AS run_id,r.status,r.message,r.task_id FROM input_event i JOIN agent_run r ON r.input_id=i.id WHERE i.conversation_id=$1 AND i.owner_id=$2 ORDER BY i.conversation_revision DESC LIMIT 30`,
+      `SELECT i.id,i.text,i.time_zone,i.reply_to_input_id,i.conversation_revision,r.id AS run_id,r.status,r.error_code,r.message,r.task_id FROM input_event i JOIN agent_run r ON r.input_id=i.id WHERE i.conversation_id=$1 AND i.owner_id=$2 ORDER BY i.conversation_revision DESC LIMIT 30`,
       [id, ownerId],
     )
   ).rows.reverse();
@@ -149,6 +151,7 @@ export async function readConversation(
       text: r.text,
       timeZone: r.time_zone,
       status: r.status,
+      ...(r.error_code ? { errorCode: r.error_code } : {}),
       ...(r.message ? { message: r.message } : {}),
       ...(r.reply_to_input_id ? { replyToInputId: r.reply_to_input_id } : {}),
       ...(r.task_id ? { task: await readTask(pool, ownerId, r.task_id) } : {}),
@@ -172,6 +175,7 @@ export function linkedInstruction(
     if (
       !m ||
       m.truncated ||
+      m.errorCode === "MODEL_REFUSED" ||
       !["clarification", "needs_clarification"].includes(m.status)
     )
       return undefined;
