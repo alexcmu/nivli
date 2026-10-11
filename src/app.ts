@@ -431,6 +431,8 @@ export async function createApp(config: Config) {
     "/v1/session",
     {
       schema: {
+        description:
+          "Revoke this session and its paired primary device, freeing the pairing slot. Identical retries recover the same response.",
         headers: MutationHeaders,
         security: [{ bearerAuth: [] }],
         response: { 200: Type.Object({ revoked: Type.Boolean() }), ...errors },
@@ -447,6 +449,12 @@ export async function createApp(config: Config) {
             sql`UPDATE session SET revoked_at=${now()} WHERE id=${identity.sessionId} AND revoked_at IS NULL AND EXISTS(SELECT 1 FROM device WHERE id=${identity.deviceId} AND revoked_at IS NULL) RETURNING id`,
           );
           if (!r.rows[0]) throw unauthorized();
+          await tx.execute(
+            sql`UPDATE device SET revoked_at=${now()} WHERE id=${identity.deviceId}`,
+          );
+          await tx.execute(
+            sql`UPDATE session SET revoked_at=${now()} WHERE device_id=${identity.deviceId}`,
+          );
           return { revoked: true };
         },
       );

@@ -1352,6 +1352,7 @@
         }
       },
       "delete": {
+        "description": "Revoke this session and its paired primary device, freeing the pairing slot. Identical retries recover the same response.",
         "parameters": [
           {
             "schema": {

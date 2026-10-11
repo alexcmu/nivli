@@ -409,4 +409,30 @@ describe("personal environment pairing over HTTP with PostgreSQL", () => {
       admin,
     );
   });
+  test("device logout releases the primary pairing slot for a new connection", async () => {
+    clock += 60000;
+    const code = (await call("/v1/admin/pairings", "POST", {}, admin)).body
+      .code;
+    const paired = await call("/v1/pairings/claim", "POST", {
+      code,
+      deviceName: "phone",
+    });
+    expect(
+      (await call("/v1/session", "DELETE", undefined, paired.body.accessToken))
+        .status,
+    ).toBe(200);
+    const newCode = (await call("/v1/admin/pairings", "POST", {}, admin)).body
+      .code;
+    const reconnected = await call("/v1/pairings/claim", "POST", {
+      code: newCode,
+      deviceName: "phone",
+    });
+    expect(reconnected.status).toBe(200);
+    await call(
+      "/v1/admin/devices/" + reconnected.body.deviceId,
+      "DELETE",
+      undefined,
+      admin,
+    );
+  });
 });
