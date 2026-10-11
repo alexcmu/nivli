@@ -8,6 +8,25 @@ final class ConversationTests: XCTestCase {
         let run=try JSONDecoder().decode(ConversationRun.self,from:Data(#"{"id":"run","inputId":"original","status":"timed_out","stillProcessing":false}"#.utf8))
         XCTAssertEqual(run.status,.timed_out)
     }
+    func testModelRefusalKeepsFeedbackAndOriginalInputWithoutLinkedReplyAuthority() throws {
+        let run = try JSONDecoder().decode(ConversationRun.self, from: Data(#"{"id":"refused-run","inputId":"refused-input","status":"needs_clarification","errorCode":"MODEL_REFUSED","text":"原始交代","message":"此次请求无法处理，请另行交代事项与提醒时间。"}"#.utf8))
+        XCTAssertEqual(run.errorCode, "MODEL_REFUSED")
+        XCTAssertEqual(run.text, "原始交代")
+        XCTAssertEqual(run.message, "此次请求无法处理，请另行交代事项与提醒时间。")
+        XCTAssertNil(run.clarificationReplyInputId)
+        let clarification = try JSONDecoder().decode(ConversationRun.self, from: Data(#"{"id":"clarify-run","inputId":"original-input","status":"needs_clarification","message":"几点？"}"#.utf8))
+        XCTAssertEqual(clarification.clarificationReplyInputId, "original-input")
+    }
+    func testRefusalHistoryRetainsDomainFeedbackAfterRelaunchAndOlderHistoryStillDecodes() throws {
+        let data = Data(#"{"id":"conversation","revision":1,"acceptedRevision":1,"messages":[{"inputId":"refused-input","runId":"refused-run","revision":1,"text":"原始交代","timeZone":"Asia/Shanghai","status":"needs_clarification","errorCode":"MODEL_REFUSED","message":"此次请求无法处理，请另行交代事项与提醒时间。"}]}"#.utf8)
+        let history = try JSONDecoder().decode(ConversationHistory.self, from: data)
+        let restored = try JSONDecoder().decode(ConversationHistory.self, from: JSONEncoder().encode(history))
+        XCTAssertEqual(restored.messages.first?.errorCode, "MODEL_REFUSED")
+        XCTAssertEqual(restored.messages.first?.text, "原始交代")
+        XCTAssertEqual(restored.messages.first?.message, "此次请求无法处理，请另行交代事项与提醒时间。")
+        let old = try JSONDecoder().decode(ConversationHistory.self, from: Data(#"{"id":"conversation","revision":1,"acceptedRevision":1,"messages":[{"inputId":"original","runId":"run","revision":1,"text":"原话","timeZone":"Asia/Shanghai","status":"needs_clarification","message":"几点？"}]}"#.utf8))
+        XCTAssertNil(old.messages.first?.errorCode)
+    }
     func testQueuedInputIsNotASavedTaskAndRunReturnsRealEntityIdentity() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let accepted = try JSONDecoder().decode(AcceptedInput.self, from: Data(contentsOf: root.appendingPathComponent("contracts/examples/input-accepted.json")))
