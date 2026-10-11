@@ -443,3 +443,216 @@ test("notification mutation transport keys reserve the exact receipt contents", 
     (await call(`/v1/tasks/${saved.body.id}`)).body.reminder.schedulingStatus,
   ).toBe("permission_denied");
 });
+
+test("task completion is retry safe, invalidates plans and supports causal undo", async () => {
+  const saved = await call("/v1/tasks", "POST", {
+    ...draft(),
+    localDeviceId: deviceId,
+    quietHoursConfirmed: true,
+  });
+  const command = {
+    commandId: randomUUID(),
+    clientMutationId: randomUUID(),
+    expectedRevision: 1,
+    operation: "complete",
+  };
+  const path = `/v1/tasks/${saved.body.id}/commands`;
+  const done = await call(path, "POST", command, command.commandId);
+  expect(done.status).toBe(200);
+  expect(done.body).toMatchObject({
+    status: "completed",
+    revision: 2,
+    reminder: null,
+  });
+  expect((await call(path, "POST", command)).body).toEqual(done.body);
+  expect(
+    (await call(`/v1/devices/${deviceId}/notification-plans`)).body.plans.some(
+      (p: any) => p.taskId === saved.body.id,
+    ),
+  ).toBe(false);
+  const restored = await call(path, "POST", {
+    commandId: randomUUID(),
+    clientMutationId: randomUUID(),
+    expectedRevision: 2,
+    operation: "undo",
+    targetMutationId: command.clientMutationId,
+  });
+  expect(restored.status).toBe(200);
+  expect(restored.body).toMatchObject({
+    status: "active",
+    revision: 3,
+    reminder: { revision: 3, instant: saved.body.reminder.instant },
+  });
+});
+
+test("concurrent terminal commands cannot resurrect tasks, snooze preserves deadline and stale notification is read only", async () => {
+  const saved = await call("/v1/tasks", "POST", {
+    ...draft(),
+    localDeviceId: deviceId,
+    quietHoursConfirmed: true,
+  });
+  const path = `/v1/tasks/${saved.body.id}/commands`;
+  const action = (operation: string, expectedRevision: number, extra = {}) => ({
+    commandId: randomUUID(),
+    clientMutationId: randomUUID(),
+    expectedRevision,
+    operation,
+    ...extra,
+  });
+  const old = saved.body.reminder.occurrence;
+  const snooze = await call(
+    path,
+    "POST",
+    action("snooze", 1, {
+      reminder: { instant: "2026-10-18T12:00:00Z", timeZone: "UTC" },
+    }),
+  );
+  expect(snooze.body).toMatchObject({
+    revision: 2,
+    deadline: saved.body.deadline,
+    reminder: { revision: 2, instant: "2026-10-18T12:00:00.000Z" },
+  });
+  expect(
+    (
+      await call(
+        path,
+        "POST",
+        action("snooze", 2, {
+          occurrence: {
+            id: old.id,
+            reminderRevision: 1,
+            routingVersion: 1,
+            requestId: old.requestId,
+          },
+          reminder: { instant: "2026-10-19T12:00:00Z", timeZone: "UTC" },
+        }),
+      )
+    ).status,
+  ).toBe(409);
+  const terminal = await Promise.all(
+    ["complete", "cancel"].map((op) => call(path, "POST", action(op, 2))),
+  );
+  expect(terminal.map((r) => r.status).sort()).toEqual([200, 409]);
+  expect(
+    (await call(path, "POST", action("edit", 3, { title: "revive" }))).status,
+  ).toBe(409);
+  const latest = await call(`/v1/tasks/${saved.body.id}`);
+  expect(latest.body.revision).toBe(3);
+  expect(latest.body.reminder).toBeNull();
+  const restore = await call(path, "POST", action("restore", 3));
+  expect(restore.body.status).toBe("active");
+});
+
+test("causal undo refuses later changes, mutation/body conflicts and expired restoration requires a new time", async () => {
+  const saved = await call("/v1/tasks", "POST", {
+    ...draft(),
+    reminder: { instant: "2026-10-10T12:00:00Z", timeZone: "UTC" },
+  });
+  const path = `/v1/tasks/${saved.body.id}/commands`,
+    mutation = randomUUID();
+  const done = {
+    commandId: randomUUID(),
+    clientMutationId: mutation,
+    expectedRevision: 1,
+    operation: "cancel",
+  };
+  expect((await call(path, "POST", done)).status).toBe(200);
+  expect(
+    (await call(path, "POST", { ...done, operation: "complete" })).status,
+  ).toBe(409);
+  expect(
+    (
+      await call(path, "POST", {
+        commandId: randomUUID(),
+        clientMutationId: randomUUID(),
+        expectedRevision: 2,
+        operation: "restore",
+      })
+    ).body.code,
+  ).toBe("NEW_REMINDER_TIME_REQUIRED");
+  const restored = await call(path, "POST", {
+    commandId: randomUUID(),
+    clientMutationId: randomUUID(),
+    expectedRevision: 2,
+    operation: "restore",
+    reminder: { instant: "2026-10-12T12:00:00Z", timeZone: "UTC" },
+  });
+  expect(restored.status).toBe(200);
+  const undo = await call(path, "POST", {
+    commandId: randomUUID(),
+    clientMutationId: randomUUID(),
+    expectedRevision: 3,
+    operation: "undo",
+    targetMutationId: mutation,
+  });
+  expect(undo.body.code).toBe("UNDO_CONFLICT");
+});
+
+test("action commit fault leaves current task and notification plan unchanged and permits same command retry", async () => {
+  const saved = await call("/v1/tasks", "POST", {
+    ...draft(),
+    localDeviceId: deviceId,
+    quietHoursConfirmed: true,
+  });
+  const db = new pg.Pool({ connectionString: databaseUrl });
+  const command = {
+    commandId: randomUUID(),
+    clientMutationId: randomUUID(),
+    expectedRevision: 1,
+    operation: "complete",
+  };
+  const path = `/v1/tasks/${saved.body.id}/commands`;
+  try {
+    await db.query(
+      "CREATE FUNCTION reject_action_commit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'simulated action commit fault'; END $$; CREATE TRIGGER action_commit_fault BEFORE INSERT ON task_change_log FOR EACH ROW EXECUTE FUNCTION reject_action_commit();",
+    );
+    expect((await call(path, "POST", command)).status).toBe(503);
+    expect((await call(`/v1/tasks/${saved.body.id}`)).body).toEqual(saved.body);
+    expect(
+      (await call(`/v1/devices/${deviceId}/notification-plans`)).body.plans,
+    ).toContainEqual({
+      taskId: saved.body.id,
+      ...saved.body.reminder.occurrence,
+    });
+    await db.query(
+      "DROP TRIGGER action_commit_fault ON task_change_log; DROP FUNCTION reject_action_commit();",
+    );
+    expect((await call(path, "POST", command)).body).toMatchObject({
+      status: "completed",
+      revision: 2,
+    });
+  } finally {
+    await db.end();
+  }
+});
+
+test("editing deadline and removing reminder remains removed after terminal restoration", async () => {
+  const saved = await call("/v1/tasks", "POST", draft()),
+    path = `/v1/tasks/${saved.body.id}/commands`;
+  const act = (operation: string, expectedRevision: number, extra = {}) => ({
+    operation,
+    expectedRevision,
+    commandId: randomUUID(),
+    clientMutationId: randomUUID(),
+    ...extra,
+  });
+  const edit = await call(
+    path,
+    "POST",
+    act("edit", 1, { deadline: null, reminder: null, title: "无需提醒的材料" }),
+  );
+  expect(edit.body).toMatchObject({
+    deadline: null,
+    reminder: null,
+    title: "无需提醒的材料",
+    revision: 2,
+  });
+  expect((await call(path, "POST", act("cancel", 2))).status).toBe(200);
+  const restore = await call(path, "POST", act("restore", 3));
+  expect(restore.body).toMatchObject({
+    status: "active",
+    revision: 4,
+    reminder: null,
+    deadline: null,
+  });
+});

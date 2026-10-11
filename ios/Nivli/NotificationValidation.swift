@@ -12,6 +12,7 @@ struct NotificationValidationView: View {
         NavigationStack {
             Form {
                 Text(evidence).accessibilityIdentifier("notificationEvidence")
+                Button("验证通知动作与替换取消") { Task { await actions() } }
                 Button("验证本机容量与恢复") { Task { await capacity() } }
                 Button("安排3分钟验收通知") { Task { await schedule(delay: 180) } }
                 Button("安排自动化验收通知") { Task { await schedule(delay: 8) } }
@@ -35,6 +36,30 @@ struct NotificationValidationView: View {
         center.removePendingNotificationRequests(withIdentifiers: ids)
         let delivered = await center.deliveredNotifications().filter { $0.request.content.userInfo["installationIdentity"] as? String == "platform-validation" }.map { $0.request.identifier }
         center.removeDeliveredNotifications(withIdentifiers: delivered)
+    }
+    private func actions() async {
+        do {
+            await clear()
+            let categories = await UNUserNotificationCenter.current().notificationCategories()
+            let category = categories.first { $0.identifier == "NIVLI_TASK" }
+            let protected = category?.actions.filter { $0.options.contains(.authenticationRequired) && $0.options.contains(.foreground) }.count == 2
+            let old = makePlan(id: "action-old", at: Date().addingTimeInterval(86400))
+            let new = makePlan(id: "action-new", at: Date().addingTimeInterval(90000))
+            let first = try journal()
+            let initial = try await first.install(old, requestPermission: true)
+            guard initial == .installed else { evidence = "动作验收：\(initial.rawValue)"; return }
+            // Reopen exactly as after a crash; current projection drives replacement and cancellation.
+            let reopened = try journal()
+            try await reopened.reconcile(current: [new])
+            let next = try await reopened.install(new, requestPermission: false)
+            let pending = await system.pending()
+            let replaced = !pending.contains { $0.requestId == old.requestId } && pending.contains { $0.requestId == new.requestId }
+            try await journal().reconcile(current: [])
+            let cancelled = !(await system.pending()).contains { $0.requestId == new.requestId }
+            evidence = "认证动作=\(protected)；替换=\(replaced)；取消=\(cancelled)；新计划=\(next.rawValue)"
+            print("NIVLI_ACTION_VALIDATION \(evidence)")
+            await clear()
+        } catch { evidence = error.localizedDescription }
     }
     private func capacity() async {
         do {
