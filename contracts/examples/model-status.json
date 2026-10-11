@@ -1,0 +1,6 @@
+{
+  "configured": true,
+  "provider": "anthropic",
+  "model": "claude-sonnet-5-5",
+  "dataDestination": "https://api.anthropic.com"
+}

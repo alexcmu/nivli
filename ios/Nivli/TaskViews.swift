@@ -98,7 +98,8 @@ struct ManualTaskView: View {
     @Bindable var connection: Connection
     @Bindable var repository: TaskRepository
     @Environment(\.dismiss) private var dismiss
-    @State private var title = ""
+    let initialTitle: String
+    @State private var title: String
     @State private var background = ""
     @State private var hasReminder = true
     @State private var reminderDate = Date().addingTimeInterval(3600)
@@ -109,6 +110,10 @@ struct ManualTaskView: View {
     @State private var busy = false
     @State private var error: String?
     @State private var saved: TaskRecord?
+    init(connection: Connection, repository: TaskRepository, initialTitle: String = "") {
+        self.connection = connection; self.repository = repository; self.initialTitle = initialTitle
+        _title = State(initialValue: initialTitle)
+    }
     private var timeZone: TimeZone { TimeZone(identifier: zone) ?? .current }
     private var draftSignature: String { "\(title)|\(background)|\(hasReminder)|\(reminderDate.timeIntervalSince1970)|\(zone)|\(deadlineKind)|\(deadlineDate.timeIntervalSince1970)" }
     var body: some View {

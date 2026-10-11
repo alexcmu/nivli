@@ -115,7 +115,10 @@ export const TaskDTO = Type.Object(
       Type.Object(
         {
           id: uuid,
-          kind: Type.Literal("manual"),
+          kind: Type.Union([
+            Type.Literal("manual"),
+            Type.Literal("instruction"),
+          ]),
           text: Type.String(),
           createdAt: instant,
         },

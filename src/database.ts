@@ -1,3 +1,4 @@
+import { migrateAgent } from "./agent-schema.js";
 import { migrateTaskActions } from "./task-action-schema.js";
 import { migrateLocalNotifications } from "./notification-schema.js";
 import pg from "pg";
@@ -6,7 +7,7 @@ import { sql } from "drizzle-orm";
 import { PgBoss } from "pg-boss";
 import { migrateGmail } from "./gmail-schema.js";
 import { migrateTasks } from "./task-schema.js";
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 export function connect(databaseUrl: string) {
   const pool = new pg.Pool({
     connectionString: databaseUrl,
@@ -56,6 +57,10 @@ export async function migrate(databaseUrl: string) {
     await migrateTasks(pool);
     await migrateLocalNotifications(pool);
     await migrateTaskActions(pool);
+    await migrateAgent(pool);
+    await pool.query(
+      "INSERT INTO schema_version(version) VALUES(3) ON CONFLICT DO NOTHING",
+    );
     const boss = new PgBoss({ connectionString: databaseUrl });
     boss.on("error", () => {});
     await boss.start();
@@ -78,11 +83,17 @@ export async function verifySchema(databaseUrl: string) {
     );
     if (!gmail.rows[0]?.source)
       throw new Error("Gmail schema missing; run migration before starting");
+    const agent = await pool.query(
+      "SELECT to_regclass('agent_run') AS runs,to_regclass('input_event') AS inputs,to_regclass('agent_retry') AS retries",
+    );
     const tasks = await pool.query(
       "SELECT to_regclass('task_command_key') AS table_name, to_regclass('local_occurrence') AS occurrences, to_regclass('notification_plan_command') AS notification_commands",
     );
     if (
       r.rows[0]?.version !== SCHEMA_VERSION ||
+      !agent.rows[0]?.runs ||
+      !agent.rows[0]?.inputs ||
+      !agent.rows[0]?.retries ||
       !tasks.rows[0]?.table_name ||
       !tasks.rows[0]?.occurrences ||
       !tasks.rows[0]?.notification_commands

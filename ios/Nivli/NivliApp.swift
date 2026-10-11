@@ -29,7 +29,7 @@ struct RootView: View {
                 TaskListView(connection: connection, repository: repository)
             }.id(taskIdentity).tabItem { Label("此刻", systemImage: "sun.max") }.tag(0)
             NavigationStack {
-                if connection.saved != nil { ManualTaskView(connection: connection, repository: repository) }
+                if connection.saved != nil { ConversationView(connection: connection, repository: repository) }
                 else { ContentUnavailableView("先连接个人环境", systemImage: "network", description: Text("在“我的”连接后即可手动创建事项。")) }
             }.id(taskIdentity).tabItem { Label("交代", systemImage: "text.bubble") }.tag(1)
             NavigationStack {
