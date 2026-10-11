@@ -50,6 +50,7 @@ const report: {
   unknownRequests: number;
   requests: number;
   results: any[];
+  cleanupFailures: string[];
 } = {
   status: "not_run",
   model: "claude-sonnet-5-5",
@@ -61,6 +62,7 @@ const report: {
   unknownRequests: 0,
   requests: 0,
   results: [],
+  cleanupFailures: [],
 };
 const model = await readModelConfig();
 if (process.env.NIVLI_REAL_MODEL_EVAL !== "1" || !model) {
@@ -84,210 +86,265 @@ if (process.env.NIVLI_REAL_MODEL_EVAL !== "1" || !model) {
   const maintenance = new pg.Pool({ connectionString: root });
   let committedUsd = 0;
   report.status = "running";
-  for (const sample of cases) {
-    if (budget - committedUsd < 0.141312) {
-      if (report.status !== "partial_failure")
-        report.status = "budget_exhausted";
-      report.results.push({
-        id: sample.id,
-        status: "unevaluated",
-        reason: "budget_exhausted",
-      });
-      continue;
-    }
-    const name = "model_eval_" + randomUUID().replaceAll("-", ""),
-      url = new URL(root);
-    url.pathname = "/" + name;
-    const steps: any[] = [];
-    let account: (() => Promise<any>) | undefined;
-    let app: Awaited<ReturnType<typeof createApp>> | undefined,
-      worker: Awaited<ReturnType<typeof startAgentWorker>> | undefined;
-    try {
-      await maintenance.query("CREATE DATABASE " + name);
-      await migrate(url.toString());
-      const clock = new Date(sample.now);
-      const admin = randomBytes(32).toString("hex");
-      const config = {
-        databaseUrl: url.toString(),
-        adminSecret: admin,
-        publicUrl: "https://isolated-evaluation.invalid",
-        environmentName: "Isolated model evaluation",
-        pushMode: "disabled" as const,
-        modelDataDestination: model.baseUrl,
-        clock: () => clock,
-        model: { ...model, dailyBudgetUsd: budget - committedUsd },
-      };
-      app = await createApp(config);
-      const base = await app.listen({ host: "127.0.0.1", port: 0 });
-      worker = await startAgentWorker(config);
-      let token = "";
-      async function call(
-        path: string,
-        method = "GET",
-        body?: unknown,
-        authorization = token,
-      ) {
-        const r = await fetch(base + path, {
-          method,
-          headers: {
-            authorization: "Bearer " + authorization,
-            "idempotency-key": randomUUID(),
-            ...(body ? { "content-type": "application/json" } : {}),
-          },
-          ...(body ? { body: JSON.stringify(body) } : {}),
+  let failure: Error | undefined;
+  try {
+    for (const sample of cases) {
+      if (budget - committedUsd < 0.141312) {
+        if (report.status !== "partial_failure")
+          report.status = "budget_exhausted";
+        report.results.push({
+          id: sample.id,
+          status: "unevaluated",
+          reason: "budget_exhausted",
         });
-        const value = (await r.json()) as any;
-        if (!r.ok) throw new Error("Public evaluation API failed: " + r.status);
-        return value;
+        continue;
       }
-      account = () => call("/v1/admin/model/budget", "GET", undefined, admin);
-      const pairing = await call("/v1/admin/pairings", "POST", {}, admin);
-      token = (
-        await call("/v1/pairings/claim", "POST", {
-          code: pairing.code,
-          deviceName: "Isolated evaluation",
-        })
-      ).accessToken;
-      async function allTasks() {
-        const tasks = [];
-        let cursor: string | undefined;
-        do {
-          const page = await call(
-            "/v1/tasks?status=all&limit=100" +
-              (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""),
-          );
-          tasks.push(...page.tasks);
-          cursor = page.nextCursor ?? undefined;
-        } while (cursor);
-        return tasks;
-      }
-      let conversationId: string | undefined,
-        previousInputId: string | undefined,
-        previousTaskId: string | undefined;
-      for (const step of sample.messages) {
-        const before = await allTasks();
-        const signature = (tasks: any[]) =>
-          JSON.stringify(tasks.map((t) => [t.id, t.revision, t.status]).sort());
-        const q = await call("/v1/inputs", "POST", {
-          text: step.text,
-          timeZone: sample.timeZone,
-          ...(conversationId ? { conversationId } : {}),
-          ...(step.replyToPrevious ? { replyToInputId: previousInputId } : {}),
-          ...(step.selectPreviousTask ? { taskId: previousTaskId } : {}),
-        });
-        conversationId = q.conversationId;
-        let run: any;
-        for (let n = 0; n < 140; n++) {
-          run = await call("/v1/runs/" + q.runId);
-          if (!["queued", "running"].includes(run.status)) break;
-          await new Promise((r) => setTimeout(r, 500));
-        }
-        const after = await allTasks(),
-          task = run.taskId ? await call("/v1/tasks/" + run.taskId) : undefined;
-        let passed = false;
-        if (step.expected === "create")
-          passed =
-            run.status === "succeeded" &&
-            !!task &&
-            after.length === before.length + 1;
-        else if (step.expected === "change")
-          passed =
-            run.status === "succeeded" &&
-            !!task &&
-            after.length === before.length &&
-            task.revision ===
-              (before.find((t: any) => t.id === task.id)?.revision ?? 0) + 1;
-        else
-          passed =
-            run.status === "needs_clarification" &&
-            signature(after) === signature(before);
-        if (step.expectedInstant)
-          passed =
-            passed &&
-            task?.reminder?.instant ===
-              new Date(step.expectedInstant).toISOString();
-        if (step.expectedDeadline)
-          passed = passed && task?.deadline?.date === step.expectedDeadline;
-        if (step.expectedStatus)
-          passed = passed && task?.status === step.expectedStatus;
-        steps.push({
-          evaluated: run.errorCode !== "MODEL_BUDGET_EXHAUSTED",
-
-          expected: step.expected,
-          actualInstant: task?.reminder?.instant ?? null,
-          actualDeadline: task?.deadline?.date ?? null,
-          actualTaskStatus: task?.status ?? null,
-          actual: run.status,
-          publicMessage: run.message,
-          passed,
-          requests: run.requests,
-          toolCalls: run.toolCalls,
-          errorCode: run.errorCode ?? null,
-          cost: run.cost ?? null,
-        });
-        previousInputId = q.inputId;
-        previousTaskId = run.taskId ?? previousTaskId;
-      }
-      const accounting = await call(
-        "/v1/admin/model/budget",
-        "GET",
-        undefined,
-        admin,
-      );
-      report.usageUsd += accounting.usageUsd;
-      report.unknownRequests += accounting.unknownRequests;
-      report.requests += accounting.requests;
-      committedUsd += budget - committedUsd - accounting.remainingUsd;
-      report.results.push({
-        id: sample.id,
-        language: sample.language,
-        status: steps.some((s) => !s.evaluated) ? "unevaluated" : "evaluated",
-        passed: steps.every((s) => s.evaluated)
-          ? steps.every((s) => s.passed)
-          : null,
-        steps,
-      });
-    } catch {
-      report.status = "partial_failure";
-      report.results.push({
-        id: sample.id,
-        status: "unevaluated",
-        reason: "evaluation_api_failure",
-        steps,
-      });
+      const name = "model_eval_" + randomUUID().replaceAll("-", ""),
+        url = new URL(root);
+      url.pathname = "/" + name;
+      const steps: any[] = [];
+      let account: (() => Promise<any>) | undefined;
+      let app: Awaited<ReturnType<typeof createApp>> | undefined,
+        worker: Awaited<ReturnType<typeof startAgentWorker>> | undefined;
       try {
-        const accounting = await account?.();
-        if (!accounting) throw new Error("No accounting");
+        await maintenance.query("CREATE DATABASE " + name);
+        await migrate(url.toString());
+        const clock = new Date(sample.now);
+        const admin = randomBytes(32).toString("hex");
+        const config = {
+          databaseUrl: url.toString(),
+          adminSecret: admin,
+          publicUrl: "https://isolated-evaluation.invalid",
+          environmentName: "Isolated model evaluation",
+          pushMode: "disabled" as const,
+          modelDataDestination: model.baseUrl,
+          clock: () => clock,
+          model: { ...model, dailyBudgetUsd: budget - committedUsd },
+        };
+        app = await createApp(config);
+        const base = await app.listen({ host: "127.0.0.1", port: 0 });
+        worker = await startAgentWorker(config);
+        let token = "";
+        async function call(
+          path: string,
+          method = "GET",
+          body?: unknown,
+          authorization = token,
+        ) {
+          const r = await fetch(base + path, {
+            method,
+            headers: {
+              authorization: "Bearer " + authorization,
+              "idempotency-key": randomUUID(),
+              ...(body ? { "content-type": "application/json" } : {}),
+            },
+            ...(body ? { body: JSON.stringify(body) } : {}),
+          });
+          const value = (await r.json()) as any;
+          if (!r.ok)
+            throw new Error("Public evaluation API failed: " + r.status);
+          return value;
+        }
+        account = () => call("/v1/admin/model/budget", "GET", undefined, admin);
+        const pairing = await call("/v1/admin/pairings", "POST", {}, admin);
+        token = (
+          await call("/v1/pairings/claim", "POST", {
+            code: pairing.code,
+            deviceName: "Isolated evaluation",
+          })
+        ).accessToken;
+        async function allTasks() {
+          const tasks = [];
+          let cursor: string | undefined;
+          do {
+            const page = await call(
+              "/v1/tasks?status=all&limit=100" +
+                (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""),
+            );
+            tasks.push(...page.tasks);
+            cursor = page.nextCursor ?? undefined;
+          } while (cursor);
+          return tasks;
+        }
+        let conversationId: string | undefined,
+          previousInputId: string | undefined,
+          previousTaskId: string | undefined;
+        for (const step of sample.messages) {
+          const before = await allTasks();
+          const signature = (tasks: any[]) =>
+            JSON.stringify(
+              tasks.map((t) => [t.id, t.revision, t.status]).sort(),
+            );
+          const q = await call("/v1/inputs", "POST", {
+            text: step.text,
+            timeZone: sample.timeZone,
+            ...(conversationId ? { conversationId } : {}),
+            ...(step.replyToPrevious
+              ? { replyToInputId: previousInputId }
+              : {}),
+            ...(step.selectPreviousTask ? { taskId: previousTaskId } : {}),
+          });
+          conversationId = q.conversationId;
+          let run: any;
+          for (let n = 0; n < 140; n++) {
+            run = await call("/v1/runs/" + q.runId);
+            if (!["queued", "running"].includes(run.status)) break;
+            await new Promise((r) => setTimeout(r, 500));
+          }
+          const after = await allTasks(),
+            task = run.taskId
+              ? await call("/v1/tasks/" + run.taskId)
+              : undefined;
+          let passed = false;
+          if (step.expected === "create")
+            passed =
+              run.status === "succeeded" &&
+              !!task &&
+              after.length === before.length + 1;
+          else if (step.expected === "change")
+            passed =
+              run.status === "succeeded" &&
+              !!task &&
+              after.length === before.length &&
+              task.revision ===
+                (before.find((t: any) => t.id === task.id)?.revision ?? 0) + 1;
+          else
+            passed =
+              run.status === "needs_clarification" &&
+              signature(after) === signature(before);
+          if (step.expectedInstant)
+            passed =
+              passed &&
+              task?.reminder?.instant ===
+                new Date(step.expectedInstant).toISOString();
+          if (step.expectedDeadline)
+            passed = passed && task?.deadline?.date === step.expectedDeadline;
+          if (step.expectedStatus)
+            passed = passed && task?.status === step.expectedStatus;
+          if (
+            run.errorCode === "MODEL_BUDGET_EXHAUSTED" &&
+            report.status !== "partial_failure"
+          )
+            report.status = "budget_exhausted";
+          steps.push({
+            evaluated: run.errorCode !== "MODEL_BUDGET_EXHAUSTED",
+
+            expected: step.expected,
+            actualInstant: task?.reminder?.instant ?? null,
+            actualDeadline: task?.deadline?.date ?? null,
+            actualTaskStatus: task?.status ?? null,
+            actual: run.status,
+            publicMessage: run.message,
+            passed,
+            requests: run.requests,
+            toolCalls: run.toolCalls,
+            errorCode: run.errorCode ?? null,
+            cost: run.cost ?? null,
+          });
+          previousInputId = q.inputId;
+          previousTaskId = run.taskId ?? previousTaskId;
+        }
+        const accounting = await call(
+          "/v1/admin/model/budget",
+          "GET",
+          undefined,
+          admin,
+        );
         report.usageUsd += accounting.usageUsd;
         report.unknownRequests += accounting.unknownRequests;
         report.requests += accounting.requests;
         committedUsd += budget - committedUsd - accounting.remainingUsd;
+        report.results.push({
+          id: sample.id,
+          language: sample.language,
+          status: steps.some((s) => !s.evaluated) ? "unevaluated" : "evaluated",
+          passed: steps.every((s) => s.evaluated)
+            ? steps.every((s) => s.passed)
+            : null,
+          steps,
+        });
       } catch {
-        // If usage cannot be observed, further paid requests are unsafe.
-        committedUsd = budget;
-      }
-    } finally {
-      await worker?.stop();
-      await app?.close();
-      for (let attempt = 0; attempt < 50; attempt++) {
-        const active = await maintenance.query(
-          "SELECT pid FROM pg_stat_activity WHERE datname=$1",
-          [name],
-        );
-        if (active.rowCount === 0) {
-          await maintenance.query('DROP DATABASE IF EXISTS "' + name + '"');
-          break;
+        report.status = "partial_failure";
+        report.results.push({
+          id: sample.id,
+          status: "unevaluated",
+          reason: "evaluation_api_failure",
+          steps,
+        });
+        try {
+          const accounting = await account?.();
+          if (!accounting) throw new Error("No accounting");
+          report.usageUsd += accounting.usageUsd;
+          report.unknownRequests += accounting.unknownRequests;
+          report.requests += accounting.requests;
+          committedUsd += budget - committedUsd - accounting.remainingUsd;
+        } catch {
+          // If usage cannot be observed, further paid requests are unsafe.
+          committedUsd = budget;
         }
-        if (attempt === 49)
-          throw new Error("Evaluation database did not drain after shutdown");
-        await new Promise((resolve) => setTimeout(resolve, 20));
+      } finally {
+        const stopped = await Promise.allSettled([
+          (async () => {
+            await worker?.stop();
+          })(),
+          (async () => {
+            await app?.close();
+          })(),
+        ]);
+        for (const [index, result] of stopped.entries())
+          if (result.status === "rejected")
+            report.cleanupFailures.push(
+              index === 0 ? "worker_stop" : "app_close",
+            );
+        try {
+          for (let attempt = 0; attempt < 50; attempt++) {
+            const active = await maintenance.query(
+              "SELECT pid FROM pg_stat_activity WHERE datname=$1",
+              [name],
+            );
+            if (active.rowCount === 0) {
+              await maintenance.query('DROP DATABASE IF EXISTS "' + name + '"');
+              break;
+            }
+            if (attempt === 49)
+              throw new Error(
+                "Evaluation database did not drain after shutdown",
+              );
+            await new Promise((resolve) => setTimeout(resolve, 20));
+          }
+        } catch {
+          report.cleanupFailures.push("database_drain_or_drop");
+        }
+        if (report.cleanupFailures.length) {
+          report.status = "partial_failure";
+          failure = new Error(
+            "Evaluation cleanup failed; inspect the persisted partial report.",
+          );
+        }
+        await writeFile(output, JSON.stringify(report, null, 2) + "\n");
       }
+      if (failure) throw failure;
+    }
+  } catch {
+    report.status = "partial_failure";
+    failure ??= new Error(
+      "Evaluation interrupted; inspect the persisted partial report.",
+    );
+  } finally {
+    try {
+      await maintenance.end();
+    } catch {
+      report.status = "partial_failure";
+      report.cleanupFailures.push("maintenance_close");
+      failure ??= new Error(
+        "Evaluation maintenance cleanup failed; inspect the persisted partial report.",
+      );
+    } finally {
+      if (report.status === "running") report.status = "completed";
       await writeFile(output, JSON.stringify(report, null, 2) + "\n");
     }
   }
-  await maintenance.end();
-  if (report.status === "running") report.status = "completed";
-  await writeFile(output, JSON.stringify(report, null, 2) + "\n");
+  if (failure) throw failure;
   console.log(
     "Real model evaluation report written; inspect individual labeled outcomes.",
   );
