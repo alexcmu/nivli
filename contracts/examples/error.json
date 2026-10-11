@@ -1,0 +1,6 @@
+{
+  "code": "UNAUTHENTICATED",
+  "message": "身份无效，请重新连接。",
+  "requestId": "contract-example-request",
+  "retryable": false
+}

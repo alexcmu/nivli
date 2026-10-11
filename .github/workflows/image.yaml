@@ -1,0 +1,74 @@
+name: Application image
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  image:
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        id: build
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          sbom: true
+          provenance: mode=max
+      - name: Record immutable image
+        run: echo '${{ env.IMAGE }}@${{ steps.build.outputs.digest }}' > image-digest.txt
+      - uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
+          format: json
+          output: vulnerability-scan.json
+          scanners: vuln
+          exit-code: '0'
+      - uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
+          format: cyclonedx
+          output: sbom.cdx.json
+          scanners: license
+          exit-code: '0'
+      - name: Dependency license metadata
+        run: |
+          docker run --rm --entrypoint node '${{ env.IMAGE }}@${{ steps.build.outputs.digest }}' -e '
+            const fs = require("node:fs"), path = require("node:path");
+            const rows = [];
+            function scan(dir) {
+              for (const item of fs.readdirSync(dir, {withFileTypes:true})) {
+                if (!item.isDirectory() || item.name.startsWith(".")) continue;
+                const at = path.join(dir,item.name);
+                if (item.name.startsWith("@")) { scan(at); continue; }
+                const file = path.join(at,"package.json");
+                if (fs.existsSync(file)) { const p=JSON.parse(fs.readFileSync(file)); rows.push({name:p.name,version:p.version,license:p.license??"UNDECLARED"}); }
+                if (fs.existsSync(path.join(at,"node_modules"))) scan(path.join(at,"node_modules"));
+              }
+            }
+            scan("/app/node_modules");
+            console.log(JSON.stringify(rows,null,2));' > dependency-licenses.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image-evidence
+          path: |
+            image-digest.txt
+            vulnerability-scan.json
+            sbom.cdx.json
+            dependency-licenses.json

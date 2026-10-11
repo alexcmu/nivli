@@ -1,0 +1,72 @@
+x-app: &app
+  image: ${APP_IMAGE:?Set APP_IMAGE to the published image with @sha256 digest}
+  init: true
+  read_only: true
+  user: "1000:1000"
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=16m
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  environment: &app-env
+    NODE_ENV: production
+    DATABASE_URL: postgresql://nivli:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/nivli
+    ADMIN_SECRET_FILE: /run/secrets/admin_secret
+    PUBLIC_URL: ${PUBLIC_URL:?Set PUBLIC_URL to your HTTPS address}
+    ENVIRONMENT_NAME: ${ENVIRONMENT_NAME:-Nivli personal environment}
+    PUSH_MODE: ${PUSH_MODE:-disabled}
+    MODEL_DATA_DESTINATION: ${MODEL_DATA_DESTINATION:-No model configured}
+  secrets: [admin_secret]
+  depends_on:
+    db:
+      condition: service_healthy
+    migration:
+      condition: service_completed_successfully
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  db:
+    image: postgres:17-bookworm@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826
+    environment:
+      POSTGRES_DB: nivli
+      POSTGRES_USER: nivli
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U nivli -d nivli"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+  migration:
+    <<: *app
+    command: [migrate]
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+  api:
+    <<: *app
+    command: [api]
+    ports: ["127.0.0.1:${API_PORT:-3000}:3000"]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+  agent:
+    <<: *app
+    command: [agent]
+  delivery:
+    <<: *app
+    command: [delivery]
+
+volumes:
+  postgres_data:
+secrets:
+  admin_secret:
+    file: ${ADMIN_SECRET_PATH:?Set ADMIN_SECRET_PATH to a readable administrator secret file}
