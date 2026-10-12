@@ -16,4 +16,4 @@ COPY --from=build --chown=node:node /app/dist ./dist
 USER node
 EXPOSE 3000
 ENTRYPOINT ["node", "dist/main.js"]
-CMD ["api"]
+CMD ["serve"]

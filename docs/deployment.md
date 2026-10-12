@@ -1,5 +1,7 @@
 # 部署与配对（ticket 01）
 
+Railway 从 GitHub 导入的步骤见 [根目录 README](../README.md)。镜像默认 `serve` 自动迁移并同时运行 API 与 AI worker；下述 Compose 继续显式使用独立进程角色。
+
 本阶段提供 HTTPS 环境发现、管理员一次性配对码、设备会话与三个应用入口。agent/delivery 运行真实 PostgreSQL/pg-boss 并报告进程状态，尚未提供模型理解、Gmail、APNs 投递、提醒、备份自动化或完整 v1。`PUSH_MODE` 和模型数据去向是手机确认的信息，不是能力已可用的证明；当前推荐 `disabled` / `No model configured`。后续能力以对应 ticket 的验收为准。
 
 ## 安装

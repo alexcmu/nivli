@@ -9,6 +9,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/main.js",
+    "pretest": "npm run build",
     "test": "vitest run",
     "contract": "node dist/export-contract.js",
     "model:smoke": "node dist/model-smoke.js",

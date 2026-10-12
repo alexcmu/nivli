@@ -1,0 +1,13 @@
+.git
+.scratch
+.secrets
+.env
+**/.env
+**/*Fixture.json
+node_modules
+dist
+ios
+test
+docs
+archived
+*.xcresult
