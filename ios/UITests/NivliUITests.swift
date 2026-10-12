@@ -1,5 +1,47 @@
 import XCTest
 final class NivliUITests: XCTestCase {
+    @MainActor func testKeyboardCommandDispatchKeepsNewlineInDraft() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-conversation-keyboard-validation"]
+        app.launch()
+        let editor = app.textViews["交代内容"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 5))
+        editor.tap()
+        editor.typeText("First line")
+        app.buttons["执行换行快捷键"].tap()
+        XCTAssertEqual(app.staticTexts["keyboardDraftText"].label, "First line\n")
+        editor.typeText("Second line")
+        XCTAssertEqual(app.staticTexts["keyboardDraftText"].label, "First line\nSecond line")
+        XCTAssertEqual(app.staticTexts["keyboardSubmissionCount"].label, "提交次数：0")
+        editor.typeText("\n")
+        XCTAssertEqual(app.staticTexts["keyboardSubmissionCount"].label, "提交次数：1")
+        XCTAssertEqual(app.staticTexts["keyboardSubmittedText"].label, "First line\nSecond line")
+    }
+    @MainActor func testShiftReturnInsertsNewlineAndReturnSubmits() throws {
+        guard Bundle(for: Self.self).url(forResource: "KeyboardFixture", withExtension: "json") != nil else {
+            throw XCTSkip("Provide an isolated KeyboardFixture.json only with a verified hardware keyboard input path; synthetic committed text does not verify Shift+Return.")
+        }
+        let app = XCUIApplication()
+        app.launchArguments = ["-conversation-keyboard-validation"]
+        app.launch()
+        let editor = app.textViews["交代内容"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 5))
+        editor.tap()
+        editor.typeKey("x", modifierFlags: [])
+        guard app.staticTexts["keyboardDraftText"].label == "x" else {
+            throw XCTSkip("This automation session did not deliver a hardware key to the editor; physical keyboard acceptance remains required.")
+        }
+        editor.typeText(XCUIKeyboardKey.delete.rawValue)
+        editor.typeText("First line")
+        XCTAssertEqual(app.staticTexts["keyboardDraftText"].label, "First line")
+        editor.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: .shift)
+        editor.typeText("Second line")
+        XCTAssertEqual(app.staticTexts["keyboardDraftText"].label, "First line\nSecond line")
+        XCTAssertEqual(app.staticTexts["keyboardSubmissionCount"].label, "提交次数：0")
+        editor.typeText("\n")
+        XCTAssertEqual(app.staticTexts["keyboardSubmissionCount"].label, "提交次数：1")
+        XCTAssertEqual(app.staticTexts["keyboardSubmittedText"].label, "First line\nSecond line")
+    }
     @MainActor func testNativeTabsAndManualPairingFailure() { verifyNavigation(style: "Light", size: "UICTContentSizeCategoryL") }
     @MainActor func testDarkNavigation() { verifyNavigation(style: "Dark", size: "UICTContentSizeCategoryL") }
     @MainActor private func verifyNavigation(style: String, size: String) {
@@ -54,13 +96,20 @@ final class NivliUITests: XCTestCase {
 
     @MainActor func testNotificationPermissionOffPreservesUnscheduledState() throws {
         let app = XCUIApplication(); app.launchArguments = ["-notification-platform-validation"]; app.launch()
+        // A fresh isolated installation must request authorization before Settings
+        // exposes its notification switch.
+        app.buttons["验证本机容量与恢复"].tap()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let allow = springboard.buttons.matching(NSPredicate(format: "label == 'Allow' OR label == '允许'")).firstMatch
+        if allow.waitForExistence(timeout: 3) { allow.tap() }
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'OS pending' OR label CONTAINS '权限关闭'")).firstMatch.waitForExistence(timeout: 15))
         app.buttons["打开通知设置"].tap()
         let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
         let permission = settings.switches.matching(NSPredicate(format: "label CONTAINS[c] 'Allow Notifications' OR label CONTAINS '允许通知'")).firstMatch
         XCTAssertTrue(permission.waitForExistence(timeout: 10))
         guard permission.exists else { return }
         print("NIVLI_PERMISSION_BEFORE \(String(describing: permission.value))")
-        if permission.value as? String == "1" { permission.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap() }
+        if permission.value as? String == "1" { permission.tap() }
         let off = NSPredicate(format: "value == '0'")
         guard off.evaluate(with: permission) || XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: off, object: permission)], timeout: 5) == .completed else { throw XCTSkip("Device Settings did not turn notification authorization off; manual permission-off acceptance remains required.") }
         print("NIVLI_PERMISSION_AFTER \(String(describing: permission.value))")
@@ -70,7 +119,7 @@ final class NivliUITests: XCTestCase {
         app.buttons["打开通知设置"].tap()
         XCTAssertTrue(permission.waitForExistence(timeout: 10))
         print("NIVLI_PERMISSION_RESTORE \(String(describing: permission.value))")
-        if permission.value as? String == "0" { permission.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap() }
+        if permission.value as? String == "0" { permission.tap() }
         app.activate()
     }
 

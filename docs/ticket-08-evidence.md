@@ -25,3 +25,7 @@ Final merged verification: TypeScript build passed; 53 public HTTP tests across 
 `npm run build && npm run model:eval` writes a `not_run` report unless `NIVLI_REAL_MODEL_EVAL=1` and server-only model configuration are present. A live run creates an isolated database, authenticates through public HTTP, starts the real queue worker, evaluates all message chains, records model/Pi versions, request/tool counts and budget/usage estimates, and drops the database in `finally`. No existing user's tasks are modified. The configured daily budget (default USD 1, evaluator cap USD 10) remains enforced. `NIVLI_EVAL_REPORT` chooses the report path; default `/tmp/nivli-conversation-evaluation.json`. Provider invoices are not inferred from usage.
 
 At this checkpoint, the real Claude key was unavailable. The observed report is `not_run`, model `claude-sonnet-5-5`, Pi `1.1.0`, budget USD 1, 50 labeled cases and zero evaluated results. Actual Claude contract quality/evaluation remains unverified and ticket 08 remains open for that external acceptance and IME observation.
+
+## 2026-10-11 本轮范围调整
+
+用户明确“中文输入法不要管”，实际 marked-text/中文组合验收已豁免，不宣称已观察通过。07 的 Shift+Enter 仍单独验收。08 的真实模型记录以 [最终评估证据](evals/claude-sonnet-5-5-evidence.md) 和 [真实模型真机证据](live-ai-device-evidence.md) 为准；以上早期缺凭据/not_run 描述保留为历史，已被后续证据更新。

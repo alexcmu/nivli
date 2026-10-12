@@ -10,6 +10,7 @@
 		00512BE70902391EB0D6B271 /* AgentNotificationEvidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA96DDAEABC6B8EF88AB40B3 /* AgentNotificationEvidence.swift */; };
 		0D740BA4CA9138794B22D14C /* Tasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 311FD4FDA9EF45EA1C65757B /* Tasks.swift */; };
 		1592D47D169318DD077B46C6 /* PairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99478604CD2057017844E522 /* PairingView.swift */; };
+		1B1575B7FB13B03653039150 /* NotificationInteractionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE07B080B50F2F13FDEA3F2 /* NotificationInteractionUITests.swift */; };
 		1EA7926D829BE630C1499862 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9F451767170E085EC373F94 /* API.swift */; };
 		27FBC94CCFC3ACD746EAE628 /* GmailAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B5BB59CA495516566450C3 /* GmailAPI.swift */; };
 		2C6316E3867F858D90031207 /* Conversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CA245A5A262BCCDA96F586 /* Conversation.swift */; };
@@ -53,6 +54,7 @@
 		311FD4FDA9EF45EA1C65757B /* Tasks.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Tasks.swift; path = Sources/NivliCore/Tasks.swift; sourceTree = "<group>"; };
 		35F6CB324DF689F3EE39FF70 /* NotificationValidation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NotificationValidation.swift; path = Nivli/NotificationValidation.swift; sourceTree = "<group>"; };
 		398CD6C1D63F32FD4CFC0EBD /* ConversationUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConversationUITests.swift; path = UITests/ConversationUITests.swift; sourceTree = "<group>"; };
+		3FE07B080B50F2F13FDEA3F2 /* NotificationInteractionUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NotificationInteractionUITests.swift; path = UITests/NotificationInteractionUITests.swift; sourceTree = "<group>"; };
 		41B017C6C86B71C1A28FDE7D /* Pairing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Pairing.swift; path = Sources/NivliCore/Pairing.swift; sourceTree = "<group>"; };
 		43F3E155657750E29F745EBF /* AgentUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AgentUITests.swift; path = UITests/AgentUITests.swift; sourceTree = "<group>"; };
 		4B4E32683EE49DD853B1A32A /* ConversationView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConversationView.swift; path = Nivli/ConversationView.swift; sourceTree = "<group>"; };
@@ -130,6 +132,7 @@
 				43F3E155657750E29F745EBF /* AgentUITests.swift */,
 				398CD6C1D63F32FD4CFC0EBD /* ConversationUITests.swift */,
 				2F3C4C4DD0E537D59E868F61 /* LiveAgentUITests.swift */,
+				3FE07B080B50F2F13FDEA3F2 /* NotificationInteractionUITests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -243,6 +246,7 @@
 				F4D22D7EB0F1C29DBD9533EC /* AgentUITests.swift in Sources */,
 				6F81938A1A06B9F978C7D769 /* ConversationUITests.swift in Sources */,
 				9C124DB3A03AC5E064A17FE7 /* LiveAgentUITests.swift in Sources */,
+				1B1575B7FB13B03653039150 /* NotificationInteractionUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

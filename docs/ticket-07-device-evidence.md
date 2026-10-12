@@ -25,3 +25,19 @@
 ## 真实 Claude 补充验收
 
 2026-10-11 管理员提供服务端密钥后，已在独立数据库、HTTPS 环境和临时原生 bundle 上，用真实 Claude Sonnet 5.5 / Pi 1.1.0 完成缺时间澄清、重启恢复、关联回答保存、同一事项时间修改、当前历史重启恢复、实际 OS pending=1 与 `local_installed`。修复工具 operation 契约后聚焦真机测试 1 项通过（70.212 秒），3 个 run 各 1 次请求与 1 次工具，用量估价 USD 0.0164388。首次实际模型失败和隔离 Keychain 的测试问题均如实记录；完整路径、费用及清理见 [真实模型真机证据](live-ai-device-evidence.md)。此前“真实模型凭据尚缺”的描述是当时状态；IME composition 和 Shift+Enter 仍未验收。
+
+## 2026-10-11 本轮范围调整
+
+用户明确“中文输入法不要管”，实际 marked-text/中文组合验收已豁免，不宣称已观察通过。07 的 Shift+Enter 仍单独验收。08 的真实模型记录以 [最终评估证据](evals/claude-sonnet-5-5-evidence.md) 和 [真实模型真机证据](live-ai-device-evidence.md) 为准；以上早期缺凭据/not_run 描述保留为历史，已被后续证据更新。
+
+## 2026-10-11 Enter / Shift+Enter 聚焦验收
+
+新增 DEBUG 独立键盘验收入口，使用未经替代的生产 `ConversationEditor`；不配置服务器、不调用模型，也不保存业务事项。直接通过原生 responder chain 调用生产换行快捷键方法的 UI 测试通过：草稿包含两行、换行不提交、普通 Enter 恰好一次提交并携带完整两行。最终 iOS 26.5 模拟器运行 2 项：方法派发测试通过（6.487 秒的合计运行），硬件键测试因没有明确硬件键盘 fixture 跳过。实际硬件 Shift+Enter 不算通过。
+
+先前 XCTest `typeKey(Return, .shift)` 没有插入换行；临时观测确认未进入生产 `lineBreak` 方法，普通 `typeText` 可以进入 delegate。优先级、绑定同步、换行键编码和 responder 假设均未证明可修复真实硬件路径，全部试探性生产修改与日志已撤回。直接派发原始方法已通过，故不把按键自动化失败断言为已确认应用 bug。真实 iPhone 测试还受到 Siri 输入浮层干扰；待清除干扰后重新验收。
+
+复核：19 项 Swift package 测试通过；Release 通用真机目标构建通过，DEBUG 验收页不编入 Release。最终日志 `/tmp/nivli-acceptance-3qxCym/keyboard-final.log`、`swift.log`、`release.log`；UI 结果 `/tmp/nivli-acceptance-3qxCym/simulator/Logs/Test/Test-Nivli-2026.10.11_19-26-50--0700.xcresult`。没有产生模型费用。
+
+## 2026-10-11 20:21 PDT — 键盘方向停止重复验收
+
+用户关闭 Siri 干扰后，真机合成键重试已能输入完整 `First line`，但 XCTest Shift+Return 仍未插入换行。权限测试 skipped、键盘测试 failed，真实结果 `/tmp/nivli-acceptance-3qxCym/build/Logs/Test/Test-Nivli-2026.10.11_20-21-26--0700.xcresult`。用户随后要求“尽快，不要在 corner case 上浪费太多的时间”，该方向停止继续重试；硬件 Shift+Enter 继续保留未验收，不重跑已通过的真实模型/恢复测试。

@@ -2,4 +2,4 @@
 DerivedData/
 *.xcuserstate
 xcuserdata/
-UITests/LiveFixture.json
+UITests/*Fixture.json

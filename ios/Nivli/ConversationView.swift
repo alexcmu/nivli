@@ -181,3 +181,26 @@ private final class ComposerTextView: UITextView {
     override var keyCommands: [UIKeyCommand]? { [UIKeyCommand(input: "\r", modifierFlags: .shift, action: #selector(lineBreak))] }
     @objc private func lineBreak() { insertingLineBreak = true; insertText("\n"); insertingLineBreak = false }
 }
+
+#if DEBUG
+/// Isolated keyboard acceptance uses the production editor without a server or model.
+struct ConversationKeyboardValidationView: View {
+    @State private var text = ""
+    @State private var submissions = 0
+    @State private var submitted = ""
+    var body: some View {
+        VStack {
+            ConversationEditor(text: $text, disabled: false) {
+                submissions += 1
+                submitted = text
+            }.frame(height: 180)
+            Button("执行换行快捷键") {
+                UIApplication.shared.sendAction(NSSelectorFromString("lineBreak"), to: nil, from: nil, for: nil)
+            }
+            Text("提交次数：\(submissions)").accessibilityIdentifier("keyboardSubmissionCount")
+            Text(text).accessibilityIdentifier("keyboardDraftText")
+            Text(submitted).accessibilityIdentifier("keyboardSubmittedText")
+        }.padding()
+    }
+}
+#endif
