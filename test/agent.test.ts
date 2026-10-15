@@ -64,7 +64,7 @@ beforeAll(async () => {
   await migrate(databaseUrl);
   const previousSchema = new pg.Pool({ connectionString: databaseUrl });
   await previousSchema.query(
-    "ALTER TABLE reminder DROP CONSTRAINT reminder_scheduling_status_check; ALTER TABLE reminder ADD CONSTRAINT reminder_scheduling_status_check CHECK(scheduling_status='not_scheduled'); DROP TABLE notification_plan_command; DROP TABLE local_occurrence;",
+    "ALTER TABLE reminder DROP CONSTRAINT reminder_scheduling_status_check; ALTER TABLE reminder ADD CONSTRAINT reminder_scheduling_status_check CHECK(scheduling_status='not_scheduled'); ",
   );
   await previousSchema.end();
   await migrate(databaseUrl);
@@ -161,15 +161,18 @@ beforeAll(async () => {
       res.end();
       return;
     }
-    const args = {
-      title: "提交材料",
-      instant: "2026-10-12T01:00:00Z",
-      timeZone: "Asia/Shanghai",
-      instruction: "明天上午9点提醒我提交材料",
-      timeExpression: "明天上午9点",
-      localDateTime: "2026-10-12T09:00:00",
-      ...fixtureOverride,
-    };
+    const args =
+      fixtureMode === "location"
+        ? fixtureOverride
+        : {
+            title: "提交材料",
+            instant: "2026-10-12T01:00:00Z",
+            timeZone: "Asia/Shanghai",
+            instruction: "明天上午9点提醒我提交材料",
+            timeExpression: "明天上午9点",
+            localDateTime: "2026-10-12T09:00:00",
+            ...fixtureOverride,
+          };
     const events = [
       [
         "message_start",
@@ -195,7 +198,12 @@ beforeAll(async () => {
           content_block: {
             type: "tool_use",
             id: "call_test",
-            name: fixtureMode === "unknown" ? "read_file" : "propose_reminder",
+            name:
+              fixtureMode === "unknown"
+                ? "read_file"
+                : fixtureMode === "location"
+                  ? "propose_location_reminder"
+                  : "propose_reminder",
             input: {},
           },
         },
@@ -325,22 +333,10 @@ test("released Pi consumes strict Claude tool output and creates a real source-b
     sources: [{ kind: "instruction", text: "明天上午9点提醒我提交材料" }],
     reminder: {
       instant: "2026-10-12T01:00:00.000Z",
-      schedulingStatus: "local_pending",
+      schedulingStatus: "remote_planned",
     },
   });
-  const o = task.reminder.occurrence;
-  const installed = await call(
-    "/v1/devices/" + deviceId + "/notification-plans",
-    "POST",
-    {
-      operation: "installed",
-      occurrenceId: o.id,
-      reminderRevision: o.reminderRevision,
-      routingVersion: o.routingVersion,
-      requestId: o.requestId,
-    },
-  );
-  expect(installed.body.reminder.schedulingStatus).toBe("local_installed");
+  expect(task.reminder.remoteOccurrence.deliveryOwner).toBe("server");
   expect(payloads[0]).toMatchObject({
     thinking: { type: "between_tools" },
     output_config: { effort: "low" },
@@ -538,4 +534,84 @@ test("explicit provider refusal is an unsupported request with no side effects a
     expect(run.cost.usageUsd).toBe(mode === "refusal_unknown" ? 0 : 0.00034);
   }
   fixtureMode = "valid";
+}, 30000);
+
+test("explicit named-place instructions create region reminders; negation and fabricated place authority cannot commit", async () => {
+  await worker.stop();
+  worker = await startAgentWorker({
+    databaseUrl,
+    clock: config.clock,
+    model: {
+      model: "claude-sonnet-5-5",
+      apiKey: "external-fixture-key",
+      baseUrl:
+        "http://127.0.0.1:" + (provider.address() as { port: number }).port,
+    },
+  });
+  const place = (
+    await call("/v1/places", "POST", {
+      id: randomUUID(),
+      name: "公司",
+      latitude: 37.3,
+      longitude: -122,
+      radius: 200,
+    })
+  ).body;
+  fixtureMode = "location";
+  try {
+    const runFor = async (text: string) => {
+      const accepted = await call("/v1/inputs", "POST", {
+        text,
+        timeZone: "UTC",
+      });
+      expect(accepted.status).toBe(202);
+      for (let n = 0; n < 100; n++) {
+        const run = (await call("/v1/runs/" + accepted.body.runId)).body;
+        if (!["queued", "running"].includes(run.status)) return run;
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      throw new Error("location agent did not finish");
+    };
+    for (const transition of ["enter", "exit"]) {
+      const text =
+        transition === "enter" ? "到公司提醒我报销" : "离开公司提醒我带快递";
+      fixtureOverride = {
+        title: "地点事项",
+        placeId: place.id,
+        placeRevision: place.revision,
+        transition,
+        instruction: text,
+      };
+      const run = await runFor(text);
+      expect(run.status).toBe("succeeded");
+      const task = (await call("/v1/tasks/" + run.taskId)).body;
+      expect(task.reminder).toBeNull();
+      expect(task.locationReminder.transition).toBe(transition);
+      expect(task.locationReminder.place.name).toBe("公司");
+      expect(task.sources[0].text).toBe(text);
+      expect(
+        (payloads.at(-1)?.tools as Array<{ name: string }>).some(
+          (t) => t.name === "propose_location_reminder",
+        ),
+      ).toBe(true);
+    }
+    for (const [text, placeId] of [
+      ["不要到公司提醒我报销", place.id],
+      ["到公司提醒我报销", randomUUID()],
+    ]) {
+      fixtureOverride = {
+        title: "不应保存",
+        placeId,
+        placeRevision: 1,
+        transition: "enter",
+        instruction: text,
+      };
+      const run = await runFor(text!);
+      expect(run.status).toBe("needs_clarification");
+      expect(run.taskId).toBeUndefined();
+    }
+  } finally {
+    fixtureMode = "valid";
+    fixtureOverride = undefined;
+  }
 }, 30000);

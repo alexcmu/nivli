@@ -1,3 +1,7 @@
+import { registerLocations } from "./location-routes.js";
+import { registerPortal } from "./portal.js";
+import { registerPush } from "./push-routes.js";
+import type { ApnsIdentity, PushSender } from "./apns.js";
 import { registerAgent } from "./agent-routes.js";
 import type { ModelConfig } from "./pi-adapter.js";
 import { registerTasks } from "./tasks.js";
@@ -27,6 +31,8 @@ import {
 import { registerGmail } from "./gmail-routes.js";
 import type { GmailConfig } from "./gmail.js";
 export interface Config {
+  apns?: ApnsIdentity;
+  sendPush?: PushSender;
   model?: ModelConfig;
   gmail?: GmailConfig;
   databaseUrl: string;
@@ -505,6 +511,16 @@ export async function createApp(config: Config) {
       );
     },
   );
+  await registerPortal(app, {
+    pool,
+    admin,
+    rate,
+    now,
+    apns: config.pushMode === "self_signed" ? config.apns : undefined,
+    send: config.sendPush,
+    environmentName: config.environmentName,
+    publicUrl: config.publicUrl,
+  });
   await registerGmail(app, {
     pool,
     session,
@@ -513,7 +529,19 @@ export async function createApp(config: Config) {
     modelDataDestination: config.modelDataDestination,
     clock: config.clock,
   });
-  await registerTasks(app, { pool, session, now });
+  await registerPush(app, {
+    pool,
+    session,
+    now,
+    apns: config.pushMode === "self_signed" ? config.apns : undefined,
+  });
+  await registerLocations(app, { pool, session, now });
+  await registerTasks(app, {
+    pool,
+    session,
+    now,
+    remoteIdentity: config.pushMode === "self_signed" ? config.apns : undefined,
+  });
   await registerAgent(app, { pool, session, admin, now, model: config.model });
   return app;
 }

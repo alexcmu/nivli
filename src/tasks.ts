@@ -1,3 +1,4 @@
+import type { ApnsIdentity } from "./apns.js";
 import { createTaskInTransaction } from "./task-create.js";
 import { registerTaskActions } from "./task-actions.js";
 import type { FastifyInstance } from "fastify";
@@ -6,19 +7,14 @@ import { Type, type Static } from "@sinclair/typebox";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { createHash, randomUUID } from "node:crypto";
 import { PublicError } from "./app.js";
-import {
-  CreateTaskDTO,
-  TaskDTO,
-  TaskPageDTO,
-  NotificationPlansDTO,
-  NotificationPlanCommandDTO,
-} from "./task-contracts.js";
+import { CreateTaskDTO, TaskDTO, TaskPageDTO } from "./task-contracts.js";
 import { MutationHeaders, ErrorDTO } from "./contracts.js";
 type Identity = { ownerId: string; deviceId: string; sessionId: string };
 type Context = {
   pool: pg.Pool;
   session: (authorization?: string) => Promise<Identity>;
   now: () => Date;
+  remoteIdentity?: ApnsIdentity;
 };
 type Queryable = Pick<pg.Pool, "query"> | Pick<pg.PoolClient, "query">;
 const errors = {
@@ -90,15 +86,54 @@ export async function readTask(
       [owner, id],
     )
   ).rows;
-  const occurrence = reminder
+  const remote = reminder
     ? (
         await db.query(
-          "SELECT * FROM local_occurrence WHERE owner_id=$1 AND reminder_id=$2 AND reminder_revision=$3",
+          "SELECT * FROM remote_occurrence WHERE owner_id=$1 AND reminder_id=$2 AND reminder_revision=$3",
           [owner, reminder.id, reminder.revision],
         )
       ).rows[0]
     : null;
+  const location =
+    reminder?.kind === "location"
+      ? (
+          await db.query(
+            "SELECT * FROM location_plan WHERE owner_id=$1 AND reminder_id=$2 AND reminder_revision=$3",
+            [owner, reminder.id, reminder.revision],
+          )
+        ).rows[0]
+      : null;
+  const remoteProjection = remote
+    ? {
+        id: remote.id,
+        reminderRevision: remote.reminder_revision,
+        routingVersion: remote.routing_version,
+        deliveryOwner: "server" as const,
+        status: remote.status,
+        quietHoursConfirmed: remote.quiet_hours_confirmed,
+        scheduledAt: iso(remote.scheduled_at),
+        expiresAt: iso(remote.expires_at),
+        attempt: remote.attempt,
+        lastError: remote.last_error,
+      }
+    : undefined;
   return {
+    locationReminder: location
+      ? {
+          id: location.id,
+          reminderRevision: location.reminder_revision,
+          taskId: id,
+          place: location.place_snapshot,
+          transition: location.transition,
+          timeZone: reminder.time_zone,
+          installationStatus: location.installation_status,
+          quietHoursConfirmed: location.quiet_hours_confirmed,
+          triggeredAt: location.triggered_at
+            ? iso(location.triggered_at)
+            : null,
+          ...(remoteProjection ? { remoteOccurrence: remoteProjection } : {}),
+        }
+      : null,
     id: task.id,
     ownerId: task.owner_id,
     revision: task.revision,
@@ -108,31 +143,34 @@ export async function readTask(
     deadline: task.deadline,
     createdAt: iso(task.created_at),
     updatedAt: iso(task.updated_at),
-    reminder: reminder
-      ? {
-          id: reminder.id,
-          revision: reminder.revision,
-          instant: iso(reminder.instant),
-          timeZone: reminder.time_zone,
-          originalExpression: reminder.original_expression,
-          timeSemantics: reminder.time_semantics,
-          schedulingStatus: reminder.scheduling_status,
-          ...(occurrence
-            ? {
-                occurrence: {
-                  id: occurrence.id,
-                  reminderRevision: occurrence.reminder_revision,
-                  routingVersion: occurrence.routing_version,
-                  requestId: occurrence.request_id,
-                  scheduledAt: iso(reminder.instant),
-                  timeZone: reminder.time_zone,
-                  installationStatus: occurrence.installation_status,
-                  quietHoursConfirmed: occurrence.quiet_hours_confirmed,
-                },
-              }
-            : {}),
-        }
-      : null,
+    reminder:
+      reminder?.kind === "time"
+        ? {
+            id: reminder.id,
+            revision: reminder.revision,
+            instant: iso(reminder.instant),
+            timeZone: reminder.time_zone,
+            originalExpression: reminder.original_expression,
+            timeSemantics: reminder.time_semantics,
+            schedulingStatus: reminder.scheduling_status,
+            ...(remote
+              ? {
+                  remoteOccurrence: {
+                    id: remote.id,
+                    reminderRevision: remote.reminder_revision,
+                    routingVersion: remote.routing_version,
+                    deliveryOwner: "server" as const,
+                    status: remote.status,
+                    quietHoursConfirmed: remote.quiet_hours_confirmed,
+                    scheduledAt: iso(remote.scheduled_at),
+                    expiresAt: iso(remote.expires_at),
+                    attempt: remote.attempt,
+                    lastError: remote.last_error,
+                  },
+                }
+              : {}),
+          }
+        : null,
     sources: sources.map((s) => ({
       id: s.id,
       kind: s.kind,
@@ -159,7 +197,13 @@ export async function registerTasks(instance: FastifyInstance, ctx: Context) {
         input = req.body,
         time = ctx.now();
       validateInput(input);
-      if (input.localDeviceId && input.localDeviceId !== identity.deviceId)
+      if (input.remoteDeviceId && (!ctx.remoteIdentity || !input.reminder))
+        throw new PublicError(
+          409,
+          "REMOTE_NOT_READY",
+          "远程提醒需要已配置 APNs 和具体时间。",
+        );
+      if (input.remoteDeviceId && input.remoteDeviceId !== identity.deviceId)
         throw new PublicError(404, "DEVICE_NOT_FOUND", "此设备不存在。");
       const client = await ctx.pool.connect();
       try {
@@ -234,6 +278,23 @@ export async function registerTasks(instance: FastifyInstance, ctx: Context) {
             false,
             `/v1/tasks/${input.taskId}`,
           );
+        if (input.remoteDeviceId) {
+          const registration = (
+            await client.query(
+              "SELECT topic,environment FROM push_registration WHERE owner_id=$1 AND device_id=$2 FOR SHARE",
+              [identity.ownerId, identity.deviceId],
+            )
+          ).rows[0];
+          if (
+            registration?.topic !== ctx.remoteIdentity?.topic ||
+            registration?.environment !== ctx.remoteIdentity?.environment
+          )
+            throw new PublicError(
+              409,
+              "APNS_IDENTITY_MISMATCH",
+              "请重新注册与当前服务器匹配的远程通知身份。",
+            );
+        }
         await createTaskInTransaction(client, identity, input, time, {
           kind: "manual",
           text: input.background || input.title,
@@ -332,7 +393,7 @@ export async function registerTasks(instance: FastifyInstance, ctx: Context) {
         await client.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
         const rows = (
           await client.query(
-            `SELECT t.id,r.instant FROM task t LEFT JOIN reminder r ON r.owner_id=t.owner_id AND r.task_id=t.id AND r.active WHERE t.owner_id=$1 AND ($2='all' OR t.status=$2) AND ($3::uuid IS NULL OR (coalesce(r.instant,'infinity'::timestamptz),t.id)>(coalesce($4::timestamptz,'infinity'::timestamptz),$3::uuid)) ORDER BY coalesce(r.instant,'infinity'::timestamptz),t.id LIMIT $5`,
+            `SELECT t.id,r.instant FROM task t LEFT JOIN reminder r ON r.owner_id=t.owner_id AND r.task_id=t.id AND r.active AND r.kind='time' WHERE t.owner_id=$1 AND ($2='all' OR t.status=$2) AND ($3::uuid IS NULL OR (coalesce(r.instant,'infinity'::timestamptz),t.id)>(coalesce($4::timestamptz,'infinity'::timestamptz),$3::uuid)) ORDER BY coalesce(r.instant,'infinity'::timestamptz),t.id LIMIT $5`,
             [
               identity.ownerId,
               status,
@@ -364,190 +425,6 @@ export async function registerTasks(instance: FastifyInstance, ctx: Context) {
         throw e;
       } finally {
         client.release();
-      }
-    },
-  );
-  app.get(
-    "/v1/devices/:id/notification-plans",
-    {
-      schema: {
-        security,
-        params: Type.Object({ id: Type.String({ format: "uuid" }) }),
-        response: { 200: NotificationPlansDTO, ...errors },
-      },
-    },
-    async (req) => {
-      const identity = await ctx.session(req.headers.authorization);
-      if (req.params.id !== identity.deviceId)
-        throw new PublicError(404, "DEVICE_NOT_FOUND", "此设备不存在。");
-      const rows = (
-        await ctx.pool.query(
-          "SELECT r.task_id FROM local_occurrence o JOIN reminder r ON r.owner_id=o.owner_id AND r.id=o.reminder_id AND r.revision=o.reminder_revision JOIN task t ON t.owner_id=r.owner_id AND t.id=r.task_id WHERE o.owner_id=$1 AND o.device_id=$2 AND r.active AND t.status='active' ORDER BY r.instant,o.id",
-          [identity.ownerId, identity.deviceId],
-        )
-      ).rows;
-      const plans = [];
-      for (const row of rows) {
-        const task = await readTask(ctx.pool, identity.ownerId, row.task_id);
-        if (task.reminder?.occurrence)
-          plans.push({ taskId: task.id, ...task.reminder.occurrence });
-      }
-      return { plans };
-    },
-  );
-  app.post(
-    "/v1/devices/:id/notification-plans",
-    {
-      schema: {
-        security,
-        headers: MutationHeaders,
-        params: Type.Object({ id: Type.String({ format: "uuid" }) }),
-        body: NotificationPlanCommandDTO,
-        response: { 200: TaskDTO, ...errors },
-      },
-    },
-    async (req) => {
-      const identity = await ctx.session(req.headers.authorization);
-      if (req.params.id !== identity.deviceId)
-        throw new PublicError(404, "DEVICE_NOT_FOUND", "此设备不存在。");
-      const c = await ctx.pool.connect();
-      try {
-        await c.query("BEGIN");
-        await c.query("SELECT id FROM owner WHERE id=$1 FOR UPDATE", [
-          identity.ownerId,
-        ]);
-        const auth = await c.query(
-          "SELECT s.id FROM session s JOIN device d ON d.id=s.device_id WHERE s.id=$1 AND s.revoked_at IS NULL AND d.revoked_at IS NULL FOR SHARE OF s,d",
-          [identity.sessionId],
-        );
-        if (!auth.rowCount)
-          throw new PublicError(
-            401,
-            "UNAUTHENTICATED",
-            "身份无效，请重新连接。",
-          );
-        const o = (
-          await c.query(
-            "SELECT o.*,r.task_id,r.revision,r.active,t.status FROM local_occurrence o JOIN reminder r ON r.owner_id=o.owner_id AND r.id=o.reminder_id JOIN task t ON t.owner_id=r.owner_id AND t.id=r.task_id WHERE o.id=$1 AND o.owner_id=$2 AND o.device_id=$3 FOR UPDATE OF o,r,t",
-            [req.body.occurrenceId, identity.ownerId, identity.deviceId],
-          )
-        ).rows[0];
-        if (!o)
-          throw new PublicError(404, "OCCURRENCE_NOT_FOUND", "此提醒不存在。");
-        const b = req.body;
-        if (
-          !o.active ||
-          o.status !== "active" ||
-          o.revision !== b.reminderRevision ||
-          o.reminder_revision !== b.reminderRevision ||
-          o.routing_version !== b.routingVersion ||
-          (b.requestId !== undefined && b.requestId !== o.request_id)
-        )
-          throw new PublicError(
-            409,
-            "STALE_PLAN",
-            "提醒版本已变更，请刷新。",
-            false,
-            `/v1/tasks/${o.task_id}`,
-          );
-        const digest = createHash("sha256").update(canonical(b)).digest("hex");
-        const prior = (
-          await c.query(
-            "SELECT * FROM notification_plan_command WHERE owner_id=$1 AND device_id=$2 AND operation=$3 AND idempotency_key=$4",
-            [
-              identity.ownerId,
-              identity.deviceId,
-              b.operation,
-              req.headers["idempotency-key"],
-            ],
-          )
-        ).rows[0];
-        if (prior) {
-          if (prior.body_hash !== digest)
-            throw new PublicError(
-              409,
-              "IDEMPOTENCY_CONFLICT",
-              "相同操作标识的内容不同。",
-              false,
-              `/v1/tasks/${o.task_id}`,
-            );
-          if (new Date(prior.expires_at) <= ctx.now())
-            throw new PublicError(
-              410,
-              "OPERATION_EXPIRED",
-              "此操作已过期，请核对提醒。",
-            );
-          await c.query("COMMIT");
-          return prior.result;
-        }
-        if (b.operation === "confirm-quiet-hours") {
-          await c.query(
-            "UPDATE local_occurrence SET quiet_hours_confirmed=true WHERE id=$1",
-            [o.id],
-          );
-          if (!o.quiet_hours_confirmed)
-            await c.query(
-              "UPDATE reminder SET scheduling_status='local_pending' WHERE id=$1",
-              [o.reminder_id],
-            );
-        } else if (b.operation !== "claim") {
-          if (!o.quiet_hours_confirmed)
-            throw new PublicError(
-              409,
-              "QUIET_HOURS_CONFIRMATION_REQUIRED",
-              "请先确认安静时段提醒。",
-              false,
-              `/v1/tasks/${o.task_id}`,
-            );
-          if (
-            b.requestId !== o.request_id ||
-            (b.operation === "failed" && !b.result)
-          )
-            throw new PublicError(
-              422,
-              "INVALID_RECEIPT",
-              "请提供当前安装结果。",
-            );
-          const installed = b.operation === "installed",
-            status = installed ? "installed" : b.result!;
-          await c.query(
-            "UPDATE local_occurrence SET installation_status=$1 WHERE id=$2",
-            [status, o.id],
-          );
-          await c.query(
-            "UPDATE reminder SET scheduling_status=$1 WHERE id=$2",
-            [
-              installed
-                ? "local_installed"
-                : status === "denied"
-                  ? "permission_denied"
-                  : status === "capacity"
-                    ? "capacity_exceeded"
-                    : "installation_failed",
-              o.reminder_id,
-            ],
-          );
-        }
-        const task = await readTask(c, identity.ownerId, o.task_id);
-        await c.query(
-          "INSERT INTO notification_plan_command(owner_id,device_id,operation,idempotency_key,body_hash,result,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7)",
-          [
-            identity.ownerId,
-            identity.deviceId,
-            b.operation,
-            req.headers["idempotency-key"],
-            digest,
-            task,
-            new Date(ctx.now().getTime() + 90 * 86400000),
-          ],
-        );
-        await c.query("COMMIT");
-        return task;
-      } catch (e) {
-        await c.query("ROLLBACK");
-        throw e;
-      } finally {
-        c.release();
       }
     },
   );

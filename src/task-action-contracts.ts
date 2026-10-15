@@ -1,3 +1,4 @@
+import { LocationInputDTO } from "./location-contracts.js";
 import { Type } from "@sinclair/typebox";
 import { DeadlineDTO } from "./task-contracts.js";
 const uuid = Type.String({ format: "uuid" });
@@ -26,6 +27,7 @@ export const TaskActionDTO = Type.Object(
         Type.Null(),
       ]),
     ),
+    locationReminder: Type.Optional(LocationInputDTO),
     quietHoursConfirmed: Type.Optional(Type.Boolean()),
     targetMutationId: Type.Optional(uuid),
     occurrence: Type.Optional(

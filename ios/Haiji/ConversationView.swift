@@ -36,7 +36,7 @@ struct ConversationView: View {
                     GroupBox { VStack(alignment:.leading,spacing:8) {
                         Text(item.text).font(.body)
                         if let task=item.task {
-                            Text(task.title).bold();Text(repository.notifications.localStatus[task.id] ?? reminderStatus(task.reminder));ForEach(task.sources,id: \.id){Text("来源："+$0.text).font(.footnote)};Text(task.status == "active" ? "当前事项" : task.status == "completed" ? "已完成" : "已取消")
+                            Text(task.title).bold();if let location=task.locationReminder {Text((location.transition=="enter" ? "到达 " : "离开 ")+location.place.name)};Text(task.locationReminder.map(locationStatus) ?? reminderStatus(task.reminder));ForEach(task.sources,id: \.id){Text("来源："+$0.text).font(.footnote)};Text(task.status == "active" ? "当前事项" : task.status == "completed" ? "已完成" : "已取消")
                             if let reminder=task.reminder {Text(taskDate(reminder.instant,zone:reminder.timeZone));Text("时区："+reminder.timeZone)}
                             if let deadline=task.deadline {Text("截止："+(deadline.date ?? deadline.instant ?? ""))}
                             NavigationLink("查看最新事项和来源") {TaskDetailView(initial:task,connection:connection)}
@@ -51,9 +51,10 @@ struct ConversationView: View {
                     GroupBox("已保存事项") {
                         VStack(alignment: .leading, spacing: 10) {
                             Text(saved.title).font(.headline)
+                            if let location=saved.locationReminder {Text((location.transition=="enter" ? "到达 " : "离开 ")+location.place.name)}
                             if let reminder = saved.reminder { Text(taskDate(reminder.instant, zone: reminder.timeZone)); Text("时区：\(reminder.timeZone)") }
                             if let deadline = saved.deadline { Text("截止：" + (deadline.kind == "date" ? (deadline.date ?? "") : taskDate(deadline.instant ?? "", zone: deadline.timeZone))) }
-                            Text(repository.notifications.localStatus[saved.id] ?? reminderStatus(saved.reminder))
+                            Text(saved.locationReminder.map(locationStatus) ?? reminderStatus(saved.reminder))
                             ForEach(saved.sources, id: \.id) { Text("来源：\($0.text)").font(.footnote) }
                             NavigationLink("查看当前事项与提醒设置") { TaskDetailView(initial: saved, connection: connection) }
                             Button("再交代一件事") { draft = ConversationDraft(); self.saved = nil; message = nil; error = nil; persist() }
@@ -132,7 +133,7 @@ struct ConversationView: View {
                         let task = try await api.task(id: taskId, token: session.credentials.accessToken)
                         try Task.checkCancellation()
                         guard connection.saved?.credentials.deviceId == session.credentials.deviceId, connection.saved?.credentials.ownerId == session.credentials.ownerId, connection.saved?.server == session.server else { return }
-                        saved = await repository.notifications.install(task, session: session)
+                        saved = task
                         await repository.refresh(connection)
                         message = nil; error = nil
                     } else { message = run.message ?? "本次没有创建事项。" }

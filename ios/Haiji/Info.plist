@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>APNSEnvironment</key><string>$(APS_ENVIRONMENT)</string>
+<key>NSLocationWhenInUseUsageDescription</key><string>用于选取你确认的地点范围；不会持续上传位置轨迹。</string>
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key><string>用于在后台检测进入或离开你指定的地点，只上报单次提醒事件，由服务器发送通知。</string>
+</dict></plist>

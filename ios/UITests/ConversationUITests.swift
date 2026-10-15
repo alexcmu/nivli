@@ -26,8 +26,8 @@ final class ConversationUITests: XCTestCase {
         let allow = springboard.buttons.matching(NSPredicate(format: "label == 'Allow' OR label == '允许'")).firstMatch
         if allow.waitForExistence(timeout: 15) { allow.tap() }
         XCTAssertTrue(app.staticTexts[fixture.title].firstMatch.waitForExistence(timeout: 30))
-        for _ in 0..<4 { if app.staticTexts["本机已安排"].isHittable { break }; app.swipeUp() }
-        XCTAssertTrue(app.staticTexts["本机已安排"].waitForExistence(timeout: 20))
+        for _ in 0..<4 { if app.staticTexts["服务器远程提醒 · 待发送"].isHittable { break }; app.swipeUp() }
+        XCTAssertTrue(app.staticTexts["服务器远程提醒 · 待发送"].waitForExistence(timeout: 20))
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format:"label CONTAINS %@",fixture.instruction)).firstMatch.exists)
         let screenshot = XCTAttachment(screenshot: app.screenshot()); screenshot.name = "Agent saved current task and system receipt"; screenshot.lifetime = .keepAlways; add(screenshot)
         struct Proof: Decodable {
@@ -38,7 +38,7 @@ final class ConversationUITests: XCTestCase {
         XCTAssertEqual((response as? HTTPURLResponse)?.statusCode, 200)
         let proof = try JSONDecoder().decode(Proof.self, from: data)
         XCTAssertEqual(proof.requests, 2); XCTAssertEqual(proof.tasks.count, 1)
-        let task = try XCTUnwrap(proof.tasks.first); XCTAssertEqual(task.title, fixture.title); XCTAssertEqual(task.reminder.schedulingStatus, "local_installed")
+        let task = try XCTUnwrap(proof.tasks.first); XCTAssertEqual(task.title, fixture.title); XCTAssertEqual(task.reminder.schedulingStatus, "remote_planned")
         for _ in 0..<5 {if editor.isHittable{break};app.swipeDown()}
         editor.tap();editor.typeText(fixture.change);editor.typeText("\n")
         for _ in 0..<40 {let (current,_) = try await URLSession.shared.data(from:fixture.proofUrl);let p=try JSONDecoder().decode(Proof.self,from:current);if p.tasks.first?.revision==2 {break};try await Task.sleep(for:.milliseconds(500))}

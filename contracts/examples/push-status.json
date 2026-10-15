@@ -1,0 +1,9 @@
+{
+  "configured": true,
+  "topic": "app.haiji.Haiji",
+  "environment": "development",
+  "registered": true,
+  "enabled": true,
+  "authorized": true,
+  "invalidated": false
+}

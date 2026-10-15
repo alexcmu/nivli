@@ -11,7 +11,7 @@ Dir.glob(File.join(__dir__, 'UITests/*.swift')).each { |path| ui.add_file_refere
  end
 end
 app.frameworks_build_phase.add_file_reference(project.main_group.new_file('usr/lib/libsqlite3.tbd', :sdk_root))
-app.build_configurations.each { |c| c.build_settings['CODE_SIGN_ENTITLEMENTS'] = 'Haiji/Haiji.entitlements'; c.build_settings['INFOPLIST_KEY_NSCameraUsageDescription'] = '扫描一次性配对二维码。你也可以手动输入，无需摄像头。'; c.build_settings['INFOPLIST_KEY_UILaunchScreen_Generation'] = 'YES' }
+app.build_configurations.each { |c| c.build_settings['INFOPLIST_FILE'] = 'Haiji/Info.plist'; c.build_settings['APS_ENVIRONMENT'] = 'development'; c.build_settings['INFOPLIST_KEY_APNSEnvironment'] = '$(APS_ENVIRONMENT)'; c.build_settings['CODE_SIGN_ENTITLEMENTS'] = 'Haiji/HaijiPush.entitlements'; c.build_settings['INFOPLIST_KEY_NSCameraUsageDescription'] = '扫描一次性配对二维码。你也可以手动输入，无需摄像头。'; c.build_settings['INFOPLIST_KEY_UILaunchScreen_Generation'] = 'YES' }
 ui.build_configurations.each { |c| c.build_settings['TEST_TARGET_NAME'] = 'Haiji' }
 Dir.glob(File.join(__dir__, "UITests/*Fixture.json")).each { |fixture| ui.resources_build_phase.add_file_reference(project.main_group.new_file("UITests/" + File.basename(fixture))) }
 project.save

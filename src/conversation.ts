@@ -87,6 +87,7 @@ export async function loadConversationContext(
       status: t.status,
       revision: t.revision,
       reminder: t.reminder,
+      locationReminder: t.locationReminder,
       deadline: t.deadline,
     });
   }

@@ -1,7 +1,8 @@
 import SwiftUI
 
 @main struct HaijiApp: App {
-    @State private var connection = Connection()
+    @UIApplicationDelegateAdaptor(PushAppDelegate.self) private var pushDelegate
+    @State private var connection = Connection.shared
     @State private var notificationNavigation = NotificationNavigation()
     var body: some Scene { WindowGroup {
             appContent.tint(Color(uiColor: UIColor { traits in
@@ -9,9 +10,7 @@ import SwiftUI
             })) } }
     @ViewBuilder private var appContent: some View {
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("-notification-platform-validation") { NotificationValidationView() }
-        else if ProcessInfo.processInfo.arguments.contains("-conversation-keyboard-validation") { ConversationKeyboardValidationView() }
-        else if ProcessInfo.processInfo.arguments.contains("-agent-system-evidence") { AgentNotificationEvidenceView() }
+        if ProcessInfo.processInfo.arguments.contains("-conversation-keyboard-validation") { ConversationKeyboardValidationView() }
         else { RootView(connection: connection, notificationNavigation: notificationNavigation) }
         #else
         RootView(connection: connection, notificationNavigation: notificationNavigation)
@@ -44,12 +43,14 @@ struct RootView: View {
                             }.padding(.vertical, 6)
                         }
                     }
+                    Section("通知") { NavigationLink("远程通知") { RemotePushSettingsView(connection: connection) } }
+                    Section("地点") { NavigationLink("我的地点") { PlacesView(connection: connection) }; NavigationLink("地点监测与权限") { LocationSettingsView() } }
                     Section("来源") { NavigationLink("Gmail") { GmailView(connection: connection) } }
                     Section("后续功能") { Text("记忆、地点、提醒设置与数据控制尚未开放。").foregroundStyle(.primary) }
                 }.navigationTitle("我的")
             }.tabItem { Label("我的", systemImage: "person.crop.circle") }.tag(2)
-        }.task { await connection.restore() }
-            .onChange(of: scenePhase) { if scenePhase == .active { Task { await repository.refresh(connection) } } }
+        }.task { await NotificationIdentity.retireLegacyRequests(); await connection.restore(); if let session = connection.saved { await RemotePushController.shared.refresh(session); await LocationMonitoring.shared.synchronize(session) }; await repository.refresh(connection) }
+            .onChange(of: scenePhase) { if scenePhase == .active { Task { await connection.restore(); if let session = connection.saved { await RemotePushController.shared.refresh(session); await LocationMonitoring.shared.synchronize(session) }; await repository.refresh(connection) } } }
             .sheet(isPresented: Binding(get: { notificationNavigation.taskId != nil }, set: { if !$0 { notificationNavigation.taskId = nil } })) {
                 if let taskId = notificationNavigation.taskId { NavigationStack { VStack { if let error = notificationNavigation.actionError { Text(error).padding().foregroundStyle(.red) }; NotificationDetailView(taskId: taskId, connection: connection, undoMutation: notificationNavigation.actionMutation).id(notificationNavigation.reloadId) } } }
             }
@@ -65,7 +66,7 @@ struct EnvironmentView: View {
                     Text(connection.verified ? "已连接" : "已保存凭据 · 待验证连接")
                     LabeledContent("主机") { Text(saved.server.haijiAuthority).foregroundStyle(.primary) }
                     if let info = connection.environment { EnvironmentDetails(info: info) }
-                    Text("提醒同步尚未开放。").foregroundStyle(.primary)
+                    Text("提醒由服务器通过 Apple 远程通知发送。").foregroundStyle(.primary)
                     Button("重新检查连接") { Task { await connection.restore() } }.disabled(connection.busy)
                     Button("吊销并断开此设备", role: .destructive) { Task { await connection.disconnect() } }.disabled(connection.busy)
                     Button("移除此 iPhone 的连接", role: .destructive) { removingLocalCredentials = true }.disabled(connection.busy)

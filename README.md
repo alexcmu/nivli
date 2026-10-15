@@ -1,6 +1,6 @@
 # Haiji
 
-原生 iPhone AI 时间提醒应用。后端使用 Node 24、Fastify、PostgreSQL 与 pg-boss；本地通知由 iPhone 安排。
+原生 iPhone AI 时间与地点提醒应用。后端使用 Node 24、Fastify、PostgreSQL 与 pg-boss；所有提醒均由服务器通过 Apple APNs 远程发送。
 
 ## 在 Railway 导入
 
@@ -18,9 +18,15 @@ GitHub 的 `main` 更新后，Railway 连接该分支的服务可自动部署。
 
 ## 部署后连接 iPhone
 
-先检查 `https://你的域名/health/ready`。用管理员密钥请求 `POST /v1/admin/pairings` 生成一次性配对码，在 App 的“我的 → 环境连接”输入 HTTPS 地址和配对码。管理员密钥和模型 key 都不输入手机；配对成功后连接凭据保存在钥匙串中，重开 App 自动恢复。
+打开 `https://你的域名/portal`，用后端的 `ADMIN_SECRET` 登录，点击“连接新设备”生成一次性配对码，在 App 的“我的 → 环境连接”输入 HTTPS 地址和配对码。管理员密钥和模型 key 都不输入手机；配对成功后连接凭据保存在钥匙串中，重开 App 自动恢复。
 
 Railway 的账单和 Anthropic 的模型调用费用分别计算。模型每日预算默认为 USD 1，可通过 `MODEL_DAILY_BUDGET_USD` 调整。Gmail 真实连接仍按当前验收范围延后。
+
+## 测试 Portal
+
+后端自带 `/portal` 管理页，可查看设备注册状态、生成配对码、发送远程测试通知，以及查看测试与事项投递记录。测试通知不创建事项；页面不会显示设备 token 或 Apple 私钥。
+
+本地使用见 [Portal 操作步骤](docs/PORTAL.md)。
 
 ## 本地开发与现有部署
 
@@ -29,5 +35,7 @@ Railway 的账单和 Anthropic 的模型调用费用分别计算。模型每日�
 - `swift test --package-path ios`：原生公共契约测试。
 - [现有 Docker Compose 部署](docs/deployment.md)仍使用显式 `api` / `agent` / `delivery` 角色，支持 `ADMIN_SECRET_FILE`；文件密钥优先于环境变量。
 - [iPhone 构建与使用](ios/README.md)。
+- [Haiji 自有 APNs 远程通知配置](docs/APNS.md)。
+- [地点提醒逐步操作](docs/LOCATION.md)：保存地点、到达／离开条件、权限与时间替代。
 
 当前实现范围以 `.scratch/haiji-v1/issues/` 的验收记录为准，完整 v1 尚未完成。

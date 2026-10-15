@@ -1,0 +1,18 @@
+# docker compose -f compose.yaml -f deploy/apns.compose.yaml up -d
+x-apns-env: &apns-env
+  PUSH_MODE: self_signed
+  APNS_TEAM_ID: ${APNS_TEAM_ID:?Set your Apple Developer Team ID}
+  APNS_KEY_ID: ${APNS_KEY_ID:?Set your APNs Key ID}
+  APNS_TOPIC: ${APNS_TOPIC:-app.haiji.Haiji}
+  APNS_ENVIRONMENT: ${APNS_ENVIRONMENT:-development}
+  APNS_KEY_FILE: /run/secrets/apns_key
+services:
+  api:
+    environment: *apns-env
+    secrets: [admin_secret, apns_key]
+  delivery:
+    environment: *apns-env
+    secrets: [admin_secret, apns_key]
+secrets:
+  apns_key:
+    file: ${APNS_KEY_PATH:?Set APNS_KEY_PATH to your private .p8 key file}

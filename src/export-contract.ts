@@ -1,3 +1,5 @@
+import { PlaceDTO, LocationPlanDTO } from "./location-contracts.js";
+import { PushStatusDTO, PushRegistrationDTO } from "./push-contracts.js";
 import { QueuedDTO, RunDTO, ModelDTO } from "./agent-contracts.js";
 import { ConversationDTO } from "./conversation-contracts.js";
 import { TaskActionDTO } from "./task-action-contracts.js";
@@ -11,13 +13,7 @@ import {
   ErrorDTO,
 } from "./contracts.js";
 import { GmailStatusDTO, GmailConsentDTO } from "./gmail-routes.js";
-import {
-  CreateTaskDTO,
-  TaskDTO,
-  TaskPageDTO,
-  NotificationPlansDTO,
-  NotificationPlanCommandDTO,
-} from "./task-contracts.js";
+import { CreateTaskDTO, TaskDTO, TaskPageDTO } from "./task-contracts.js";
 import { createApp } from "./app.js";
 const app = await createApp({
   databaseUrl:
@@ -53,9 +49,14 @@ for (const [name, schema] of Object.entries({
   "gmail-status": GmailStatusDTO,
   "gmail-consent": GmailConsentDTO,
   task: TaskDTO,
+  "task-remote": TaskDTO,
+  "task-location": TaskDTO,
+  "location-plan": LocationPlanDTO,
+  place: PlaceDTO,
+  "task-location-command": CreateTaskDTO,
+  "push-status": PushStatusDTO,
+  "push-registration": PushRegistrationDTO,
   "task-action": TaskActionDTO,
-  "notification-plans": NotificationPlansDTO,
-  "notification-plan-command": NotificationPlanCommandDTO,
   "task-page": TaskPageDTO,
   "task-command": CreateTaskDTO,
   environment: EnvironmentDTO,

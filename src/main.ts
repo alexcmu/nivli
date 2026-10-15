@@ -1,3 +1,5 @@
+import { readApnsConfig, createApnsSender } from "./apns.js";
+import { startDeliveryWorker } from "./delivery-worker.js";
 import { readModelConfig } from "./model-config.js";
 import { startAgentWorker } from "./agent-worker.js";
 import { readGmailConfig } from "./gmail-config.js";
@@ -33,11 +35,14 @@ if (role === "migrate") {
   const gmail = await readGmailConfig();
   const model = await readModelConfig();
   const pushMode = process.env.PUSH_MODE ?? "disabled";
+  const apns = pushMode === "self_signed" ? await readApnsConfig() : undefined;
   if (!["self_signed", "disabled", "relay"].includes(pushMode))
     throw new Error("Invalid PUSH_MODE");
   const app = await createApp({
     gmail,
     model,
+    apns,
+    sendPush: apns ? createApnsSender(apns) : undefined,
     databaseUrl,
     adminSecret,
     publicUrl,
@@ -53,17 +58,34 @@ if (role === "migrate") {
     const mailbox = gmail
       ? await startGmailWorker({ databaseUrl, gmail, publicUrl })
       : undefined;
+    const delivery = await startDeliveryWorker({
+      databaseUrl,
+      apns,
+      send: apns ? createApnsSender(apns) : undefined,
+    });
     app.addHook("onClose", async () => {
-      await Promise.all([agent.stop(), mailbox?.stop()]);
+      await Promise.all([agent.stop(), mailbox?.stop(), delivery.stop()]);
     });
   }
-  await app.listen({ host: "0.0.0.0", port });
+  await app.listen({ host: process.env.HOST ?? "0.0.0.0", port });
   for (const signal of ["SIGTERM", "SIGINT"] as const)
     process.on(signal, () => {
       void app.close();
     });
 } else if (role === "agent" || role === "delivery") {
   await verifySchema(databaseUrl);
+  const apns =
+    role === "delivery" && process.env.PUSH_MODE === "self_signed"
+      ? await readApnsConfig()
+      : undefined;
+  const delivery =
+    role === "delivery"
+      ? await startDeliveryWorker({
+          databaseUrl,
+          apns,
+          send: apns ? createApnsSender(apns) : undefined,
+        })
+      : undefined;
   const agent =
     role === "agent"
       ? await startAgentWorker({ databaseUrl, model: await readModelConfig() })
@@ -82,7 +104,7 @@ if (role === "migrate") {
     console.error("Queue connection failed; no private data logged"),
   );
   await boss.start();
-  // Ticket 01 establishes real, isolated queue processes. Business consumers arrive in dependent tickets.
+  // Keep the shared process heartbeat alongside its registered business consumers.
   const heartbeat = async () => {
     try {
       await db.execute(
@@ -99,8 +121,11 @@ if (role === "migrate") {
   for (const signal of ["SIGTERM", "SIGINT"] as const)
     process.on(signal, () => {
       clearInterval(interval);
-      void Promise.all([boss.stop(), mailbox?.stop(), agent?.stop()]).then(() =>
-        pool.end(),
-      );
+      void Promise.all([
+        boss.stop(),
+        mailbox?.stop(),
+        agent?.stop(),
+        delivery?.stop(),
+      ]).then(() => pool.end());
     });
 } else throw new Error("Unknown process role");

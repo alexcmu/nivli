@@ -1,3 +1,5 @@
+import { createLocationPlan } from "./location-store.js";
+import { createRemoteOccurrence } from "./push-plans.js";
 import { isQuiet } from "./quiet-hours.js";
 import type pg from "pg";
 import type { FastifyInstance } from "fastify";
@@ -80,7 +82,14 @@ export async function executeTaskAction(
   if (before.revision !== b.expectedRevision)
     conflict("REVISION_CONFLICT", "事项已更新，请核对最新状态。");
   if (b.occurrence) {
-    const o = before.reminder?.occurrence;
+    if (before.locationReminder?.installationStatus === "needs_configuration")
+      conflict("STALE_PLAN", "地点已修改，旧通知不能修改当前条件。");
+    const remote =
+      before.reminder?.remoteOccurrence ??
+      before.locationReminder?.remoteOccurrence;
+    const o = remote
+      ? { ...remote, requestId: "haiji.remote." + remote.id + ".1" }
+      : undefined;
     if (
       !o ||
       o.id !== b.occurrence.id ||
@@ -90,7 +99,18 @@ export async function executeTaskAction(
     )
       conflict("STALE_PLAN", "旧提醒不能修改最新计划。");
   }
+  const locationInput = (task: typeof before) =>
+    task.locationReminder
+      ? {
+          placeId: task.locationReminder.place.id,
+          placeRevision: task.locationReminder.place.revision,
+          transition: task.locationReminder.transition,
+          timeZone: task.locationReminder.timeZone,
+          quietHoursConfirmed: task.locationReminder.quietHoursConfirmed,
+        }
+      : null;
   let state = {
+    locationReminder: locationInput(before),
     status: before.status,
     title: before.title,
     background: before.background,
@@ -120,6 +140,7 @@ export async function executeTaskAction(
       );
     const old = target.before_state;
     state = {
+      locationReminder: locationInput(old),
       status: old.status,
       title: old.title,
       background: old.background,
@@ -138,8 +159,13 @@ export async function executeTaskAction(
         "SELECT before_state FROM task_command WHERE owner_id=$1 AND task_id=$2 AND (result->>'revision')::integer=$3 AND before_state IS NOT NULL ORDER BY created_at DESC LIMIT 1",
         [identity.ownerId, taskId, before.revision],
       )
-    ).rows[0]?.before_state?.reminder;
-    if (old) state.reminder = { instant: old.instant, timeZone: old.timeZone };
+    ).rows[0]?.before_state;
+    if (old?.reminder)
+      state.reminder = {
+        instant: old.reminder.instant,
+        timeZone: old.reminder.timeZone,
+      };
+    if (old) state.locationReminder = locationInput(old);
     if (b.reminder !== undefined) state.reminder = b.reminder;
   } else {
     if (before.status !== "active")
@@ -156,6 +182,38 @@ export async function executeTaskAction(
       if (b.deadline !== undefined) state.deadline = b.deadline;
       if (b.reminder !== undefined) state.reminder = b.reminder;
     }
+  }
+  if (b.reminder !== undefined) {
+    state.reminder = b.reminder;
+    state.locationReminder = null;
+  }
+  if (b.locationReminder) {
+    if (b.reminder)
+      throw new PublicError(422, "ONE_REMINDER_ONLY", "请选择时间或地点提醒。");
+    state.locationReminder = {
+      ...b.locationReminder,
+      quietHoursConfirmed: b.locationReminder.quietHoursConfirmed === true,
+    };
+    state.reminder = null;
+  }
+  if (b.operation === "snooze") state.locationReminder = null;
+  if (
+    (b.operation === "restore" || b.operation === "undo") &&
+    state.locationReminder &&
+    !b.locationReminder &&
+    b.reminder === undefined
+  ) {
+    const old = (
+      await c.query(
+        "SELECT triggered_at,installation_status FROM location_plan WHERE owner_id=$1 AND reminder_id IN(SELECT id FROM reminder WHERE owner_id=$1 AND task_id=$2) ORDER BY reminder_revision DESC LIMIT 1",
+        [identity.ownerId, taskId],
+      )
+    ).rows[0];
+    if (old?.triggered_at || old?.installation_status === "needs_configuration")
+      conflict(
+        "LOCATION_RECONFIGURATION_REQUIRED",
+        "原地点提醒已触发或地点已修改，请重新选择地点或设置时间。",
+      );
   }
   if (!state.title.trim())
     throw new PublicError(422, "INVALID_INPUT", "请填写事项标题。");
@@ -205,68 +263,88 @@ export async function executeTaskAction(
       taskId,
     ],
   );
-  // Every command invalidates the old occurrence in the same transaction.
-  await c.query(
-    "UPDATE local_occurrence SET invalidated_at=$1 WHERE owner_id=$2 AND reminder_id IN(SELECT id FROM reminder WHERE owner_id=$2 AND task_id=$3) AND invalidated_at IS NULL",
-    [time, identity.ownerId, taskId],
-  );
-  const existing = (
+  const preserveLocation =
+    before.locationReminder &&
+    b.operation === "edit" &&
+    b.reminder === undefined &&
+    !b.locationReminder;
+  if (!preserveLocation) {
+    // Every condition change invalidates the old occurrence in the same transaction.
     await c.query(
-      "SELECT * FROM reminder WHERE owner_id=$1 AND task_id=$2 ORDER BY revision DESC LIMIT 1",
+      "UPDATE location_plan SET installation_status='cancelled' WHERE owner_id=$1 AND reminder_id IN(SELECT id FROM reminder WHERE owner_id=$1 AND task_id=$2) AND installation_status!='needs_configuration'",
       [identity.ownerId, taskId],
-    )
-  ).rows[0];
-  await c.query(
-    "UPDATE reminder SET active=false,revision=revision+1,scheduling_status='not_scheduled' WHERE owner_id=$1 AND task_id=$2",
-    [identity.ownerId, taskId],
-  );
-  if (state.status === "active" && state.reminder) {
-    const reminderId = existing?.id ?? randomUUID(),
-      reminderRevision = existing ? existing.revision + 1 : 1;
-    const confirmed =
-      !isQuiet(state.reminder.instant, state.reminder.timeZone) ||
-      b.quietHoursConfirmed === true ||
-      (before.reminder?.instant === state.reminder.instant &&
-        before.reminder?.timeZone === state.reminder.timeZone &&
-        before.reminder?.occurrence?.quietHoursConfirmed === true);
-    if (existing)
-      await c.query(
-        "UPDATE reminder SET active=true,instant=$1,time_zone=$2,scheduling_status=$3 WHERE owner_id=$4 AND id=$5",
-        [
-          state.reminder.instant,
-          state.reminder.timeZone,
-          confirmed ? "local_pending" : "needs_confirmation",
-          identity.ownerId,
-          reminderId,
-        ],
-      );
-    else
-      await c.query(
-        "INSERT INTO reminder(id,owner_id,task_id,instant,time_zone,original_expression,scheduling_status) VALUES($1,$2,$3,$4,$5,$4,$6)",
-        [
-          reminderId,
-          identity.ownerId,
-          taskId,
-          state.reminder.instant,
-          state.reminder.timeZone,
-          confirmed ? "local_pending" : "needs_confirmation",
-        ],
-      );
-    const occurrenceId = randomUUID();
-    await c.query(
-      "INSERT INTO local_occurrence(id,owner_id,device_id,reminder_id,reminder_revision,logical_trigger_key,request_id,quiet_hours_confirmed,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)",
-      [
-        occurrenceId,
-        identity.ownerId,
-        identity.deviceId,
-        reminderId,
-        reminderRevision,
-        state.reminder.instant,
-        "haiji." + occurrenceId + ".1",
-        confirmed,
-        time,
-      ],
     );
+    await c.query(
+      "UPDATE remote_occurrence SET status='cancelled' WHERE owner_id=$1 AND reminder_id IN(SELECT id FROM reminder WHERE owner_id=$1 AND task_id=$2) AND status='planned'",
+      [identity.ownerId, taskId],
+    );
+    const existing = (
+      await c.query(
+        "SELECT * FROM reminder WHERE owner_id=$1 AND task_id=$2 ORDER BY revision DESC LIMIT 1",
+        [identity.ownerId, taskId],
+      )
+    ).rows[0];
+    await c.query(
+      "UPDATE reminder SET active=false,revision=revision+1,scheduling_status='not_scheduled' WHERE owner_id=$1 AND task_id=$2",
+      [identity.ownerId, taskId],
+    );
+    if (state.status === "active" && state.locationReminder)
+      await createLocationPlan(
+        c,
+        identity,
+        taskId,
+        state.locationReminder,
+        existing ? existing.revision + 1 : 1,
+        existing?.id,
+      );
+    if (state.status === "active" && state.reminder) {
+      const reminderId = existing?.id ?? randomUUID(),
+        reminderRevision = existing ? existing.revision + 1 : 1;
+      const confirmed =
+        !isQuiet(state.reminder.instant, state.reminder.timeZone) ||
+        b.quietHoursConfirmed === true ||
+        (before.reminder?.instant === state.reminder.instant &&
+          before.reminder?.timeZone === state.reminder.timeZone &&
+          before.reminder?.remoteOccurrence?.quietHoursConfirmed === true);
+      if (existing)
+        await c.query(
+          "UPDATE reminder SET active=true,kind='time',instant=$1,time_zone=$2,scheduling_status=$3 WHERE owner_id=$4 AND id=$5",
+          [
+            state.reminder.instant,
+            state.reminder.timeZone,
+            confirmed ? "remote_planned" : "needs_confirmation",
+            identity.ownerId,
+            reminderId,
+          ],
+        );
+      else
+        await c.query(
+          "INSERT INTO reminder(id,owner_id,task_id,instant,time_zone,original_expression,scheduling_status) VALUES($1,$2,$3,$4,$5,$4,$6)",
+          [
+            reminderId,
+            identity.ownerId,
+            taskId,
+            state.reminder.instant,
+            state.reminder.timeZone,
+            confirmed ? "remote_planned" : "needs_confirmation",
+          ],
+        );
+      {
+        await createRemoteOccurrence(c, {
+          ownerId: identity.ownerId,
+          deviceId: identity.deviceId,
+          reminderId,
+          revision: reminderRevision,
+          instant: state.reminder.instant,
+          timeZone: state.reminder.timeZone,
+          confirmed,
+          now: time,
+          deadline: state.deadline,
+          requireReady: false,
+          allowElapsed: true,
+        });
+      }
+    }
   }
   await c.query(
     "INSERT INTO task_change_log(owner_id,task_id,revision,command_id,kind,created_at) VALUES($1,$2,$3,$4,$5,$6)",

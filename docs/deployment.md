@@ -52,6 +52,8 @@ CI 在真实 PostgreSQL 17 上运行 `npm ci`、build、migration、API 测试�
 
 2026-10-11 在 Docker Desktop（linux/arm64）以本票真实后端源码运行 `BUILDX_BUILDER=desktop-linux deploy/check-compose.sh`，成功构建 Node 24 多阶段镜像、启动 PostgreSQL 17/迁移/API/两个 worker，API readiness 为 200；停止数据库并重启 API 后，恢复数据库再次达到 ready；替换 migration 为退出 73 的入口后，Compose 返回失败，API/agent/delivery 均未运行。测试退出已清理随机项目的数据卷。`deploy/up.sh` 另验证拒绝无 digest 的 local tag。当前证据不包含远程 GitHub Actions 执行、多架构发布、TLS 代理或真机结果。
 
+自签名 APNs 远程提醒的密钥、推送环境、可选 Compose 覆盖文件和原生签名配置见 [APNS.md](APNS.md)。未配置密钥时不会发送提醒；所有提醒均使用远程推送。真实 Apple 推送需要独立真机验收。
+
 ## 更名后的已有部署
 
 新建环境的默认 PostgreSQL 用户与数据库名为 `haiji`。使用已有持久卷升级时，在 `deploy/.env` 中将 `POSTGRES_USER` 与 `POSTGRES_DB` 设置为该卷原有的名称，并保持原密码和 Compose project 名称；仅更改初始化环境变量不会重命名已有数据库或角色。不要删除持久卷来完成更名。Railway 部署继续使用原有 `DATABASE_URL`。

@@ -1,3 +1,4 @@
+import { hasCurrentInstructionAuthority } from "./instruction-authority.js";
 import { reserveRequest, settleRequest } from "./agent-budget.js";
 import {
   commitConversationResult,
@@ -74,6 +75,12 @@ export async function startAgentWorker(config: {
         now: new Date(input.created_at).toISOString(),
         signal: AbortSignal.any([shutdown.signal, runAbort.signal]),
         context: await loadConversationContext(pool, input),
+        places: (
+          await pool.query(
+            "SELECT id,revision,name FROM place WHERE owner_id=$1 AND deleted_at IS NULL ORDER BY name,id LIMIT 100",
+            [input.owner_id],
+          )
+        ).rows,
         assertActive: async () => {
           owned.signal.throwIfAborted();
           const r = (
@@ -173,6 +180,64 @@ export async function startAgentWorker(config: {
               message =
                 e instanceof Error ? e.message : "事项状态已变化，请核对。";
             }
+          } else if (result.output.kind === "location") {
+            const p = result.output.proposal,
+              places = owned.places ?? [],
+              matches = places.filter((place) =>
+                input.text.includes(place.name),
+              );
+            const explicit =
+              /提醒我|remind me/i.test(input.text) &&
+              hasCurrentInstructionAuthority(input.text) &&
+              !/(截止|deadline|due)/i.test(input.text);
+            const direction =
+              p.transition === "exit"
+                ? /离开|离家|出门|leave|leaving/i.test(input.text)
+                : /到|进入|arriv|enter/i.test(input.text);
+            if (
+              explicit &&
+              direction &&
+              p.instruction === input.text &&
+              matches.length === 1 &&
+              matches[0]?.id === p.placeId &&
+              matches[0]?.revision === p.placeRevision &&
+              p.title.trim().length > 0 &&
+              p.title.length <= 300
+            ) {
+              try {
+                await c.query("SAVEPOINT location_proposal");
+                await createTaskInTransaction(
+                  c,
+                  { ownerId: input.owner_id, deviceId: input.device_id },
+                  {
+                    taskId: input.id,
+                    commandId: input.id,
+                    title: p.title,
+                    locationReminder: {
+                      placeId: p.placeId,
+                      placeRevision: p.placeRevision,
+                      transition: p.transition,
+                      timeZone: input.time_zone,
+                    },
+                  },
+                  now(),
+                  { kind: "instruction", text: input.text },
+                );
+                taskId = input.id;
+                status = "succeeded";
+                message =
+                  "地点事项已保存，请在 App 启用地点监测并核对权限状态。";
+                await c.query("RELEASE SAVEPOINT location_proposal");
+              } catch {
+                await c.query("ROLLBACK TO SAVEPOINT location_proposal");
+                status = "needs_clarification";
+                message = "地点已修改或不可用，请重新确认地点后再创建。";
+              }
+            } else {
+              status = "needs_clarification";
+              message =
+                "请先保存并确认一个明确地点，再说明到达还是离开时提醒。";
+            }
           } else if (result.output.kind === "proposal") {
             if (
               validateProposal(result.output.proposal, owned) &&
@@ -186,7 +251,6 @@ export async function startAgentWorker(config: {
                 {
                   taskId: input.id,
                   commandId: input.id,
-                  localDeviceId: input.device_id,
                   title: p.title,
                   background: "",
                   reminder: { instant: p.instant, timeZone: input.time_zone },

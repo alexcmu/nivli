@@ -5,7 +5,7 @@ import CryptoKit
 @MainActor enum TaskActionTransport {
     private struct Attempt: Codable { let taskId: String; let command: TaskActionCommand }
     private static func store(_ session: SavedSession, _ taskId: String) -> SecureStore {
-        let identity = IOSNotificationSystem.namespace(session)
+        let identity = NotificationIdentity.namespace(session)
         return SecureStore(account: "task-action-" + identity + "-" + taskId)
     }
     static func pending(_ taskId: String, session: SavedSession) throws -> TaskActionCommand? { try store(session, taskId).read(Attempt.self)?.command }
@@ -16,8 +16,8 @@ import CryptoKit
             _ = try await HaijiAPI(server: session.server).taskAction(id: taskId, command: command, token: session.credentials.accessToken)
             // Replay result is historical. Always project current state before updating plans.
             let latest = try await HaijiAPI(server: session.server).task(id: taskId, token: session.credentials.accessToken)
+            await LocationMonitoring.shared.synchronize(session)
             try storage.remove()
-            _ = await NotificationCoordinator().synchronize(session)
             return (try? await HaijiAPI(server: session.server).task(id: taskId, token: session.credentials.accessToken)) ?? latest
         } catch {
             if let error = error as? APIError, !error.retryable { try? storage.remove() }

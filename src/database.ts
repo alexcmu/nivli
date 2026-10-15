@@ -1,14 +1,15 @@
+import { migrateLocation } from "./location-schema.js";
+import { migratePush } from "./push-schema.js";
 import { migrateConversation } from "./conversation-schema.js";
 import { migrateAgent } from "./agent-schema.js";
 import { migrateTaskActions } from "./task-action-schema.js";
-import { migrateLocalNotifications } from "./notification-schema.js";
 import pg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { sql } from "drizzle-orm";
 import { PgBoss } from "pg-boss";
 import { migrateGmail } from "./gmail-schema.js";
 import { migrateTasks } from "./task-schema.js";
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 7;
 export function connect(databaseUrl: string) {
   const pool = new pg.Pool({
     connectionString: databaseUrl,
@@ -56,10 +57,11 @@ export async function migrate(databaseUrl: string) {
     });
     await migrateGmail(pool);
     await migrateTasks(pool);
-    await migrateLocalNotifications(pool);
     await migrateTaskActions(pool);
     await migrateAgent(pool);
     await migrateConversation(pool);
+    await migratePush(pool);
+    await migrateLocation(pool);
     await pool.query(
       "INSERT INTO schema_version(version) VALUES(4) ON CONFLICT DO NOTHING",
     );
@@ -89,7 +91,7 @@ export async function verifySchema(databaseUrl: string) {
       "SELECT to_regclass('agent_run') AS runs,to_regclass('input_event') AS inputs,to_regclass('agent_retry') AS retries,to_regclass('model_request') AS budget,to_regclass('agent_cancel') AS cancellation,to_regclass('conversation') AS conversations",
     );
     const tasks = await pool.query(
-      "SELECT to_regclass('task_command_key') AS table_name, to_regclass('local_occurrence') AS occurrences, to_regclass('notification_plan_command') AS notification_commands",
+      "SELECT to_regclass('task_command_key') AS table_name, to_regclass('remote_occurrence') AS delivery, to_regclass('push_registration') AS push_registration, to_regclass('push_registration_command') AS push_commands, to_regclass('push_test') AS push_tests, to_regclass('place') AS places, to_regclass('location_plan') AS location_plans, to_regclass('location_command') AS location_commands",
     );
     if (
       r.rows[0]?.version !== SCHEMA_VERSION ||
@@ -100,8 +102,13 @@ export async function verifySchema(databaseUrl: string) {
       !agent.rows[0]?.cancellation ||
       !agent.rows[0]?.conversations ||
       !tasks.rows[0]?.table_name ||
-      !tasks.rows[0]?.occurrences ||
-      !tasks.rows[0]?.notification_commands
+      !tasks.rows[0]?.delivery ||
+      !tasks.rows[0]?.push_registration ||
+      !tasks.rows[0]?.push_commands ||
+      !tasks.rows[0]?.push_tests ||
+      !tasks.rows[0]?.places ||
+      !tasks.rows[0]?.location_plans ||
+      !tasks.rows[0]?.location_commands
     )
       throw new Error("Incompatible schema; run migration before starting");
   } finally {

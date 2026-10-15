@@ -13,7 +13,8 @@
     "test": "vitest run",
     "contract": "node dist/export-contract.js",
     "model:smoke": "node dist/model-smoke.js",
-    "model:eval": "node dist/model-eval.js"
+    "model:eval": "node dist/model-eval.js",
+    "portal:local": "npm run build && node scripts/portal-local.mjs"
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "1.1.0",

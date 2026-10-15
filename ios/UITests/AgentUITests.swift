@@ -26,8 +26,8 @@ final class AgentUITests: XCTestCase {
         let allow = springboard.buttons.matching(NSPredicate(format: "label == 'Allow' OR label == '允许'")).firstMatch
         if allow.waitForExistence(timeout: 15) { allow.tap() }
         XCTAssertTrue(app.staticTexts[fixture.title].waitForExistence(timeout: 30))
-        for _ in 0..<4 { if app.staticTexts["本机已安排"].isHittable { break }; app.swipeUp() }
-        XCTAssertTrue(app.staticTexts["本机已安排"].waitForExistence(timeout: 20))
+        for _ in 0..<4 { if app.staticTexts["服务器远程提醒 · 待发送"].isHittable { break }; app.swipeUp() }
+        XCTAssertTrue(app.staticTexts["服务器远程提醒 · 待发送"].waitForExistence(timeout: 20))
         XCTAssertTrue(app.staticTexts["来源：" + fixture.instruction].exists)
         let screenshot = XCTAttachment(screenshot: app.screenshot()); screenshot.name = "Agent saved current task and system receipt"; screenshot.lifetime = .keepAlways; add(screenshot)
         struct Proof: Decodable {
@@ -38,12 +38,7 @@ final class AgentUITests: XCTestCase {
         XCTAssertEqual((response as? HTTPURLResponse)?.statusCode, 200)
         let proof = try JSONDecoder().decode(Proof.self, from: data)
         XCTAssertEqual(proof.requests, 1); XCTAssertEqual(proof.tasks.count, 1)
-        let task = try XCTUnwrap(proof.tasks.first); XCTAssertEqual(task.title, fixture.title); XCTAssertEqual(task.reminder.schedulingStatus, "local_installed")
-        app.terminate(); app.launchArguments = ["-agent-system-evidence", "-agent-evidence-task", task.id]; app.launch()
-        let systemConfirmed = app.staticTexts["实际系统计划=1；预览隐私=true"].waitForExistence(timeout: 10)
-        XCTAssertTrue(systemConfirmed, app.staticTexts["agentSystemEvidence"].label)
-        guard systemConfirmed else { return }
-        print("HAIJI_AGENT_DEVICE durable_relaunch=true single_task=true single_provider_request=true OS_pending=1 private_preview=true")
+        let task = try XCTUnwrap(proof.tasks.first); XCTAssertEqual(task.title, fixture.title); XCTAssertEqual(task.reminder.schedulingStatus, "remote_planned")
         app.terminate(); app.launchArguments = []; app.launch(); app.tabBars.buttons["交代"].tap()
         XCTAssertTrue(app.staticTexts[fixture.title].waitForExistence(timeout: 20))
         app.tabBars.buttons["我的"].tap(); app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "环境连接")).firstMatch.tap()

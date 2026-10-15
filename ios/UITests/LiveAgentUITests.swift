@@ -55,24 +55,21 @@ final class LiveAgentUITests: XCTestCase {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let allow = springboard.buttons.matching(NSPredicate(format: "label == 'Allow' OR label == '允许'")).firstMatch
         if allow.waitForExistence(timeout: 20) { allow.tap() }
-        let created = try await proof(fixture, count: 2, status: "succeeded") { $0.runs.count == 2 && $0.runs[1].status == "succeeded" && $0.tasks.first?.reminder.schedulingStatus == "local_installed" }
+        let created = try await proof(fixture, count: 2, status: "succeeded") { $0.runs.count == 2 && $0.runs[1].status == "succeeded" && $0.tasks.first?.reminder.schedulingStatus == "remote_planned" }
         XCTAssertEqual(created.tasks.count, 1)
         let task = try XCTUnwrap(created.tasks.first)
         XCTAssertTrue(app.staticTexts[task.title].firstMatch.waitForExistence(timeout: 10))
-        for _ in 0..<4 { if app.staticTexts["本机已安排"].firstMatch.isHittable { break }; app.swipeUp() }
-        XCTAssertTrue(app.staticTexts["本机已安排"].firstMatch.waitForExistence(timeout: 10))
+        for _ in 0..<4 { if app.staticTexts["服务器远程提醒 · 待发送"].firstMatch.isHittable { break }; app.swipeUp() }
+        XCTAssertTrue(app.staticTexts["服务器远程提醒 · 待发送"].firstMatch.waitForExistence(timeout: 10))
         for _ in 0..<5 { if editor.isHittable { break }; app.swipeDown() }
         editor.tap(); editor.typeText(fixture.change); editor.typeText("\n")
-        let changed = try await proof(fixture, count: 3, status: "succeeded") { $0.runs.count == 3 && $0.runs[2].status == "succeeded" && $0.tasks.first?.revision == 2 && $0.tasks.first?.reminder.schedulingStatus == "local_installed" }
+        let changed = try await proof(fixture, count: 3, status: "succeeded") { $0.runs.count == 3 && $0.runs[2].status == "succeeded" && $0.tasks.first?.revision == 2 && $0.tasks.first?.reminder.schedulingStatus == "remote_planned" }
         XCTAssertEqual(changed.tasks.count, 1); XCTAssertEqual(changed.tasks[0].id, task.id)
         XCTAssertNotEqual(changed.tasks[0].reminder.instant, task.reminder.instant)
         for run in changed.runs { XCTAssertTrue((1...3).contains(run.requests)); XCTAssertLessThanOrEqual(run.toolCalls, 6); XCTAssertEqual(run.cost.unknownRequests, 0) }
         app.terminate(); app.launch(); app.tabBars.buttons["交代"].tap()
         XCTAssertTrue(app.staticTexts[fixture.change].firstMatch.waitForExistence(timeout: 15))
         let image = XCTAttachment(screenshot: app.screenshot()); image.name = "Live Claude current task history"; image.lifetime = .keepAlways; add(image)
-        app.terminate(); app.launchArguments = ["-agent-system-evidence", "-agent-evidence-task", task.id]; app.launch()
-        XCTAssertTrue(app.staticTexts["实际系统计划=1；预览隐私=true"].waitForExistence(timeout: 10), app.staticTexts["agentSystemEvidence"].label)
-        print("HAIJI_LIVE_DEVICE model=claude-sonnet-5-5 pi=1.1.0 clarify=true linked_answer=true edit=true history_relaunch=true OS_pending=1 usageUsd=\(changed.runs.reduce(0) { $0 + $1.cost.usageUsd }) requests=\(changed.runs.map(\.requests)) tools=\(changed.runs.map(\.toolCalls))")
         app.terminate(); app.launchArguments = []; app.launch()
         app.tabBars.buttons["我的"].tap(); app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "环境连接")).firstMatch.tap()
         app.buttons["吊销并断开此设备"].tap(); XCTAssertTrue(app.textFields["serverAddress"].waitForExistence(timeout: 20))

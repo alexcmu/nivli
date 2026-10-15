@@ -1,7 +1,10 @@
 import Foundation
 import SQLite3
 
-public struct TaskReminder: Codable, Sendable { public let id: String; public let revision: Int; public let instant: String; public let timeZone: String; public let schedulingStatus: String; public let originalExpression:String?;public let timeSemantics:String?; public let occurrence: NotificationPlan? }
+public struct RemoteOccurrence: Codable, Sendable {
+    public let id: String; public let reminderRevision: Int; public let routingVersion: Int; public let deliveryOwner: String; public let status: String; public let quietHoursConfirmed: Bool; public let scheduledAt: String; public let expiresAt: String; public let attempt: Int; public let lastError: String?
+}
+public struct TaskReminder: Codable, Sendable { public let id: String; public let revision: Int; public let instant: String; public let timeZone: String; public let schedulingStatus: String; public let originalExpression:String?;public let timeSemantics:String?; public let remoteOccurrence: RemoteOccurrence? }
 public struct TaskDeadline: Codable, Sendable {
     public let kind: String; public let date: String?; public let instant: String?; public let timeZone: String
     public init(kind: String, date: String? = nil, instant: String? = nil, timeZone: String) { self.kind = kind; self.date = date; self.instant = instant; self.timeZone = timeZone }
@@ -10,14 +13,14 @@ public struct TaskSource: Codable, Sendable { public let id: String; public let 
 public struct TaskRecord: Codable, Identifiable, Sendable {
     public let id: String; public let ownerId: String; public let revision: Int; public let status: String
     public let title: String; public let background: String; public let reminder: TaskReminder?; public let deadline: TaskDeadline?
-    public let sources: [TaskSource]; public let createdAt: String; public let updatedAt: String
+    public let locationReminder: LocationPlan?; public let sources: [TaskSource]; public let createdAt: String; public let updatedAt: String
 }
 public struct ManualTaskCommand: Codable, Sendable {
     public struct Reminder: Codable, Sendable { public let instant: String; public let timeZone: String; public init(instant: String, timeZone: String) { self.instant = instant; self.timeZone = timeZone } }
     public let taskId: String; public let commandId: String; public let title: String; public let background: String
-    public let reminder: Reminder?; public let deadline: TaskDeadline?; public let localDeviceId: String?; public let quietHoursConfirmed: Bool?
-    public init(taskId: String = UUID().uuidString, commandId: String = UUID().uuidString, title: String, background: String, reminder: Reminder?, deadline: TaskDeadline?, localDeviceId: String? = nil, quietHoursConfirmed: Bool? = nil) {
-        self.taskId = taskId; self.commandId = commandId; self.title = title; self.background = background; self.reminder = reminder; self.deadline = deadline; self.localDeviceId = localDeviceId; self.quietHoursConfirmed = quietHoursConfirmed
+    public let locationReminder: LocationReminderInput?; public let reminder: Reminder?; public let deadline: TaskDeadline?; public let remoteDeviceId: String?; public let quietHoursConfirmed: Bool?
+    public init(taskId: String = UUID().uuidString, commandId: String = UUID().uuidString, title: String, background: String, reminder: Reminder?, deadline: TaskDeadline?, quietHoursConfirmed: Bool? = nil, remoteDeviceId: String? = nil, locationReminder: LocationReminderInput? = nil) {
+        self.locationReminder = locationReminder; self.taskId = taskId; self.commandId = commandId; self.title = title; self.background = background; self.reminder = reminder; self.deadline = deadline; self.quietHoursConfirmed = quietHoursConfirmed; self.remoteDeviceId = remoteDeviceId
     }
 }
 public struct TaskPage: Codable, Sendable { public let tasks: [TaskRecord]; public let nextCursor: String? }
@@ -72,13 +75,15 @@ public enum TaskDeadlineChange: Codable, Sendable {
 public struct TaskActionCommand: Codable, Sendable {
     public struct Occurrence: Codable, Sendable {
         public let id: String; public let reminderRevision: Int; public let routingVersion: Int; public let requestId: String
-        public init(plan: NotificationPlan) { id = plan.id; reminderRevision = plan.reminderRevision; routingVersion = plan.routingVersion; requestId = plan.requestId }
+        public init(remote: RemoteOccurrence) { id = remote.id; reminderRevision = remote.reminderRevision; routingVersion = remote.routingVersion; requestId = "haiji.remote." + remote.id + ".1" }
     }
+    public let locationReminder: LocationReminderInput?
     public let commandId: String; public let clientMutationId: String; public let expectedRevision: Int; public let operation: String
     public let title: String?; public let background: String?; public let reminder: ManualTaskCommand.Reminder?; public let targetMutationId: String?; public let occurrence: Occurrence?; public let quietHoursConfirmed: Bool?; public let deadline: TaskDeadlineChange?
-    private enum CodingKeys: String, CodingKey { case commandId, clientMutationId, expectedRevision, operation, title, background, reminder, targetMutationId, occurrence, quietHoursConfirmed, deadline }
+    private enum CodingKeys: String, CodingKey { case locationReminder, commandId, clientMutationId, expectedRevision, operation, title, background, reminder, targetMutationId, occurrence, quietHoursConfirmed, deadline }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        locationReminder = try c.decodeIfPresent(LocationReminderInput.self, forKey: .locationReminder)
         commandId = try c.decode(String.self, forKey: .commandId); clientMutationId = try c.decode(String.self, forKey: .clientMutationId)
         expectedRevision = try c.decode(Int.self, forKey: .expectedRevision); operation = try c.decode(String.self, forKey: .operation)
         title = try c.decodeIfPresent(String.self, forKey: .title); background = try c.decodeIfPresent(String.self, forKey: .background)
@@ -86,8 +91,8 @@ public struct TaskActionCommand: Codable, Sendable {
         occurrence = try c.decodeIfPresent(Occurrence.self, forKey: .occurrence); quietHoursConfirmed = try c.decodeIfPresent(Bool.self, forKey: .quietHoursConfirmed)
         deadline = c.contains(.deadline) ? (try c.decodeNil(forKey: .deadline) ? .clear : .value(try c.decode(TaskDeadline.self, forKey: .deadline))) : nil
     }
-    public init(commandId: String = UUID().uuidString, clientMutationId: String = UUID().uuidString, expectedRevision: Int, operation: String, title: String? = nil, background: String? = nil, reminder: ManualTaskCommand.Reminder? = nil, targetMutationId: String? = nil, occurrence: Occurrence? = nil, quietHoursConfirmed: Bool? = nil, deadline: TaskDeadlineChange? = nil) {
-        self.commandId = commandId; self.clientMutationId = clientMutationId; self.expectedRevision = expectedRevision; self.operation = operation; self.title = title; self.background = background; self.reminder = reminder; self.targetMutationId = targetMutationId; self.occurrence = occurrence; self.quietHoursConfirmed = quietHoursConfirmed; self.deadline = deadline
+    public init(commandId: String = UUID().uuidString, clientMutationId: String = UUID().uuidString, expectedRevision: Int, operation: String, title: String? = nil, background: String? = nil, reminder: ManualTaskCommand.Reminder? = nil, targetMutationId: String? = nil, occurrence: Occurrence? = nil, quietHoursConfirmed: Bool? = nil, deadline: TaskDeadlineChange? = nil, locationReminder: LocationReminderInput? = nil) {
+        self.locationReminder = locationReminder; self.commandId = commandId; self.clientMutationId = clientMutationId; self.expectedRevision = expectedRevision; self.operation = operation; self.title = title; self.background = background; self.reminder = reminder; self.targetMutationId = targetMutationId; self.occurrence = occurrence; self.quietHoursConfirmed = quietHoursConfirmed; self.deadline = deadline
     }
 }
 extension HaijiAPI {

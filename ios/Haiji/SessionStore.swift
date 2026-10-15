@@ -27,6 +27,7 @@ struct SecureStore {
 }
 
 @MainActor @Observable final class Connection {
+    static let shared = Connection()
     var saved: SavedSession?
     var environment: EnvironmentInfo?
     var error: String?
@@ -59,7 +60,7 @@ struct SecureStore {
         try store.save(saved); self.saved = saved; self.environment = environment; verified = true; error = nil
     }
     func forgetLocalCredentials() async {
-        if let saved { await NotificationCoordinator.clearLocal(saved) }
+        if let saved { await NotificationIdentity.clearDelivered(saved); RemotePushController.shared.clear(saved); LocationMonitoring.shared.clear(saved) }
         do {
             try store.remove(); try SecureStore(account: "pairing-attempt").remove()
             saved = nil; environment = nil; verified = false; error = nil
@@ -72,7 +73,7 @@ struct SecureStore {
             saved.revocationKey = saved.revocationKey ?? UUID().uuidString
             try store.save(saved); self.saved = saved
             try await HaijiAPI(server: saved.server).revoke(token: saved.credentials.accessToken, key: saved.revocationKey!)
-            await NotificationCoordinator.clearLocal(saved)
+            await NotificationIdentity.clearDelivered(saved); RemotePushController.shared.clear(saved); LocationMonitoring.shared.clear(saved)
             try store.remove(); self.saved = nil; environment = nil; verified = false; error = nil
         } catch { self.error = error.localizedDescription }
     }

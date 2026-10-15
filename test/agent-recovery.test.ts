@@ -67,7 +67,7 @@ beforeAll(async () => {
   await migrate(databaseUrl);
   const previousSchema = new pg.Pool({ connectionString: databaseUrl });
   await previousSchema.query(
-    "ALTER TABLE reminder DROP CONSTRAINT reminder_scheduling_status_check; ALTER TABLE reminder ADD CONSTRAINT reminder_scheduling_status_check CHECK(scheduling_status='not_scheduled'); DROP TABLE notification_plan_command; DROP TABLE local_occurrence; DROP TABLE model_request; DROP TABLE agent_cancel; ALTER TABLE agent_run DROP COLUMN error_code, DROP COLUMN deadline_at, DROP COLUMN lease_expires_at; ALTER TABLE agent_run DROP CONSTRAINT agent_run_status_check; ALTER TABLE agent_run ADD CONSTRAINT agent_run_status_check CHECK(status IN('queued','running','clarification','succeeded','failed')); DELETE FROM schema_version WHERE version=4; INSERT INTO schema_version(version) VALUES(3) ON CONFLICT DO NOTHING;",
+    "ALTER TABLE reminder DROP CONSTRAINT reminder_scheduling_status_check; ALTER TABLE reminder ADD CONSTRAINT reminder_scheduling_status_check CHECK(scheduling_status='not_scheduled');  DROP TABLE model_request; DROP TABLE agent_cancel; ALTER TABLE agent_run DROP COLUMN error_code, DROP COLUMN deadline_at, DROP COLUMN lease_expires_at; ALTER TABLE agent_run DROP CONSTRAINT agent_run_status_check; ALTER TABLE agent_run ADD CONSTRAINT agent_run_status_check CHECK(status IN('queued','running','clarification','succeeded','failed')); DELETE FROM schema_version WHERE version=4; INSERT INTO schema_version(version) VALUES(3) ON CONFLICT DO NOTHING;",
   );
   await previousSchema.end();
   await migrate(databaseUrl);

@@ -64,3 +64,19 @@ extension HaijiAPI {
     }
     public func task(id: String, token: String) async throws -> TaskRecord { try await request("v1/tasks/" + id, token: token, as: TaskRecord.self) }
 }
+
+public struct PushStatus: Codable, Sendable {
+    public let configured: Bool; public let topic: String?; public let environment: String?
+    public let registered: Bool; public let enabled: Bool; public let authorized: Bool; public let invalidated: Bool
+}
+public struct PushRegistration: Codable, Sendable {
+    public let token: String; public let topic: String; public let environment: String; public let enabled: Bool; public let authorized: Bool
+    public init(token: String, topic: String, environment: String, enabled: Bool, authorized: Bool) { self.token = token; self.topic = topic; self.environment = environment; self.enabled = enabled; self.authorized = authorized }
+}
+extension HaijiAPI {
+    public func pushStatus(deviceId: String, token: String) async throws -> PushStatus { try await request("v1/devices/\(deviceId)/push", token: token, as: PushStatus.self) }
+    public func registerPush(deviceId: String, registration: PushRegistration, token: String) async throws -> PushStatus { try await request("v1/devices/\(deviceId)/push", method: "PUT", body: JSONEncoder().encode(registration), token: token, key: UUID().uuidString, as: PushStatus.self) }
+    public func disablePush(deviceId: String, token: String) async throws -> PushStatus { try await request("v1/devices/\(deviceId)/push", method: "DELETE", token: token, key: UUID().uuidString, as: PushStatus.self) }
+    public func confirmRemote(taskId: String, occurrence: RemoteOccurrence, token: String) async throws -> TaskRecord { try await request("v1/tasks/\(taskId)/remote-confirmation", method: "POST", body: JSONEncoder().encode(RemoteConfirmation(occurrenceId: occurrence.id, reminderRevision: occurrence.reminderRevision)), token: token, key: UUID().uuidString, as: TaskRecord.self) }
+}
+private struct RemoteConfirmation: Codable { let occurrenceId: String; let reminderRevision: Int }

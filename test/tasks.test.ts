@@ -57,7 +57,7 @@ beforeAll(async () => {
   await migrate(databaseUrl);
   const previousSchema = new pg.Pool({ connectionString: databaseUrl });
   await previousSchema.query(
-    "ALTER TABLE reminder DROP CONSTRAINT reminder_scheduling_status_check; ALTER TABLE reminder ADD CONSTRAINT reminder_scheduling_status_check CHECK(scheduling_status='not_scheduled'); DROP TABLE notification_plan_command; DROP TABLE local_occurrence;",
+    "ALTER TABLE reminder DROP CONSTRAINT reminder_scheduling_status_check; ALTER TABLE reminder ADD CONSTRAINT reminder_scheduling_status_check CHECK(scheduling_status='not_scheduled'); ",
   );
   await previousSchema.end();
   await migrate(databaseUrl);
@@ -90,7 +90,7 @@ test("manual task is persistent with independent deadline, evidence and truthful
     reminder: {
       instant: "2026-10-12T16:00:00.000Z",
       timeZone: "Asia/Shanghai",
-      schedulingStatus: "not_scheduled",
+      schedulingStatus: "needs_confirmation",
     },
     sources: [{ kind: "manual", text: "手动输入的背景" }],
   });
@@ -157,12 +157,12 @@ test("home uses due then next reminder and stable UUID ordering with filtered pa
     {
       ...draft(),
       taskId: "11111111-1111-4111-8111-111111111111",
-      reminder: { instant: "2026-10-11T09:00:00Z", timeZone: "UTC" },
+      reminder: { instant: "2026-10-11T12:30:00Z", timeZone: "UTC" },
     },
     {
       ...draft(),
       taskId: "22222222-2222-4222-8222-222222222222",
-      reminder: { instant: "2026-10-11T09:00:00Z", timeZone: "UTC" },
+      reminder: { instant: "2026-10-11T12:30:00Z", timeZone: "UTC" },
     },
     {
       ...draft(),
@@ -201,7 +201,7 @@ test("home uses due then next reminder and stable UUID ordering with filtered pa
 });
 test("database commit fault rolls back task, reminder, evidence and command so same identity can retry", async () => {
   const faultDb = new pg.Pool({ connectionString: databaseUrl }),
-    input = { ...draft(), localDeviceId: deviceId, quietHoursConfirmed: true };
+    input = { ...draft(), quietHoursConfirmed: true };
   try {
     await faultDb.query(
       "CREATE FUNCTION reject_task_commit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'simulated database commit fault'; END $$; CREATE TRIGGER task_commit_fault BEFORE INSERT ON task_command FOR EACH ROW EXECUTE FUNCTION reject_task_commit();",
@@ -212,11 +212,7 @@ test("database commit fault rolls back task, reminder, evidence and command so s
       body: { code: "SERVICE_UNAVAILABLE", retryable: true },
     });
     expect((await call("/v1/tasks/" + input.taskId)).status).toBe(404);
-    expect(
-      (
-        await call(`/v1/devices/${deviceId}/notification-plans`)
-      ).body.plans.some((p: any) => p.taskId === input.taskId),
-    ).toBe(false);
+
     expect(
       (await call("/v1/tasks?status=all")).body.tasks.some(
         (t: any) => t.id === input.taskId,
@@ -228,12 +224,8 @@ test("database commit fault rolls back task, reminder, evidence and command so s
     const retry = await call("/v1/tasks", "POST", input, input.commandId);
     expect(retry.status).toBe(200);
     expect(retry.body.sources).toHaveLength(1);
-    expect(retry.body.reminder.schedulingStatus).toBe("local_pending");
-    expect(
-      (
-        await call(`/v1/devices/${deviceId}/notification-plans`)
-      ).body.plans.filter((p: any) => p.taskId === input.taskId),
-    ).toHaveLength(1);
+    expect(retry.body.reminder.schedulingStatus).toBe("remote_planned");
+    expect(retry.body.reminder.remoteOccurrence.deliveryOwner).toBe("server");
     expect(
       (await call("/v1/tasks", "POST", input, input.commandId)).body,
     ).toEqual(retry.body);
@@ -274,181 +266,10 @@ test("a new transport key replaying a command remains reserved against another i
   expect((await call("/v1/tasks", "POST", draft(), alias)).status).toBe(409);
 });
 
-test("atomic local intent outside rolling window recovers same identity and accepts only current install receipt", async () => {
-  const input = {
-    ...draft(),
-    localDeviceId: deviceId,
-    reminder: { instant: "2027-10-12T12:00:00Z", timeZone: "UTC" },
-  };
-  const saved = await call("/v1/tasks", "POST", input);
-  expect(saved.status).toBe(200);
-  expect(saved.body.reminder.schedulingStatus).toBe("local_pending");
-  const occurrence = saved.body.reminder.occurrence;
-  expect(occurrence).toMatchObject({
-    reminderRevision: 1,
-    routingVersion: 1,
-    installationStatus: "pending",
-    scheduledAt: "2027-10-12T12:00:00.000Z",
-    timeZone: "UTC",
-  });
-  const path = `/v1/devices/${deviceId}/notification-plans`;
-  const pending = await call(path);
-  expect(pending.body.plans).toContainEqual({
-    taskId: input.taskId,
-    ...occurrence,
-  });
-  await app.close();
-  app = await createApp(config);
-  base = await app.listen({ host: "127.0.0.1", port: 0 });
-  expect((await call(path)).body.plans).toContainEqual({
-    taskId: input.taskId,
-    ...occurrence,
-  });
-  const receipt = {
-    operation: "installed",
-    occurrenceId: occurrence.id,
-    reminderRevision: 1,
-    routingVersion: 1,
-    requestId: occurrence.requestId,
-  };
-  expect(
-    (await call(path, "POST", { ...receipt, routingVersion: 2 })).status,
-  ).toBe(409);
-  expect(
-    (await call(path, "POST", { ...receipt, requestId: "wrong" })).status,
-  ).toBe(409);
-  const installed = await call(path, "POST", receipt);
-  expect(installed.body.reminder.schedulingStatus).toBe("local_installed");
-  expect((await call(path, "POST", receipt)).body).toEqual(installed.body);
-  expect((await call(path)).body.plans).toContainEqual({
-    taskId: input.taskId,
-    ...installed.body.reminder.occurrence,
-  });
-  expect(
-    (
-      await call(
-        `/v1/devices/${randomUUID()}/notification-plans`,
-        "POST",
-        receipt,
-      )
-    ).status,
-  ).toBe(404);
-});
-test("night reminder stays saved pending explicit confirmation; denied permission and capacity never enable remote fallback", async () => {
-  const input = {
-    ...draft(),
-    localDeviceId: deviceId,
-    reminder: {
-      instant: "2026-11-01T06:30:00Z",
-      timeZone: "America/Los_Angeles",
-    },
-  };
-  const saved = await call("/v1/tasks", "POST", input);
-  expect(saved.body.reminder.schedulingStatus).toBe("needs_confirmation");
-  const o = saved.body.reminder.occurrence,
-    path = `/v1/devices/${deviceId}/notification-plans`;
-  const receipt = {
-    occurrenceId: o.id,
-    reminderRevision: 1,
-    routingVersion: 1,
-    requestId: o.requestId,
-  };
-  expect(
-    (await call(path, "POST", { ...receipt, operation: "installed" })).status,
-  ).toBe(409);
-  const confirmed = await call(path, "POST", {
-    ...receipt,
-    operation: "confirm-quiet-hours",
-  });
-  expect(confirmed.body.reminder.occurrence.quietHoursConfirmed).toBe(true);
-  expect(confirmed.body.reminder.instant).toBe("2026-11-01T06:30:00.000Z");
-  for (const [result, status] of [
-    ["denied", "permission_denied"],
-    ["capacity", "capacity_exceeded"],
-    ["failed", "installation_failed"],
-  ]) {
-    const failed = await call(path, "POST", {
-      ...receipt,
-      operation: "failed",
-      result,
-    });
-    expect(failed.status).toBe(200);
-    expect(failed.body.reminder.schedulingStatus).toBe(status);
-    expect(failed.body.reminder.occurrence.id).toBe(o.id);
-    expect(
-      (await call(path, "POST", { ...receipt, operation: "claim" })).body
-        .reminder.schedulingStatus,
-    ).toBe(status);
-  }
-  expect((await call(`/v1/tasks/${input.taskId}`)).body.status).toBe("active");
-});
-test("old reminder revision and unauthenticated receipts cannot mutate saved reminder", async () => {
-  const input = {
-    ...draft(),
-    localDeviceId: deviceId,
-    quietHoursConfirmed: true,
-  };
-  const saved = await call("/v1/tasks", "POST", input);
-  const o = saved.body.reminder.occurrence;
-  const wrong = await call(
-    `/v1/devices/${deviceId}/notification-plans`,
-    "POST",
-    {
-      operation: "installed",
-      occurrenceId: o.id,
-      reminderRevision: 2,
-      routingVersion: 1,
-      requestId: o.requestId,
-    },
-  );
-  expect(wrong.status).toBe(409);
-  expect(
-    (await call(`/v1/tasks/${input.taskId}`)).body.reminder.schedulingStatus,
-  ).toBe("local_pending");
-  expect(
-    (
-      await call(
-        `/v1/devices/${deviceId}/notification-plans`,
-        "GET",
-        undefined,
-        randomUUID(),
-        "invalid",
-      )
-    ).status,
-  ).toBe(401);
-});
-test("notification mutation transport keys reserve the exact receipt contents", async () => {
-  const saved = await call("/v1/tasks", "POST", {
-    ...draft(),
-    localDeviceId: deviceId,
-    quietHoursConfirmed: true,
-  });
-  const o = saved.body.reminder.occurrence,
-    path = `/v1/devices/${deviceId}/notification-plans`,
-    key = randomUUID();
-  const receipt = {
-    operation: "failed",
-    occurrenceId: o.id,
-    reminderRevision: 1,
-    routingVersion: 1,
-    requestId: o.requestId,
-    result: "denied",
-  };
-  const first = await call(path, "POST", receipt, key);
-  expect(first.status).toBe(200);
-  expect((await call(path, "POST", receipt, key)).body).toEqual(first.body);
-  expect(
-    (await call(path, "POST", { ...receipt, result: "capacity" }, key)).status,
-  ).toBe(409);
-  expect(
-    (await call(`/v1/tasks/${saved.body.id}`)).body.reminder.schedulingStatus,
-  ).toBe("permission_denied");
-});
-
 test("task completion is retry safe, invalidates plans and supports causal undo", async () => {
   const saved = await call("/v1/tasks", "POST", {
     ...draft(),
-    localDeviceId: deviceId,
+
     quietHoursConfirmed: true,
   });
   const command = {
@@ -467,10 +288,8 @@ test("task completion is retry safe, invalidates plans and supports causal undo"
   });
   expect((await call(path, "POST", command)).body).toEqual(done.body);
   expect(
-    (await call(`/v1/devices/${deviceId}/notification-plans`)).body.plans.some(
-      (p: any) => p.taskId === saved.body.id,
-    ),
-  ).toBe(false);
+    (await call(`/v1/devices/${deviceId}/notification-plans`)).status,
+  ).toBe(404);
   const restored = await call(path, "POST", {
     commandId: randomUUID(),
     clientMutationId: randomUUID(),
@@ -489,7 +308,7 @@ test("task completion is retry safe, invalidates plans and supports causal undo"
 test("concurrent terminal commands cannot resurrect tasks, snooze preserves deadline and stale notification is read only", async () => {
   const saved = await call("/v1/tasks", "POST", {
     ...draft(),
-    localDeviceId: deviceId,
+
     quietHoursConfirmed: true,
   });
   const path = `/v1/tasks/${saved.body.id}/commands`;
@@ -500,7 +319,7 @@ test("concurrent terminal commands cannot resurrect tasks, snooze preserves dead
     operation,
     ...extra,
   });
-  const old = saved.body.reminder.occurrence;
+  const old = saved.body.reminder.remoteOccurrence;
   const snooze = await call(
     path,
     "POST",
@@ -523,7 +342,7 @@ test("concurrent terminal commands cannot resurrect tasks, snooze preserves dead
             id: old.id,
             reminderRevision: 1,
             routingVersion: 1,
-            requestId: old.requestId,
+            requestId: "haiji.remote." + old.id + ".1",
           },
           reminder: { instant: "2026-10-19T12:00:00Z", timeZone: "UTC" },
         }),
@@ -547,8 +366,14 @@ test("concurrent terminal commands cannot resurrect tasks, snooze preserves dead
 test("causal undo refuses later changes, mutation/body conflicts and expired restoration requires a new time", async () => {
   const saved = await call("/v1/tasks", "POST", {
     ...draft(),
-    reminder: { instant: "2026-10-10T12:00:00Z", timeZone: "UTC" },
+    reminder: { instant: "2026-10-12T12:00:00Z", timeZone: "UTC" },
   });
+  const past = new pg.Pool({ connectionString: databaseUrl });
+  await past.query(
+    "UPDATE reminder SET instant='2026-10-10T12:00:00Z' WHERE task_id=$1",
+    [saved.body.id],
+  );
+  await past.end();
   const path = `/v1/tasks/${saved.body.id}/commands`,
     mutation = randomUUID();
   const done = {
@@ -592,7 +417,7 @@ test("causal undo refuses later changes, mutation/body conflicts and expired res
 test("action commit fault leaves current task and notification plan unchanged and permits same command retry", async () => {
   const saved = await call("/v1/tasks", "POST", {
     ...draft(),
-    localDeviceId: deviceId,
+
     quietHoursConfirmed: true,
   });
   const db = new pg.Pool({ connectionString: databaseUrl });
@@ -610,11 +435,8 @@ test("action commit fault leaves current task and notification plan unchanged an
     expect((await call(path, "POST", command)).status).toBe(503);
     expect((await call(`/v1/tasks/${saved.body.id}`)).body).toEqual(saved.body);
     expect(
-      (await call(`/v1/devices/${deviceId}/notification-plans`)).body.plans,
-    ).toContainEqual({
-      taskId: saved.body.id,
-      ...saved.body.reminder.occurrence,
-    });
+      (await call(`/v1/tasks/${saved.body.id}`)).body.reminder.remoteOccurrence,
+    ).toEqual(saved.body.reminder.remoteOccurrence);
     await db.query(
       "DROP TRIGGER action_commit_fault ON task_change_log; DROP FUNCTION reject_action_commit();",
     );
@@ -656,4 +478,23 @@ test("editing deadline and removing reminder remains removed after terminal rest
     reminder: null,
     deadline: null,
   });
+});
+
+test("metadata edits after a reminder elapsed preserve the task without sending a new notification", async () => {
+  const saved = await call("/v1/tasks", "POST", draft());
+  const db = new pg.Pool({ connectionString: databaseUrl });
+  await db.query(
+    "UPDATE reminder SET instant='2026-10-10T12:00:00Z' WHERE task_id=$1",
+    [saved.body.id],
+  );
+  await db.end();
+  const edited = await call(`/v1/tasks/${saved.body.id}/commands`, "POST", {
+    commandId: randomUUID(),
+    clientMutationId: randomUUID(),
+    expectedRevision: 1,
+    operation: "edit",
+    title: "updated after reminder",
+  });
+  expect(edited.status).toBe(200);
+  expect(edited.body.reminder.remoteOccurrence.status).toBe("expired");
 });

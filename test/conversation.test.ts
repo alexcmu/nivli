@@ -68,7 +68,7 @@ beforeAll(async () => {
   await migrate(databaseUrl);
   const previousSchema = new pg.Pool({ connectionString: databaseUrl });
   await previousSchema.query(
-    "ALTER TABLE reminder DROP CONSTRAINT reminder_scheduling_status_check; ALTER TABLE reminder ADD CONSTRAINT reminder_scheduling_status_check CHECK(scheduling_status='not_scheduled'); DROP TABLE notification_plan_command; DROP TABLE local_occurrence;",
+    "ALTER TABLE reminder DROP CONSTRAINT reminder_scheduling_status_check; ALTER TABLE reminder ADD CONSTRAINT reminder_scheduling_status_check CHECK(scheduling_status='not_scheduled'); ",
   );
   await previousSchema.end();
   await migrate(databaseUrl);
