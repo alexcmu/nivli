@@ -49,7 +49,7 @@ final class NotificationInteractionUITests: XCTestCase {
     }
     @MainActor func testPermissionDeniedKeepsSavedTaskAndSettingsLink() async throws {
         let fixture = try fixture()
-        let app = XCUIApplication(bundleIdentifier: "app.nivli.acceptance.Nivli")
+        let app = XCUIApplication(bundleIdentifier: "app.haiji.acceptance.Haiji")
         app.launch()
         pair(app, fixture: fixture)
         _ = try await call(fixture, "create", method: "POST")
@@ -69,12 +69,12 @@ final class NotificationInteractionUITests: XCTestCase {
         XCTAssertEqual(proof.status, "active")
         XCTAssertEqual(proof.revision, created.revision)
         XCTAssertEqual(proof.reminder?.schedulingStatus, "permission_denied")
-        print("NIVLI_DEVICE_PERMISSION saved=true active=true revision_unchanged=true permission_denied=true settings_link=true")
+        print("HAIJI_DEVICE_PERMISSION saved=true active=true revision_unchanged=true permission_denied=true settings_link=true")
         app.buttons["打开通知设置"].tap()
     }
     @MainActor func testOldDeliveredNotificationOpensCurrentTaskAfterColdLaunch() async throws {
         let fixture = try fixture()
-        let app = XCUIApplication(bundleIdentifier: "app.nivli.acceptance.Nivli")
+        let app = XCUIApplication(bundleIdentifier: "app.haiji.acceptance.Haiji")
         app.launch()
         let original = try await call(fixture, "reset", method: "POST")
         app.terminate()
@@ -84,7 +84,7 @@ final class NotificationInteractionUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["本机已安排"].firstMatch.waitForExistence(timeout: 15))
         XCUIDevice.shared.press(.home)
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let banner = springboard.staticTexts["Nivli 提醒"].firstMatch
+        let banner = springboard.staticTexts["Haiji 提醒"].firstMatch
         XCTAssertTrue(banner.waitForExistence(timeout: 40), "An actual generic delivered notification is required")
         let updated = try await call(fixture, "edit", method: "POST")
         XCTAssertEqual(updated.id, original.id)
@@ -93,7 +93,7 @@ final class NotificationInteractionUITests: XCTestCase {
         // Open Notification Center to use the already delivered obsolete occurrence.
         springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.01))
             .press(forDuration: 0.1, thenDragTo: springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.65)))
-        let delivered = springboard.staticTexts["Nivli 提醒"].firstMatch
+        let delivered = springboard.staticTexts["Haiji 提醒"].firstMatch
         XCTAssertTrue(delivered.waitForExistence(timeout: 10))
         delivered.tap()
         XCTAssertTrue(app.staticTexts[updated.title].firstMatch.waitForExistence(timeout: 20))
@@ -102,11 +102,11 @@ final class NotificationInteractionUITests: XCTestCase {
         XCTAssertEqual(proof.id, updated.id)
         XCTAssertEqual(proof.revision, updated.revision)
         XCTAssertEqual(proof.status, "active")
-        print("NIVLI_OLD_NOTIFICATION cold_launch=true current_title=true revision_unchanged=true active=true")
+        print("HAIJI_OLD_NOTIFICATION cold_launch=true current_title=true revision_unchanged=true active=true")
     }
     @MainActor func testPrepareRealTaskForLockedAuthenticationObservation() async throws {
         let fixture = try fixture()
-        let app = XCUIApplication(bundleIdentifier: "app.nivli.acceptance.Nivli")
+        let app = XCUIApplication(bundleIdentifier: "app.haiji.acceptance.Haiji")
         app.launch()
         let task = try await call(fixture, "prepare-locked", method: "POST")
         app.terminate()
@@ -123,11 +123,11 @@ final class NotificationInteractionUITests: XCTestCase {
         app.launchArguments = []
         app.launch()
         XCUIDevice.shared.press(.home)
-        print("NIVLI_LOCKED_ACTION_READY instant=\(proof.reminder?.instant ?? "") task=\(task.id)")
+        print("HAIJI_LOCKED_ACTION_READY instant=\(proof.reminder?.instant ?? "") task=\(task.id)")
     }
     @MainActor func testDisconnectIsolatedNotificationEnvironment() throws {
         _ = try fixture()
-        let app = XCUIApplication(bundleIdentifier: "app.nivli.acceptance.Nivli")
+        let app = XCUIApplication(bundleIdentifier: "app.haiji.acceptance.Haiji")
         app.launch()
         app.tabBars.buttons["我的"].tap()
         app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "环境连接")).firstMatch.tap()

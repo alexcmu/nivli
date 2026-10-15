@@ -1,6 +1,6 @@
 # 工单 07：AI 交代的原生真机闭环
 
-2026-10-11 在用户授权的测试 iPhone Alchemist 上，通过开发签名运行 `AgentUITests.testZDurableAgentInputCreatesSystemReminderAndRecoversAfterRelaunch`。签名使用已授权开发团队；使用临时独立 bundle `app.nivli.agentvalidation`，不替换或修改现有 Nivli 应用、连接或数据。
+2026-10-11 在用户授权的测试 iPhone Alchemist 上，通过开发签名运行 `AgentUITests.testZDurableAgentInputCreatesSystemReminderAndRecoversAfterRelaunch`。签名使用已授权开发团队；使用临时独立 bundle `app.haiji.agentvalidation`，不替换或修改现有 Haiji 应用、连接或数据。
 
 ## 验证路径和结果
 
@@ -10,13 +10,13 @@
 - 通过只读 DEBUG 验收入口直接查询 `UNUserNotificationCenter.pendingNotificationRequests()`，匹配公开 API 返回的真实 task ID，实际系统 pending 为 1，通知标题和正文均为生产默认通用预览。该入口不创建、修改或清理提醒。
 - 再次重开生产页面确认仍显示当前事项；随后通过公开界面认证吊销测试 session 并断开，清理该测试安装身份的通知。
 
-正确构建的聚焦真机测试结果为 **TEST SUCCEEDED**。初次运行只有 DEBUG 检查器使用了猜测的默认正文导致预览断言失败；改为生产默认正文并重建后同一聚焦场景通过，未改变业务或通知实现。私有结果：`/tmp/nivli07-device-validation-retry.xcresult`；测试日志：`/tmp/nivli07-device-retry.log`。结果与日志可能包含临时环境元数据，不发布到仓库。
+正确构建的聚焦真机测试结果为 **TEST SUCCEEDED**。初次运行只有 DEBUG 检查器使用了猜测的默认正文导致预览断言失败；改为生产默认正文并重建后同一聚焦场景通过，未改变业务或通知实现。私有结果：`/tmp/haiji07-device-validation-retry.xcresult`；测试日志：`/tmp/haiji07-device-retry.log`。结果与日志可能包含临时环境元数据，不发布到仓库。
 
 ## 边界与清理
 
 程序化 Unicode 输入验证已提交文字及 Enter 行为，不能代替真实中文输入法 marked-text 组合验收。中文组合与 Shift+Enter 的人机观察仍未完成；真实 Claude Sonnet 5.5 schema/工具冒烟仍待管理员显式提供服务端 API key。系统 pending 不宣称用户已经收到或看到这条次日通知。
 
-测试结束后关闭 worker/API/受控模型服务，删除独立数据库，停止 HTTPS tunnel，移除源码和测试 bundle 中的 `AgentFixture.json`，恢复默认项目 bundle/signing 设置，并卸载两个临时测试 app。现有 Nivli 与其通知命名空间未改变，手机已释放。
+测试结束后关闭 worker/API/受控模型服务，删除独立数据库，停止 HTTPS tunnel，移除源码和测试 bundle 中的 `AgentFixture.json`，恢复默认项目 bundle/signing 设置，并卸载两个临时测试 app。现有 Haiji 与其通知命名空间未改变，手机已释放。
 
 ## 重复运行入口
 
@@ -36,8 +36,8 @@
 
 先前 XCTest `typeKey(Return, .shift)` 没有插入换行；临时观测确认未进入生产 `lineBreak` 方法，普通 `typeText` 可以进入 delegate。优先级、绑定同步、换行键编码和 responder 假设均未证明可修复真实硬件路径，全部试探性生产修改与日志已撤回。直接派发原始方法已通过，故不把按键自动化失败断言为已确认应用 bug。真实 iPhone 测试还受到 Siri 输入浮层干扰；待清除干扰后重新验收。
 
-复核：19 项 Swift package 测试通过；Release 通用真机目标构建通过，DEBUG 验收页不编入 Release。最终日志 `/tmp/nivli-acceptance-3qxCym/keyboard-final.log`、`swift.log`、`release.log`；UI 结果 `/tmp/nivli-acceptance-3qxCym/simulator/Logs/Test/Test-Nivli-2026.10.11_19-26-50--0700.xcresult`。没有产生模型费用。
+复核：19 项 Swift package 测试通过；Release 通用真机目标构建通过，DEBUG 验收页不编入 Release。最终日志 `/tmp/haiji-acceptance-3qxCym/keyboard-final.log`、`swift.log`、`release.log`；UI 结果 `/tmp/haiji-acceptance-3qxCym/simulator/Logs/Test/Test-Haiji-2026.10.11_19-26-50--0700.xcresult`。没有产生模型费用。
 
 ## 2026-10-11 20:21 PDT — 键盘方向停止重复验收
 
-用户关闭 Siri 干扰后，真机合成键重试已能输入完整 `First line`，但 XCTest Shift+Return 仍未插入换行。权限测试 skipped、键盘测试 failed，真实结果 `/tmp/nivli-acceptance-3qxCym/build/Logs/Test/Test-Nivli-2026.10.11_20-21-26--0700.xcresult`。用户随后要求“尽快，不要在 corner case 上浪费太多的时间”，该方向停止继续重试；硬件 Shift+Enter 继续保留未验收，不重跑已通过的真实模型/恢复测试。
+用户关闭 Siri 干扰后，真机合成键重试已能输入完整 `First line`，但 XCTest Shift+Return 仍未插入换行。权限测试 skipped、键盘测试 failed，真实结果 `/tmp/haiji-acceptance-3qxCym/build/Logs/Test/Test-Haiji-2026.10.11_20-21-26--0700.xcresult`。用户随后要求“尽快，不要在 corner case 上浪费太多的时间”，该方向停止继续重试；硬件 Shift+Enter 继续保留未验收，不重跑已通过的真实模型/恢复测试。

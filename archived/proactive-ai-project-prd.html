@@ -1,66 +1,66 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="description" content="Nivli 产品需求文档：以通知为主要交互方式的主动式个人 AI 伙伴。"><title>Nivli 产品需求文档</title><style>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="description" content="Haiji 产品需求文档：以通知为主要交互方式的主动式个人 AI 伙伴。"><title>Haiji 产品需求文档</title><style>
 :root{color-scheme:light dark;--paper:light-dark(#fff,#1b201e);--ground:light-dark(#f4f5f1,#111512);--ink:light-dark(#1d3027,#e0e9e3);--sub:light-dark(#596c61,#acbcb2);--line:light-dark(#dbe2dc,#39483f);--soft:light-dark(#edf2eb,#25342c);--accent:light-dark(#205c3e,#9bd5b1)}*{box-sizing:border-box}body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.85 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}.shell{max-width:1210px;margin:auto;display:grid;grid-template-columns:245px minmax(0,1fr);gap:32px;padding:36px 28px}.toc{font-size:13px;color:var(--sub);align-self:start}.toc summary{font-size:15px;font-weight:600;margin-bottom:16px}.toc a{display:block;padding:5px 0;text-decoration:none;color:var(--sub)}.toc a:hover{color:var(--accent)}article{min-width:0;background:var(--paper);padding:36px 42px;border:1px solid var(--line);border-radius:8px}h1{font-size:28px;line-height:1.45;font-weight:650;margin:0 0 22px}h2{font-size:21px;line-height:1.5;font-weight:600;margin:46px 0 20px;padding-top:24px;border-top:1px solid var(--line);scroll-margin-top:20px}h3{font-size:17px;line-height:1.6;font-weight:600;margin:28px 0 12px}p{margin:12px 0 18px}ul,ol{padding-left:24px}li{margin:7px 0}strong{font-weight:600}a{color:var(--accent);overflow-wrap:anywhere}blockquote{margin:22px 0;padding:10px 20px;border-left:3px solid var(--accent);background:var(--soft)}pre{overflow:auto;border:1px solid var(--line);background:var(--soft);padding:18px;border-radius:6px;line-height:1.65;font-size:12px}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.91em;overflow-wrap:anywhere}p code,li code,td code{background:var(--soft);padding:2px 4px;border-radius:3px}pre code{padding:0;font-size:inherit;overflow-wrap:normal}table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.7}th,td{vertical-align:top;text-align:left;border-bottom:1px solid var(--line);padding:12px 8px;overflow-wrap:anywhere}th{font-weight:600;background:var(--soft)}.table-scroll{overflow:auto;max-width:100%}input[type=checkbox]{accent-color:var(--accent)}.masthead{margin:0 0 22px;font-size:12px;letter-spacing:1px;color:var(--sub)}.diagram{margin:28px 0 30px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.stage{border-top:3px solid var(--accent);padding-top:12px}.stage span{display:block;font-size:12px;color:var(--sub);margin-top:5px}.stage b{font-weight:600;font-size:14px}.docnote{font-size:12px;color:var(--sub)}@media(max-width:950px){.shell{grid-template-columns:1fr;padding:20px;gap:20px}.toc nav{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}article{padding:28px}.toc{border-bottom:1px solid var(--line);padding-bottom:18px}}@media(max-width:540px){.shell{padding:12px}.toc nav{grid-template-columns:1fr}article{padding:22px 16px}h1{font-size:24px}h2{font-size:20px}.diagram{grid-template-columns:1fr}table{min-width:490px}pre{font-size:11px;padding:12px}}@media print{body{background:#fff;color:#111;font-size:10pt}.shell{display:block;padding:0}.toc,.masthead{display:none}article{border:0;padding:0}h2{break-after:avoid;scroll-margin-top:0}h3{break-after:avoid}pre,blockquote,tr{break-inside:avoid}pre{white-space:pre-wrap;overflow-wrap:anywhere}a{color:inherit;text-decoration:none}.table-scroll{overflow:visible}table{min-width:0}thead{display:table-header-group}}
 
 .toc{position:sticky;top:24px;max-height:calc(100vh - 48px);overflow:auto}.toc a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.tagline{font-size:19px;line-height:1.6;color:var(--accent)}@media(max-width:950px){.toc{position:static;max-height:none}}@media print{.toc{display:none}}
 </style></head>
-<body><div class="shell"><aside class="toc"><details open><summary>文档目录</summary><nav aria-label="文档目录"><a href="#section-1">1. 产品愿景与定位</a><a href="#section-2">2. 首批用户与需求</a><a href="#section-3">3. 产品原则</a><a href="#section-4">4. 核心使用场景</a><a href="#section-5">5. 核心能力</a><a href="#section-6">6. 通知与交互体验</a><a href="#section-7">7. 应用内的主要体验</a><a href="#section-8">8. 渐进授权与信息来源</a><a href="#section-9">9. 隐私、开源与自主权</a><a href="#section-10">10. 首版产品范围</a><a href="#section-11">11. 后续探索方向</a><a href="#section-12">12. 如何判断产品有价值</a><a href="#section-13">13. 仍需通过用户验证的问题</a></nav></details><p class="docnote">PRD v0.3<br>产品定义版 · 2026.10.10<br>定位 · 场景 · 体验 · 产品范围</p></aside><article><div class="masthead">NIVLI / PRODUCT REQUIREMENTS</div><h1>Nivli 产品需求文档</h1><div class="diagram" role="img" aria-label="Nivli 的三个核心价值：记得住、想得起、说得合适。"><div class="stage"><b>记得住</b><span>留住交代与背景</span></div><div class="stage"><b>想得起</b><span>联系当下的时间与情境</span></div><div class="stage"><b>说得合适</b><span>在有用的时候轻轻提醒</span></div></div>
+<body><div class="shell"><aside class="toc"><details open><summary>文档目录</summary><nav aria-label="文档目录"><a href="#section-1">1. 产品愿景与定位</a><a href="#section-2">2. 首批用户与需求</a><a href="#section-3">3. 产品原则</a><a href="#section-4">4. 核心使用场景</a><a href="#section-5">5. 核心能力</a><a href="#section-6">6. 通知与交互体验</a><a href="#section-7">7. 应用内的主要体验</a><a href="#section-8">8. 渐进授权与信息来源</a><a href="#section-9">9. 隐私、开源与自主权</a><a href="#section-10">10. 首版产品范围</a><a href="#section-11">11. 后续探索方向</a><a href="#section-12">12. 如何判断产品有价值</a><a href="#section-13">13. 仍需通过用户验证的问题</a></nav></details><p class="docnote">PRD v0.3<br>产品定义版 · 2026.10.10<br>定位 · 场景 · 体验 · 产品范围</p></aside><article><div class="masthead">HAIJI / PRODUCT REQUIREMENTS</div><h1>Haiji 产品需求文档</h1><div class="diagram" role="img" aria-label="Haiji 的三个核心价值：记得住、想得起、说得合适。"><div class="stage"><b>记得住</b><span>留住交代与背景</span></div><div class="stage"><b>想得起</b><span>联系当下的时间与情境</span></div><div class="stage"><b>说得合适</b><span>在有用的时候轻轻提醒</span></div></div>
 <p>版本：0.3 · 更新日期：2026 年 10 月 10 日 · 产品定义版</p>
 <blockquote><p>你随口一提，它放在心上。</p></blockquote>
-<p>Nivli 是一个以通知为主要交互方式的主动式个人 AI 伙伴。它记住用户交代的事，理解用户主动分享或授权提供的信息，结合时间、地点和当前情境，在有用的时候主动提醒，并帮助用户完成后续处理。</p>
+<p>Haiji 是一个以通知为主要交互方式的主动式个人 AI 伙伴。它记住用户交代的事，理解用户主动分享或授权提供的信息，结合时间、地点和当前情境，在有用的时候主动提醒，并帮助用户完成后续处理。</p>
 <p>本文描述产品要解决的问题、服务的人群、核心体验和产品边界。它不指定技术选型、系统架构、数据结构、接口、开发流程或实现方法。文中能力均为产品目标，不代表已经交付。</p>
 <h2 id="section-1">1. 产品愿景与定位</h2>
 <h3>1.1 从等待提问，到主动记挂</h3>
 <p>用户常常已经知道自己要做什么，也曾经把事情说出口，但在真正需要行动的时候忘记了。信息散落在聊天、邮件和日常生活中，需要用户自己记住、整理，再不断回到工具里查看。</p>
-<p>Nivli 希望承担这部分记忆和留意的负担：听懂一次交代，在之后合适的情境里想起它，并以用户愿意接受的方式主动联系用户。</p>
+<p>Haiji 希望承担这部分记忆和留意的负担：听懂一次交代，在之后合适的情境里想起它，并以用户愿意接受的方式主动联系用户。</p>
 <p>产品起点是一个了解用户背景的待办与提醒伙伴。长期愿景是成为个人信息的提醒中心，帮助用户判断哪些事情值得关注、什么时候处理，以及下一步可以做什么。</p>
 <h3>1.2 产品的三个核心价值</h3>
 <ul><li><strong>记得住：</strong> 留住用户的交代、重要背景和已经确认的偏好，支持后续补充与修改。</li><li><strong>想得起：</strong> 把过去的信息与现在的时间、地点和任务联系起来，发现值得提醒的事情。</li><li><strong>说得合适：</strong> 在合适的时候，用合适的内容和打扰程度触达用户，让用户容易采取行动。</li></ul>
 <h3>1.3 产品形态</h3>
-<p>首发体验围绕 iPhone 应用展开。通知是日常接触 Nivli 的主要入口；应用承载交流、事项管理、来源解释与个人信息控制。用户不需要频繁打开应用检查，仍然能够从产品中获得价值。</p>
-<p>Nivli 具有持续一致的伙伴感：温和、简洁、细心、有分寸。名字和角色表达服务于信任与熟悉感，避免用过度拟人化的话术暗示它知道未经授权的信息。</p>
+<p>首发体验围绕 iPhone 应用展开。通知是日常接触 Haiji 的主要入口；应用承载交流、事项管理、来源解释与个人信息控制。用户不需要频繁打开应用检查，仍然能够从产品中获得价值。</p>
+<p>Haiji 具有持续一致的伙伴感：温和、简洁、细心、有分寸。名字和角色表达服务于信任与熟悉感，避免用过度拟人化的话术暗示它知道未经授权的信息。</p>
 <h2 id="section-2">2. 首批用户与需求</h2>
 <h3>2.1 首批用户</h3>
 <p>首批服务愿意自托管的开发者与重视隐私的个人用户。他们愿意为数据自主权投入一定配置精力，也希望把更多个人信息交给一个可理解、可控制的工具。</p>
 <p>这些用户可能同时有以下特点：</p>
 <ul><li>邮件、任务和个人安排较多，重要事项容易被其他信息淹没。</li><li>有使用 AI 的习惯，但目前仍需主动提问和提供背景。</li><li>经常出现“明明想过要做，到了时候却忘了”的情况。</li><li>希望获得个性化帮助，又不愿把所有信息交给一个无法检查和迁移的服务。</li></ul>
 <h3>2.2 用户希望达成的结果</h3>
-<ul><li>我说完一件事后，可以放心把注意力放回生活，而不用反复检查有没有记下来。</li><li>我走到相关地点或接近截止时间时，有人能想起之前的交代。</li><li>重要邮件里的行动要求不会因为我看过但没处理就被遗忘。</li><li>我可以知道 Nivli 为什么提醒我，并且能纠正它。</li><li>我愿意逐步分享更多信息，因为分享的用途和控制权是清楚的。</li></ul>
+<ul><li>我说完一件事后，可以放心把注意力放回生活，而不用反复检查有没有记下来。</li><li>我走到相关地点或接近截止时间时，有人能想起之前的交代。</li><li>重要邮件里的行动要求不会因为我看过但没处理就被遗忘。</li><li>我可以知道 Haiji 为什么提醒我，并且能纠正它。</li><li>我愿意逐步分享更多信息，因为分享的用途和控制权是清楚的。</li></ul>
 <h2 id="section-3">3. 产品原则</h2>
 <h3>3.1 主动必须带来具体价值</h3>
 <p>每一次主动联系都应能回答：“为什么是这件事、为什么是现在、用户可以做什么？”仅仅为了制造存在感，不构成提醒理由。</p>
 <h3>3.2 用户交代与 AI 推测清楚区分</h3>
 <p>用户明确要求的提醒，应被清楚确认并得到跟进。AI 从邮件、聊天背景或生活情境中发现的可能事项，应以建议呈现，让用户知道这还不是自己已经作出的承诺。</p>
 <h3>3.3 个性化通过交流逐渐形成</h3>
-<p>Nivli 在使用过程中理解用户，并允许用户修正这种理解。一次忽略或一次例外，不应轻易被解释为长期偏好。</p>
+<p>Haiji 在使用过程中理解用户，并允许用户修正这种理解。一次忽略或一次例外，不应轻易被解释为长期偏好。</p>
 <h3>3.4 权限随着需要逐步增加</h3>
 <p>先让用户体验价值，再围绕具体场景解释额外信息能带来什么帮助。没有连接邮箱、没有位置权限的用户，也能使用基础提醒。</p>
 <h3>3.5 尊重注意力，也尊重未知</h3>
-<p>Nivli 可以少说、晚一点说，也可以承认自己不确定。用户没有回应，不代表同意、完成或允许提高打扰程度。</p>
+<p>Haiji 可以少说、晚一点说，也可以承认自己不确定。用户没有回应，不代表同意、完成或允许提高打扰程度。</p>
 <h2 id="section-4">4. 核心使用场景</h2>
 <h3>4.1 交代一个明确的时间提醒</h3>
 <p><strong>用户说：</strong>“明天上午九点提醒我提交材料。”</p>
-<p>Nivli 清楚反馈自己记住的事情和提醒时间。用户可以直接修改，例如“改成九点半”。约定时间到来时，通知说明要做什么，并提供便捷的完成或稍后处理方式。</p>
+<p>Haiji 清楚反馈自己记住的事情和提醒时间。用户可以直接修改，例如“改成九点半”。约定时间到来时，通知说明要做什么，并提供便捷的完成或稍后处理方式。</p>
 <p><strong>体验目标：</strong> 用户能够确认自己被正确理解，之后无需再打开应用检查。事项的截止时间与用户希望收到提醒的时间可以不同。</p>
 <h3>4.2 出门或到达时想起之前的交代</h3>
 <p><strong>用户说：</strong>“下次出门，记得让我带移动硬盘。”</p>
-<p>Nivli 理解这是与出行情境有关的提醒。需要补充地点或获取相应信息时，说明原因；当用户不希望分享位置时，仍能选择出发时间提醒或主动查看出门清单。</p>
+<p>Haiji 理解这是与出行情境有关的提醒。需要补充地点或获取相应信息时，说明原因；当用户不希望分享位置时，仍能选择出发时间提醒或主动查看出门清单。</p>
 <p>同类场景包括“到公司提醒我还转接头”“到超市时提醒我买咖啡豆”。提醒文案应直接连接地点与行动，不让用户重新回忆自己当时说了什么。</p>
 <p><strong>体验目标：</strong> 提醒在仍然来得及行动的时候有用。无法确定当前情境时，应说明不确定性，提供其他方式，而不是让用户误以为产品始终知道其位置。</p>
 <h3>4.3 从邮件中发现可能遗漏的事情</h3>
 <p><strong>例子：</strong> 一封邮件提到需要在周五前补交材料，用户读过后没有继续处理。</p>
-<p>在用户授权的范围内，Nivli 发现可能的行动要求，展示简短建议：“这封邮件似乎需要你在周五前补交材料，要提醒你吗？”用户能看到判断依据，选择确认、修改、忽略或纠正。</p>
+<p>在用户授权的范围内，Haiji 发现可能的行动要求，展示简短建议：“这封邮件似乎需要你在周五前补交材料，要提醒你吗？”用户能看到判断依据，选择确认、修改、忽略或纠正。</p>
 <p><strong>体验目标：</strong> 找到与用户有关的行动，而不是把每封邮件、每个日期和每条营销信息都变成待办。同一件事的后续邮件应帮助用户理解变化，不制造重复事项。</p>
 <h3>4.4 把先前交流与当下情境联系起来</h3>
-<p><strong>例子：</strong> 用户之前提过要把借来的书还给朋友，后来又告诉 Nivli 周末会和这位朋友见面。</p>
-<p>Nivli 可以提出：“周末见面时，可以顺便把书带上。需要我提前提醒吗？”这类帮助来自对用户已分享信息的联系，而不要求用户每次都重新说明全部背景。</p>
+<p><strong>例子：</strong> 用户之前提过要把借来的书还给朋友，后来又告诉 Haiji 周末会和这位朋友见面。</p>
+<p>Haiji 可以提出：“周末见面时，可以顺便把书带上。需要我提前提醒吗？”这类帮助来自对用户已分享信息的联系，而不要求用户每次都重新说明全部背景。</p>
 <p><strong>体验目标：</strong> 让用户感受到有用的记忆与理解。对尚未确认的计划或模糊意愿，以询问或建议呈现。</p>
 <h3>4.5 从提醒直接完成处理</h3>
 <p>用户看到提醒后，可以表示“做完了”“晚点再说”“时间改了”或“不需要了”。需要解释更多背景时，可以自然接着聊。</p>
-<p><strong>体验目标：</strong> 处理一条提醒的成本足够低。打开通知不等于完成事项；完成或取消后，Nivli 不应继续把它当作未完成事项催促。</p>
+<p><strong>体验目标：</strong> 处理一条提醒的成本足够低。打开通知不等于完成事项；完成或取消后，Haiji 不应继续把它当作未完成事项催促。</p>
 <h2 id="section-5">5. 核心能力</h2>
 <h3>5.1 自然交代与后续修改</h3>
-<p>用户用日常语言表达任务、时间、地点和背景。Nivli 能识别明确交代，保留必要上下文，并理解“改到周四”“还是带上它”这类后续表达。</p>
+<p>用户用日常语言表达任务、时间、地点和背景。Haiji 能识别明确交代，保留必要上下文，并理解“改到周四”“还是带上它”这类后续表达。</p>
 <p>信息不足时，只追问影响提醒的关键内容；存在多个可能指代时，先澄清。普通闲聊和随口表达的愿望不会悄悄变成已确认任务。</p>
 <h3>5.2 事项与进展管理</h3>
 <p>用户能够查看、修改、完成、取消或推迟事项，理解哪些事情已经交代、哪些等待确认、哪些需要现在处理。</p>
@@ -68,31 +68,31 @@
 <ul><li>要做什么，以及必要背景。</li><li>来自自己的哪次交代，或哪条授权信息。</li><li>何时、在什么情境下希望被提醒。</li><li>是否存在截止时间。</li><li>当前是否仍需处理，以及是否有影响提醒的异常。</li></ul>
 <p>具体界面组织方式可以变化，但这些信息应容易找到和理解。</p>
 <h3>5.3 主动发现与建议</h3>
-<p>Nivli 能从授权信息中发现潜在待办、未完成的跟进和相互关联的安排。建议附带来源与理由，用户可以接受、拒绝、纠正，或要求减少某类建议。</p>
+<p>Haiji 能从授权信息中发现潜在待办、未完成的跟进和相互关联的安排。建议附带来源与理由，用户可以接受、拒绝、纠正，或要求减少某类建议。</p>
 <p>新信息与既有安排冲突时，应解释变化并让用户决定。未经确认，不替用户改变承诺。</p>
 <h3>5.4 个人记忆</h3>
-<p>Nivli 记住有助于提供帮助的个人背景，例如用户确认的重要地点、提醒偏好和长期相关事项。用户可以查看它记住了什么，区分明确提供的事实与尚未确认的推测。</p>
-<p>用户能补充、纠正和删除记忆，也能表达“这件事不要记住”。过去的信息发生变化后，Nivli 应接受更新，而不是持续引用已经失效的理解。</p>
+<p>Haiji 记住有助于提供帮助的个人背景，例如用户确认的重要地点、提醒偏好和长期相关事项。用户可以查看它记住了什么，区分明确提供的事实与尚未确认的推测。</p>
+<p>用户能补充、纠正和删除记忆，也能表达“这件事不要记住”。过去的信息发生变化后，Haiji 应接受更新，而不是持续引用已经失效的理解。</p>
 <h3>5.5 时间、地点与情境理解</h3>
 <p>提醒既可以来自明确时间，也可以来自与任务有关的地点和情境。位置能力的价值在于帮助判断行动时机，而不是展示用户的移动轨迹。</p>
-<p>当信息不完整、已经过时或暂时不可用时，Nivli 应降低判断的确定性，让用户知道哪些提醒受到影响，并提供可理解的替代选择。产品不以固定采集频率定义这一体验。</p>
+<p>当信息不完整、已经过时或暂时不可用时，Haiji 应降低判断的确定性，让用户知道哪些提醒受到影响，并提供可理解的替代选择。产品不以固定采集频率定义这一体验。</p>
 <h2 id="section-6">6. 通知与交互体验</h2>
 <h3>6.1 通知是主要入口</h3>
 <p>用户应尽可能在看到提醒的当下就理解事情并进行简单处理。只有需要更多背景、复杂修改或进一步交流时，才进入应用。</p>
 <p>一条有用的通知应包含清楚的行动内容；必要时补充时间、地点或原因；并提供与当前情境相符的下一步选择。</p>
 <p><strong>示例文案：</strong></p>
-<blockquote><p>Nivli：明天要交材料，今天可以先检查一下附件。<br>可选操作：完成、稍后提醒、查看详情。</p></blockquote>
-<blockquote><p>Nivli：出门时记得带移动硬盘，这是你昨天交代的。<br>可选操作：带好了、稍后提醒、修改。</p></blockquote>
+<blockquote><p>Haiji：明天要交材料，今天可以先检查一下附件。<br>可选操作：完成、稍后提醒、查看详情。</p></blockquote>
+<blockquote><p>Haiji：出门时记得带移动硬盘，这是你昨天交代的。<br>可选操作：带好了、稍后提醒、修改。</p></blockquote>
 <p>以上文案用于表达体验方向，不固定最终布局、按钮数量或操作方式。</p>
 <h3>6.2 丰富呈现服务于任务</h3>
 <p>通知可以根据任务需要使用图片、摘要、清单、进度或其他便于理解的内容。例如，用物品清单帮助用户准备出门，用简短来源摘要解释邮件建议。</p>
 <p>首版重视内容清楚和处理方便；更丰富的样式以实际收益为依据。用户无需打开长篇聊天记录，才能知道提醒的重点。</p>
 <h3>6.3 有分寸的主动联系</h3>
-<p>用户可以控制安静时段、建议频率和不同类型的提醒。自己明确交代的提醒，与 Nivli 自主发现的建议，应有不同的预期。</p>
+<p>用户可以控制安静时段、建议频率和不同类型的提醒。自己明确交代的提醒，与 Haiji 自主发现的建议，应有不同的预期。</p>
 <p>多个相关事项可以适当整理后一起呈现。同一事项不因信息反复出现而重复打扰；用户忽略建议后，不自动无限追问或升级为来电。</p>
 <p>如果用户明确约定在安静时段收到某条提醒，应清楚确认这一意图。产品要让用户知道个人偏好与设备通知设置对体验的影响。</p>
 <h3>6.4 伙伴感与语气</h3>
-<p>表达要简短、具体、体贴。可以有个性，但不责备、不制造内疚，也不夸大紧急程度。用户推迟事项时，Nivli 帮助重新安排，而不是评价其自律程度。</p>
+<p>表达要简短、具体、体贴。可以有个性，但不责备、不制造内疚，也不夸大紧急程度。用户推迟事项时，Haiji 帮助重新安排，而不是评价其自律程度。</p>
 <p>错误发生时，说明哪里理解错了，接受纠正。没有充分信息时，直接表达不确定。</p>
 <h3>6.5 隐私与可理解性</h3>
 <p>用户可以决定锁屏时显示多少细节。默认采用保守预览，避免让邮件正文、具体地点或私人事项在不合适的场合暴露。</p>
@@ -100,11 +100,11 @@
 <h2 id="section-7">7. 应用内的主要体验</h2>
 <p>以下描述用户需要完成的事情，不固定页面数量、导航结构或界面框架。</p>
 <h3>7.1 第一次使用</h3>
-<p>用户先理解 Nivli 能帮什么忙、如何控制个人信息，再完成一条真实有用的交代。初次体验不要求一次性连接所有信息来源。</p>
+<p>用户先理解 Haiji 能帮什么忙、如何控制个人信息，再完成一条真实有用的交代。初次体验不要求一次性连接所有信息来源。</p>
 <p>自托管用户需要清楚知道自己正在使用哪一套个人环境，以及当前是否可以正常使用。具体接入方式由后续设计决定。</p>
 <h3>7.2 看清现在需要关注什么</h3>
-<p>用户能够快速区分需要行动的事项、Nivli 发现但等待确认的建议，以及已经交代但尚未到时候的事情。没有待办时，可以安静地保持空白，不用无关内容填满界面。</p>
-<h3>7.3 与 Nivli 交流</h3>
+<p>用户能够快速区分需要行动的事项、Haiji 发现但等待确认的建议，以及已经交代但尚未到时候的事情。没有待办时，可以安静地保持空白，不用无关内容填满界面。</p>
+<h3>7.3 与 Haiji 交流</h3>
 <p>用户可以交代新事、补充背景、询问“你还记得什么”或解释自己为什么不需要某条提醒。交流结果应让用户知道哪些内容被当作任务、哪些被记住、哪些仅是一次对话。</p>
 <h3>7.4 理解提醒的依据</h3>
 <p>用户可以从提醒进入详情，查看来源、提醒理由、相关安排与当前状态。即使通知里的内容已经过时，进入后也应能理解最新情况。</p>
@@ -112,9 +112,9 @@
 <p>用户能集中查看已连接的信息来源、个人记忆、授权状态与提醒偏好，并进行修正或撤回。遇到功能不可用时，应能看懂原因和下一步选择。</p>
 <h2 id="section-8">8. 渐进授权与信息来源</h2>
 <h3>8.1 从最少的信息开始</h3>
-<p>Nivli 首先依靠用户直接交代的信息提供提醒。邮箱是首批外部信息来源；地点相关帮助在用户有对应需求时引入。初期不要求用户交出全部个人信息。</p>
+<p>Haiji 首先依靠用户直接交代的信息提供提醒。邮箱是首批外部信息来源；地点相关帮助在用户有对应需求时引入。初期不要求用户交出全部个人信息。</p>
 <h3>8.2 围绕具体收益提出建议</h3>
-<p>当 Nivli 发现一个明确的帮助机会时，可以说明新增信息的价值。例如：“如果你愿意连接邮箱，我可以帮你留意需要回复或有截止时间的邮件。”</p>
+<p>当 Haiji 发现一个明确的帮助机会时，可以说明新增信息的价值。例如：“如果你愿意连接邮箱，我可以帮你留意需要回复或有截止时间的邮件。”</p>
 <p>授权说明应让用户理解：会访问什么、用于什么、可能交给谁处理、如何停止，以及拒绝后仍能使用哪些功能。</p>
 <h3>8.3 用户始终拥有选择权</h3>
 <p>拒绝某项授权后，不反复打断用户索取。新增用途或扩大范围时，需要重新说明。用户随时可以停止分享，已有任务受到影响时，应明确告知并提供选择。</p>
@@ -134,7 +134,7 @@
 <h3>9.4 自主选择与长期信任</h3>
 <p>用户对使用哪些智能服务以及相应数据去向拥有选择权。开源与自托管应支持这种控制权，也让社区有机会检查、改进和延续产品。</p>
 <h2 id="section-10">10. 首版产品范围</h2>
-<p>首版要证明一个完整的价值过程：用户交代或发现一件事，Nivli 理解并记住，在有用的时候提醒，用户能够方便处理，并逐步愿意继续使用。</p>
+<p>首版要证明一个完整的价值过程：用户交代或发现一件事，Haiji 理解并记住，在有用的时候提醒，用户能够方便处理，并逐步愿意继续使用。</p>
 <h3>10.1 首版应提供的体验</h3>
 <ul><li>通过自然交流创建、补充和修改个人事项。</li><li>明确时间提醒，以及与重要地点有关的提醒。</li><li>通过通知理解事项，并便捷完成、推迟或进入详情。</li><li>连接一个邮箱来源，发现潜在行动并交由用户确认。</li><li>利用相关对话和用户确认的个人记忆提供帮助。</li><li>查看来源与提醒理由，纠正错误理解。</li><li>管理安静时段、建议频率、隐私预览与授权范围。</li><li>自托管使用，以及个人数据的查看、导出和删除。</li></ul>
 <h3>10.2 首版不承诺的能力</h3>
@@ -150,17 +150,17 @@
 <h3>11.4 更强的主动联系</h3>
 <p>来电式或更明显的提醒，只在用户明确希望的少数场景中探索。用户应能够预先选择适用事项和打扰程度；没有回应本身不构成升级理由。</p>
 <h3>11.5 更完整的个人信息提醒中心</h3>
-<p>随着信息来源增加，Nivli 帮助用户串联安排、发现遗漏和减少重复提醒。更深的个性化应提升判断质量，让用户在需要时获得更具体的帮助。</p>
+<p>随着信息来源增加，Haiji 帮助用户串联安排、发现遗漏和减少重复提醒。更深的个性化应提升判断质量，让用户在需要时获得更具体的帮助。</p>
 <h2 id="section-12">12. 如何判断产品有价值</h2>
 <h3>12.1 核心判断</h3>
-<p>核心问题是：Nivli 是否帮助用户记起并处理了原本容易漏掉的事情，同时让用户愿意继续保留它的通知和信息授权？</p>
+<p>核心问题是：Haiji 是否帮助用户记起并处理了原本容易漏掉的事情，同时让用户愿意继续保留它的通知和信息授权？</p>
 <p>提醒数量、聊天时长和打开应用次数本身，不足以证明产品有价值。</p>
 <h3>12.2 需要观察的结果</h3>
-<ul><li><strong>提醒有用性：</strong> 用户是否认为提醒来得合适、内容相关，并帮助其采取行动。</li><li><strong>遗漏减少：</strong> 用户是否能举出被 Nivli 帮忙记住的重要小事。</li><li><strong>建议质量：</strong> 从邮件和情境中发现的建议是否被确认，哪些类型经常被纠正或忽略。</li><li><strong>打扰程度：</strong> 用户是否频繁静音、关闭通知，或认为提醒重复、过时、无关。</li><li><strong>信任与控制感：</strong> 用户是否理解提醒来源，并能方便地修正理解、撤回授权和删除信息。</li><li><strong>持续使用意愿：</strong> 首次体验之后，用户是否愿意继续交代真实事项，并在看到收益后主动增加信息来源。</li></ul>
+<ul><li><strong>提醒有用性：</strong> 用户是否认为提醒来得合适、内容相关，并帮助其采取行动。</li><li><strong>遗漏减少：</strong> 用户是否能举出被 Haiji 帮忙记住的重要小事。</li><li><strong>建议质量：</strong> 从邮件和情境中发现的建议是否被确认，哪些类型经常被纠正或忽略。</li><li><strong>打扰程度：</strong> 用户是否频繁静音、关闭通知，或认为提醒重复、过时、无关。</li><li><strong>信任与控制感：</strong> 用户是否理解提醒来源，并能方便地修正理解、撤回授权和删除信息。</li><li><strong>持续使用意愿：</strong> 首次体验之后，用户是否愿意继续交代真实事项，并在看到收益后主动增加信息来源。</li></ul>
 <p>这些结果应通过用户自愿的反馈与明确告知的评估方式了解，不能为了衡量产品而默认收集私人内容。</p>
 <h3>12.3 首版体验检验</h3>
 <p>首批用户应能够独立完成一次真实的时间提醒、一次地点相关提醒，以及一次从邮件建议到确认并处理的过程。</p>
-<p>体验过程中，需要确认：用户知道 Nivli 理解了什么；提醒能说明行动与原因；修改和取消容易理解；权限不足或信息不可用时不会造成错误期待；用户能够控制并清除自己的信息。</p>
+<p>体验过程中，需要确认：用户知道 Haiji 理解了什么；提醒能说明行动与原因；修改和取消容易理解；权限不足或信息不可用时不会造成错误期待；用户能够控制并清除自己的信息。</p>
 <h2 id="section-13">13. 仍需通过用户验证的问题</h2>
-<ul><li>用户最常遗漏、且最愿意交给 Nivli 的前三类事项是什么？</li><li>在什么情况下，主动建议会被认为贴心；在什么情况下会被认为多余？</li><li>用户愿意提供哪些信息，需要先看到什么收益？</li><li>伙伴的语气和角色感做到什么程度最合适？</li><li>邮箱与地点场景，哪一种更容易带来持续使用？</li><li>自托管用户可以接受多少初次使用负担，需要哪些帮助？</li><li>更丰富的通知、灵动岛、手表和语音，分别在哪些场景中产生实际价值？</li></ul>
+<ul><li>用户最常遗漏、且最愿意交给 Haiji 的前三类事项是什么？</li><li>在什么情况下，主动建议会被认为贴心；在什么情况下会被认为多余？</li><li>用户愿意提供哪些信息，需要先看到什么收益？</li><li>伙伴的语气和角色感做到什么程度最合适？</li><li>邮箱与地点场景，哪一种更容易带来持续使用？</li><li>自托管用户可以接受多少初次使用负担，需要哪些帮助？</li><li>更丰富的通知、灵动岛、手表和语音，分别在哪些场景中产生实际价值？</li></ul>
 <p>以上问题保持开放，通过真实使用来完善产品定义，不预先绑定具体方案。</p></article></div></body></html>

@@ -41,7 +41,7 @@ if (role === "migrate") {
     databaseUrl,
     adminSecret,
     publicUrl,
-    environmentName: process.env.ENVIRONMENT_NAME ?? "Nivli",
+    environmentName: process.env.ENVIRONMENT_NAME ?? "Haiji",
     pushMode: pushMode as "self_signed" | "disabled" | "relay",
     modelDataDestination:
       process.env.MODEL_DATA_DESTINATION ??

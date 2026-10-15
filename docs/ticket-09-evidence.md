@@ -22,7 +22,7 @@ The combined agent/conversation tests cover every run state, raw tool/request li
 
 The Swift client understands queued/running/needs_clarification/succeeded/failed/cancelled/timed_out, polls persisted runs after returning to the page, preserves drafts and failed input identities in Keychain, exposes cancellation/retry/manual controls, and distinguishes usage estimates, reserved estimates and unconfirmed usage from provider invoices. Conversation history and current task cards come from the server; a model reply cannot manufacture a saved task identity.
 
-`swift test --package-path ios`: 14 tests passed. Generic iOS build passed with `xcodebuild -project ios/Nivli.xcodeproj -scheme Nivli -destination 'generic/platform=iOS' -derivedDataPath /tmp/nivli09-generic CODE_SIGNING_ALLOWED=NO build`; local log `/tmp/nivli09-generic.log`.
+`swift test --package-path ios`: 14 tests passed. Generic iOS build passed with `xcodebuild -project ios/Haiji.xcodeproj -scheme Haiji -destination 'generic/platform=iOS' -derivedDataPath /tmp/haiji09-generic CODE_SIGNING_ALLOWED=NO build`; local log `/tmp/haiji09-generic.log`.
 
 API, agent and delivery run as independent processes/queue roles; each agent worker has concurrency 1. The HTTP tests establish that slow or budget-blocked agent work does not occupy the manual API. Installed local reminders do not call the model: ticket 03's real-system evidence includes the user's observation of a reminder while the test iPhone was locked and offline. This ticket does not claim APNs or future server reminder delivery consumers are implemented.
 

@@ -273,7 +273,7 @@ export async function registerGmail(
       if (!binding.rowCount) return reject();
       const b = binding.rows[0];
       if (req.query.error || !req.query.code)
-        return reply.redirect("nivli://gmail?result=cancelled", 303);
+        return reply.redirect("haiji://gmail?result=cancelled", 303);
       try {
         const tokens = await provider.exchange(req.query.code);
         const profile = await provider.get<{
@@ -331,7 +331,7 @@ export async function registerGmail(
             return reject();
           }
           await tx.query("COMMIT");
-          return reply.redirect("nivli://gmail?result=connected", 303);
+          return reply.redirect("haiji://gmail?result=connected", 303);
         } catch (e) {
           await tx.query("ROLLBACK");
           throw e;
@@ -339,7 +339,7 @@ export async function registerGmail(
           tx.release();
         }
       } catch {
-        return reply.redirect("nivli://gmail?result=failed", 303);
+        return reply.redirect("haiji://gmail?result=failed", 303);
       }
     },
   );

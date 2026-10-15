@@ -1,6 +1,6 @@
 # AI agent implementation checkpoint
 
-2026-10-11，集成分支 `integration/nivli-v1`，最新代码提交 `092a0b3ae6be5176510dd669e0c80d9c7b47795d`。早期软件检查点为 `20cb1c7`；本次补充真实 Claude 验证。
+2026-10-11，集成分支 `integration/haiji-v1`，最新代码提交 `092a0b3ae6be5176510dd669e0c80d9c7b47795d`。早期软件检查点为 `20cb1c7`；本次补充真实 Claude 验证。
 
 07–09 的软件闭环已合入：持久化输入与实际 Pi/pg-boss 执行、多轮澄清与修改、当前事项确认卡和本地安装回执、取消与超时、稳定重试及每日模型预算。邮件连接按用户要求继续延后；此检查点不代表完整 v1 已完成。
 
@@ -10,7 +10,7 @@
 - 受控外部 Anthropic 服务的真机测试验证单轮提交、执行中重启恢复、一次业务结果、真实系统通知安装及通用隐私文案；多轮真机测试验证澄清回答、自然语言修改和重启后的当前历史。
 - 实际 Claude Sonnet 5.5、Pi 1.1.0 与 pg-boss 的签名真机测试通过（70.212 秒）：动态澄清、关联时间回答、保存唯一事项、同一事项修改至 revision 2、重启当前历史、真实 OS pending=1 和隐私预览。三个 run 各一次模型请求和一次工具调用，详见真实设备证据。
 - 用户确认锁屏且离线时收到本地提醒，记录见 ticket 03。
-- 最新代码用团队 `Q974D4E3V6` 成功签名，并通过 `devicectl` 更新到测试 iPhone 的 `app.nivli.Nivli`，包括拒绝请求不自动关联澄清的原生修复。安装保留原 App 数据，未卸载正式测试 bundle。签名日志 `/tmp/nivli-ai-real-claude-signed.log`，构建 `/tmp/nivli-ai-final-signed/Build/Products/Debug-iphoneos/Nivli.app`。
+- 最新代码用团队 `Q974D4E3V6` 成功签名，并通过 `devicectl` 更新到测试 iPhone 的 `app.haiji.Haiji`，包括拒绝请求不自动关联澄清的原生修复。安装保留原 App 数据，未卸载正式测试 bundle。签名日志 `/tmp/haiji-ai-real-claude-signed.log`，构建 `/tmp/haiji-ai-final-signed/Build/Products/Debug-iphoneos/Haiji.app`。
 - 临时测试 App、数据库、私有 fixture、HTTPS tunnel 和实施 worktree 已清理。
 
 ## Standards

@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Nivli identity API",
+    "title": "Haiji identity API",
     "version": "0.1.0"
   },
   "components": {
@@ -10020,7 +10020,7 @@
   },
   "servers": [
     {
-      "url": "https://nivli.example"
+      "url": "https://haiji.example"
     }
   ]
 }

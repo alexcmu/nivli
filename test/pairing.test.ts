@@ -6,8 +6,8 @@ import { createApp } from "../src/app.js";
 import { migrate } from "../src/database.js";
 const rootUrl =
   process.env.DATABASE_URL ??
-  "postgres://nivli:nivli@127.0.0.1:55432/nivli_test";
-const fixtureName = "nivli_test_" + randomUUID().replaceAll("-", "");
+  "postgres://haiji:haiji@127.0.0.1:55432/haiji_test";
+const fixtureName = "haiji_test_" + randomUUID().replaceAll("-", "");
 const fixtureUrl = new URL(rootUrl);
 fixtureUrl.pathname = "/" + fixtureName;
 const databaseUrl = fixtureUrl.toString();
@@ -42,8 +42,8 @@ describe("personal environment pairing over HTTP with PostgreSQL", () => {
     app = await createApp({
       databaseUrl,
       adminSecret: admin,
-      publicUrl: "https://nivli.example",
-      environmentName: "My Nivli",
+      publicUrl: "https://haiji.example",
+      environmentName: "My Haiji",
       pushMode: "disabled",
       modelDataDestination: "No model configured",
       clock: () => new Date(clock),
@@ -65,8 +65,8 @@ describe("personal environment pairing over HTTP with PostgreSQL", () => {
     const env = await call("/v1/environment");
     expect(env.status).toBe(200);
     expect(env.body).toMatchObject({
-      name: "My Nivli",
-      host: "nivli.example",
+      name: "My Haiji",
+      host: "haiji.example",
       pushMode: "disabled",
     });
     const session = await call("/v1/session");
@@ -246,8 +246,8 @@ describe("personal environment pairing over HTTP with PostgreSQL", () => {
     app = await createApp({
       databaseUrl,
       adminSecret: admin,
-      publicUrl: "https://nivli.example",
-      environmentName: "My Nivli",
+      publicUrl: "https://haiji.example",
+      environmentName: "My Haiji",
       pushMode: "disabled",
       modelDataDestination: "No model configured",
       clock: () => new Date(clock),

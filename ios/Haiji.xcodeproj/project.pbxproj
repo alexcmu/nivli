@@ -1,0 +1,505 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00512BE70902391EB0D6B271 /* AgentNotificationEvidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA96DDAEABC6B8EF88AB40B3 /* AgentNotificationEvidence.swift */; };
+		0D740BA4CA9138794B22D14C /* Tasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 311FD4FDA9EF45EA1C65757B /* Tasks.swift */; };
+		1592D47D169318DD077B46C6 /* PairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99478604CD2057017844E522 /* PairingView.swift */; };
+		1B1575B7FB13B03653039150 /* NotificationInteractionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE07B080B50F2F13FDEA3F2 /* NotificationInteractionUITests.swift */; };
+		1EA7926D829BE630C1499862 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9F451767170E085EC373F94 /* API.swift */; };
+		27FBC94CCFC3ACD746EAE628 /* GmailAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B5BB59CA495516566450C3 /* GmailAPI.swift */; };
+		2C6316E3867F858D90031207 /* Conversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CA245A5A262BCCDA96F586 /* Conversation.swift */; };
+		3CF37EE2190E0002D3AAF101 /* GmailUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF1D5203203380E6FE0DBE49 /* GmailUITests.swift */; };
+		53E471251F802D1D586EB930 /* TaskActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1231C160ECAAEA816876D446 /* TaskActions.swift */; };
+		5546BCF342BEC26EB05F60B5 /* ConversationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4E32683EE49DD853B1A32A /* ConversationView.swift */; };
+		5BC1714FD78AFCA95C7B03B9 /* HaijiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5C3395D867A1085CBFF4E8 /* HaijiApp.swift */; };
+		5BEFBFB8C3D690C8F8876BA0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6C25B9ADF819382D3AEC8D8E /* Foundation.framework */; };
+		5F68626B881D212AF8C63503 /* Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AD415FDFBA797F44B69395 /* Notifications.swift */; };
+		65E51AB40CC3F5C49F3DDD62 /* LocalNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B926D656DBB2A687E561E7D /* LocalNotifications.swift */; };
+		6F81938A1A06B9F978C7D769 /* ConversationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398CD6C1D63F32FD4CFC0EBD /* ConversationUITests.swift */; };
+		736A28393ED63028484504D1 /* TaskViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E345851BA606D22AEAAB551D /* TaskViews.swift */; };
+		96E7BCBEB2B0BA5FC25E9FB5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6C25B9ADF819382D3AEC8D8E /* Foundation.framework */; };
+		9BA601B9673D6A7747038F98 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E37BC27DBBD66561434BBE4B /* libsqlite3.tbd */; };
+		9C124DB3A03AC5E064A17FE7 /* LiveAgentUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3C4C4DD0E537D59E868F61 /* LiveAgentUITests.swift */; };
+		9E49B19847DF73C877176F14 /* Pairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41B017C6C86B71C1A28FDE7D /* Pairing.swift */; };
+		A4B637F8854D6D2DD8A47016 /* HaijiUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9EF03FA19B20B91764FDDD3 /* HaijiUITests.swift */; };
+		AE921986C8522A411BCF413F /* QRScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08BE04CE01AE984084F0DA7B /* QRScanner.swift */; };
+		B22392910F5D5C8911B4C02B /* GmailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB6F690EDEB8A6D515F4053 /* GmailView.swift */; };
+		D64FF10761AF74ECC1554941 /* NotificationValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35F6CB324DF689F3EE39FF70 /* NotificationValidation.swift */; };
+		F4D22D7EB0F1C29DBD9533EC /* AgentUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43F3E155657750E29F745EBF /* AgentUITests.swift */; };
+		FB6FC67F513A30286DC76552 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14709763951ED3E1D9A2516F /* SessionStore.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		3698BCCD81F8DCD56F38972F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5C0FD6739D92A97CB9647D5D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B3C1B9A9FDA238FA86868792;
+			remoteInfo = Haiji;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		08BE04CE01AE984084F0DA7B /* QRScanner.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = QRScanner.swift; path = Haiji/QRScanner.swift; sourceTree = "<group>"; };
+		1231C160ECAAEA816876D446 /* TaskActions.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TaskActions.swift; path = Haiji/TaskActions.swift; sourceTree = "<group>"; };
+		14709763951ED3E1D9A2516F /* SessionStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SessionStore.swift; path = Haiji/SessionStore.swift; sourceTree = "<group>"; };
+		14B5BB59CA495516566450C3 /* GmailAPI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GmailAPI.swift; path = Sources/HaijiCore/GmailAPI.swift; sourceTree = "<group>"; };
+		2F3C4C4DD0E537D59E868F61 /* LiveAgentUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LiveAgentUITests.swift; path = UITests/LiveAgentUITests.swift; sourceTree = "<group>"; };
+		311FD4FDA9EF45EA1C65757B /* Tasks.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Tasks.swift; path = Sources/HaijiCore/Tasks.swift; sourceTree = "<group>"; };
+		35F6CB324DF689F3EE39FF70 /* NotificationValidation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NotificationValidation.swift; path = Haiji/NotificationValidation.swift; sourceTree = "<group>"; };
+		398CD6C1D63F32FD4CFC0EBD /* ConversationUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConversationUITests.swift; path = UITests/ConversationUITests.swift; sourceTree = "<group>"; };
+		3FE07B080B50F2F13FDEA3F2 /* NotificationInteractionUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NotificationInteractionUITests.swift; path = UITests/NotificationInteractionUITests.swift; sourceTree = "<group>"; };
+		41B017C6C86B71C1A28FDE7D /* Pairing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Pairing.swift; path = Sources/HaijiCore/Pairing.swift; sourceTree = "<group>"; };
+		43F3E155657750E29F745EBF /* AgentUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AgentUITests.swift; path = UITests/AgentUITests.swift; sourceTree = "<group>"; };
+		4B4E32683EE49DD853B1A32A /* ConversationView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConversationView.swift; path = Haiji/ConversationView.swift; sourceTree = "<group>"; };
+		4B926D656DBB2A687E561E7D /* LocalNotifications.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LocalNotifications.swift; path = Haiji/LocalNotifications.swift; sourceTree = "<group>"; };
+		4CB6F690EDEB8A6D515F4053 /* GmailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GmailView.swift; path = Haiji/GmailView.swift; sourceTree = "<group>"; };
+		6924178B41859C359C3F6B23 /* HaijiUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HaijiUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6C25B9ADF819382D3AEC8D8E /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		99478604CD2057017844E522 /* PairingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PairingView.swift; path = Haiji/PairingView.swift; sourceTree = "<group>"; };
+		A72138637F5DEDC42B6BCF4D /* Haiji.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Haiji.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B2AD415FDFBA797F44B69395 /* Notifications.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Notifications.swift; path = Sources/HaijiCore/Notifications.swift; sourceTree = "<group>"; };
+		CA5C3395D867A1085CBFF4E8 /* HaijiApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HaijiApp.swift; path = Haiji/HaijiApp.swift; sourceTree = "<group>"; };
+		D0CA245A5A262BCCDA96F586 /* Conversation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Conversation.swift; path = Sources/HaijiCore/Conversation.swift; sourceTree = "<group>"; };
+		DA96DDAEABC6B8EF88AB40B3 /* AgentNotificationEvidence.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AgentNotificationEvidence.swift; path = Haiji/AgentNotificationEvidence.swift; sourceTree = "<group>"; };
+		E345851BA606D22AEAAB551D /* TaskViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TaskViews.swift; path = Haiji/TaskViews.swift; sourceTree = "<group>"; };
+		E37BC27DBBD66561434BBE4B /* libsqlite3.tbd */ = {isa = PBXFileReference; includeInIndex = 1; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		E9EF03FA19B20B91764FDDD3 /* HaijiUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HaijiUITests.swift; path = UITests/HaijiUITests.swift; sourceTree = "<group>"; };
+		F9F451767170E085EC373F94 /* API.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = API.swift; path = Sources/HaijiCore/API.swift; sourceTree = "<group>"; };
+		FF1D5203203380E6FE0DBE49 /* GmailUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GmailUITests.swift; path = UITests/GmailUITests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		44D3298E720E5F09A8E63935 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				96E7BCBEB2B0BA5FC25E9FB5 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		918BF8AFC3981C8B92169C60 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5BEFBFB8C3D690C8F8876BA0 /* Foundation.framework in Frameworks */,
+				9BA601B9673D6A7747038F98 /* libsqlite3.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		158E4AAFD336D385FC0AC4B6 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				6C25B9ADF819382D3AEC8D8E /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		7EFB4829CE4DA0A60202243D = {
+			isa = PBXGroup;
+			children = (
+				BF15415E208B7E8F116B23DD /* Products */,
+				9FB7EBF1295F85F64DC33E14 /* Frameworks */,
+				4B4E32683EE49DD853B1A32A /* ConversationView.swift */,
+				4CB6F690EDEB8A6D515F4053 /* GmailView.swift */,
+				4B926D656DBB2A687E561E7D /* LocalNotifications.swift */,
+				CA5C3395D867A1085CBFF4E8 /* HaijiApp.swift */,
+				35F6CB324DF689F3EE39FF70 /* NotificationValidation.swift */,
+				99478604CD2057017844E522 /* PairingView.swift */,
+				08BE04CE01AE984084F0DA7B /* QRScanner.swift */,
+				14709763951ED3E1D9A2516F /* SessionStore.swift */,
+				1231C160ECAAEA816876D446 /* TaskActions.swift */,
+				E345851BA606D22AEAAB551D /* TaskViews.swift */,
+				F9F451767170E085EC373F94 /* API.swift */,
+				D0CA245A5A262BCCDA96F586 /* Conversation.swift */,
+				14B5BB59CA495516566450C3 /* GmailAPI.swift */,
+				B2AD415FDFBA797F44B69395 /* Notifications.swift */,
+				41B017C6C86B71C1A28FDE7D /* Pairing.swift */,
+				311FD4FDA9EF45EA1C65757B /* Tasks.swift */,
+				E9EF03FA19B20B91764FDDD3 /* HaijiUITests.swift */,
+				FF1D5203203380E6FE0DBE49 /* GmailUITests.swift */,
+				E37BC27DBBD66561434BBE4B /* libsqlite3.tbd */,
+				DA96DDAEABC6B8EF88AB40B3 /* AgentNotificationEvidence.swift */,
+				43F3E155657750E29F745EBF /* AgentUITests.swift */,
+				398CD6C1D63F32FD4CFC0EBD /* ConversationUITests.swift */,
+				2F3C4C4DD0E537D59E868F61 /* LiveAgentUITests.swift */,
+				3FE07B080B50F2F13FDEA3F2 /* NotificationInteractionUITests.swift */,
+			);
+			sourceTree = "<group>";
+		};
+		9FB7EBF1295F85F64DC33E14 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				158E4AAFD336D385FC0AC4B6 /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		BF15415E208B7E8F116B23DD /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A72138637F5DEDC42B6BCF4D /* Haiji.app */,
+				6924178B41859C359C3F6B23 /* HaijiUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B3C1B9A9FDA238FA86868792 /* Haiji */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4F76F7D5470201A6FEE610F1 /* Build configuration list for PBXNativeTarget "Haiji" */;
+			buildPhases = (
+				BCA2CCE5C0E59F6075D6EAFC /* Sources */,
+				918BF8AFC3981C8B92169C60 /* Frameworks */,
+				2A2B12B03769F2C4E21BF125 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Haiji;
+			productName = Haiji;
+			productReference = A72138637F5DEDC42B6BCF4D /* Haiji.app */;
+			productType = "com.apple.product-type.application";
+		};
+		EBF4F71DC663B98C82A34DA4 /* HaijiUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AD81BD12EFFCE8B8F63C6B26 /* Build configuration list for PBXNativeTarget "HaijiUITests" */;
+			buildPhases = (
+				9F08DFCDB669539B51EF3885 /* Sources */,
+				44D3298E720E5F09A8E63935 /* Frameworks */,
+				26254ADDBC326B727E5AAAB3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E81E973365B90C1F29FBABE6 /* PBXTargetDependency */,
+			);
+			name = HaijiUITests;
+			productName = HaijiUITests;
+			productReference = 6924178B41859C359C3F6B23 /* HaijiUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		5C0FD6739D92A97CB9647D5D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = 7967F1DC4C2A1498DB883EBE /* Build configuration list for PBXProject "Haiji" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 7EFB4829CE4DA0A60202243D;
+			productRefGroup = BF15415E208B7E8F116B23DD /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B3C1B9A9FDA238FA86868792 /* Haiji */,
+				EBF4F71DC663B98C82A34DA4 /* HaijiUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		26254ADDBC326B727E5AAAB3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2A2B12B03769F2C4E21BF125 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9F08DFCDB669539B51EF3885 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A4B637F8854D6D2DD8A47016 /* HaijiUITests.swift in Sources */,
+				3CF37EE2190E0002D3AAF101 /* GmailUITests.swift in Sources */,
+				F4D22D7EB0F1C29DBD9533EC /* AgentUITests.swift in Sources */,
+				6F81938A1A06B9F978C7D769 /* ConversationUITests.swift in Sources */,
+				9C124DB3A03AC5E064A17FE7 /* LiveAgentUITests.swift in Sources */,
+				1B1575B7FB13B03653039150 /* NotificationInteractionUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BCA2CCE5C0E59F6075D6EAFC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5546BCF342BEC26EB05F60B5 /* ConversationView.swift in Sources */,
+				B22392910F5D5C8911B4C02B /* GmailView.swift in Sources */,
+				65E51AB40CC3F5C49F3DDD62 /* LocalNotifications.swift in Sources */,
+				5BC1714FD78AFCA95C7B03B9 /* HaijiApp.swift in Sources */,
+				D64FF10761AF74ECC1554941 /* NotificationValidation.swift in Sources */,
+				1592D47D169318DD077B46C6 /* PairingView.swift in Sources */,
+				AE921986C8522A411BCF413F /* QRScanner.swift in Sources */,
+				FB6FC67F513A30286DC76552 /* SessionStore.swift in Sources */,
+				53E471251F802D1D586EB930 /* TaskActions.swift in Sources */,
+				736A28393ED63028484504D1 /* TaskViews.swift in Sources */,
+				1EA7926D829BE630C1499862 /* API.swift in Sources */,
+				2C6316E3867F858D90031207 /* Conversation.swift in Sources */,
+				27FBC94CCFC3ACD746EAE628 /* GmailAPI.swift in Sources */,
+				5F68626B881D212AF8C63503 /* Notifications.swift in Sources */,
+				9E49B19847DF73C877176F14 /* Pairing.swift in Sources */,
+				0D740BA4CA9138794B22D14C /* Tasks.swift in Sources */,
+				00512BE70902391EB0D6B271 /* AgentNotificationEvidence.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E81E973365B90C1F29FBABE6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Haiji;
+			target = B3C1B9A9FDA238FA86868792 /* Haiji */;
+			targetProxy = 3698BCCD81F8DCD56F38972F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		2BD4D04980BEB7633661A5FA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.haiji.HaijiUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Haiji;
+			};
+			name = Debug;
+		};
+		875987E0D1230A317F2963B5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		89015EC11E27B87A85E3E6A9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.haiji.HaijiUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Haiji;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		8A59FE15B03146B5E20719CF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = Haiji/Haiji.entitlements;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "扫描一次性配对二维码。你也可以手动输入，无需摄像头。";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = app.haiji.Haiji;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		E718302BA2AFA7F2C131FD6E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		EA3CC6EB1F372B4194D25178 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = Haiji/Haiji.entitlements;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "扫描一次性配对二维码。你也可以手动输入，无需摄像头。";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = app.haiji.Haiji;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4F76F7D5470201A6FEE610F1 /* Build configuration list for PBXNativeTarget "Haiji" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EA3CC6EB1F372B4194D25178 /* Release */,
+				8A59FE15B03146B5E20719CF /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7967F1DC4C2A1498DB883EBE /* Build configuration list for PBXProject "Haiji" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E718302BA2AFA7F2C131FD6E /* Debug */,
+				875987E0D1230A317F2963B5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AD81BD12EFFCE8B8F63C6B26 /* Build configuration list for PBXNativeTarget "HaijiUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				89015EC11E27B87A85E3E6A9 /* Release */,
+				2BD4D04980BEB7633661A5FA /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 5C0FD6739D92A97CB9647D5D /* Project object */;
+}

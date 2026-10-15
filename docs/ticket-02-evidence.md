@@ -1,6 +1,6 @@
 # 工单 02：手动事项
 
-实现入口：`src/tasks.ts`、`src/task-contracts.ts`、`src/task-schema.ts`，原生入口 `ios/Nivli/TaskViews.swift`，持久投影 `ios/Sources/NivliCore/Tasks.swift`。
+实现入口：`src/tasks.ts`、`src/task-contracts.ts`、`src/task-schema.ts`，原生入口 `ios/Haiji/TaskViews.swift`，持久投影 `ios/Sources/HaijiCore/Tasks.swift`。
 
 ## 已验证的公开边界
 

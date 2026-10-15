@@ -12,9 +12,9 @@ Railway 从 GitHub 导入的步骤见 [根目录 README](../README.md)。镜像�
 2. 在私有目录生成独立管理员凭据（不要复用数据库密码）：
 
    ```sh
-   mkdir -m 700 /absolute/private/nivli-secrets
-   openssl rand -hex 32 > /absolute/private/nivli-secrets/admin-secret
-   chmod 0444 /absolute/private/nivli-secrets/admin-secret
+   mkdir -m 700 /absolute/private/haiji-secrets
+   openssl rand -hex 32 > /absolute/private/haiji-secrets/admin-secret
+   chmod 0444 /absolute/private/haiji-secrets/admin-secret
    ```
 
    将绝对文件路径设置为 `ADMIN_SECRET_PATH`。本地 Compose secret 使用文件 bind mount，不能依赖 secret 的 `uid`/`mode` 自动重映射；文件必须能由容器 UID 1000 读取，私有父目录限制主机访问。运行时只收到 `ADMIN_SECRET_FILE=/run/secrets/admin_secret`，文件不写进镜像。
@@ -33,7 +33,7 @@ Railway 从 GitHub 导入的步骤见 [根目录 README](../README.md)。镜像�
 开发构建无需已发布镜像，明确使用 local tag 与覆盖文件：
 
 ```sh
-APP_IMAGE=nivli:local docker compose --env-file deploy/.env -f compose.yaml -f deploy/compose.build.yaml up -d --build --wait
+APP_IMAGE=haiji:local docker compose --env-file deploy/.env -f compose.yaml -f deploy/compose.build.yaml up -d --build --wait
 ```
 
 `deploy/check-compose.sh` 构建当前源码并在独立随机项目/临时数据卷上验证 API readiness、数据库停机重连及迁移失败阻止常驻服务启动；退出时只删除该测试项目的数据卷。需要可用 Docker daemon。生产 Compose 的数据库数据卷不会被测试触及。
@@ -51,3 +51,9 @@ CI 在真实 PostgreSQL 17 上运行 `npm ci`、build、migration、API 测试�
 ## 本次验证证据
 
 2026-10-11 在 Docker Desktop（linux/arm64）以本票真实后端源码运行 `BUILDX_BUILDER=desktop-linux deploy/check-compose.sh`，成功构建 Node 24 多阶段镜像、启动 PostgreSQL 17/迁移/API/两个 worker，API readiness 为 200；停止数据库并重启 API 后，恢复数据库再次达到 ready；替换 migration 为退出 73 的入口后，Compose 返回失败，API/agent/delivery 均未运行。测试退出已清理随机项目的数据卷。`deploy/up.sh` 另验证拒绝无 digest 的 local tag。当前证据不包含远程 GitHub Actions 执行、多架构发布、TLS 代理或真机结果。
+
+## 更名后的已有部署
+
+新建环境的默认 PostgreSQL 用户与数据库名为 `haiji`。使用已有持久卷升级时，在 `deploy/.env` 中将 `POSTGRES_USER` 与 `POSTGRES_DB` 设置为该卷原有的名称，并保持原密码和 Compose project 名称；仅更改初始化环境变量不会重命名已有数据库或角色。不要删除持久卷来完成更名。Railway 部署继续使用原有 `DATABASE_URL`。
+
+iPhone 构建使用新的应用身份；重新配对、旧设备会话撤销与推送配置见 [iOS 说明](../ios/README.md)。旧环境中已保存的通知标识属于原设备的计划，不能当作新安装已安排的通知；切换前应取消旧设备的计划，再为新设备确认提醒。

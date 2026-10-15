@@ -1,6 +1,6 @@
 {
-  "name": "My Nivli",
-  "host": "nivli.example",
+  "name": "My Haiji",
+  "host": "haiji.example",
   "pushMode": "disabled",
   "modelDataDestination": "No model configured",
   "capabilities": ["pairing", "session"]

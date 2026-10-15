@@ -117,7 +117,7 @@ export async function createApp(config: Config) {
   }).withTypeProvider<TypeBoxTypeProvider>();
   await app.register(swagger, {
     openapi: {
-      info: { title: "Nivli identity API", version: "0.1.0" },
+      info: { title: "Haiji identity API", version: "0.1.0" },
       servers: [{ url: config.publicUrl }],
       components: {
         securitySchemes: { bearerAuth: { type: "http", scheme: "bearer" } },

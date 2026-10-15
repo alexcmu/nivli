@@ -22,10 +22,10 @@ import { createApp } from "./app.js";
 const app = await createApp({
   databaseUrl:
     process.env.DATABASE_URL ??
-    "postgres://nivli:nivli@127.0.0.1:55432/nivli_test",
+    "postgres://haiji:haiji@127.0.0.1:55432/haiji_test",
   adminSecret: "contract-only-placeholder".repeat(2),
-  publicUrl: "https://nivli.example",
-  environmentName: "Nivli",
+  publicUrl: "https://haiji.example",
+  environmentName: "Haiji",
   pushMode: "disabled",
   modelDataDestination: "No model configured",
 });

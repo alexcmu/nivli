@@ -47,7 +47,7 @@ final class ConversationUITests: XCTestCase {
         app.terminate();app.launch();app.tabBars.buttons["交代"].tap()
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format:"label CONTAINS %@",fixture.change)).firstMatch.waitForExistence(timeout:20))
         let image=XCTAttachment(screenshot:app.screenshot());image.name="Linked clarification and current conversation task history";image.lifetime = .keepAlways;add(image)
-        print("NIVLI_CONVERSATION_DEVICE linked_answer=true persisted_history=true one_task=true revision=2 requests=3 committed_Unicode=true")
+        print("HAIJI_CONVERSATION_DEVICE linked_answer=true persisted_history=true one_task=true revision=2 requests=3 committed_Unicode=true")
         app.tabBars.buttons["我的"].tap(); app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "环境连接")).firstMatch.tap()
         app.buttons["吊销并断开此设备"].tap(); XCTAssertTrue(app.textFields["serverAddress"].waitForExistence(timeout: 20))
     }

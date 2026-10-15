@@ -11,16 +11,16 @@ jobs:
       postgres:
         image: postgres:17-bookworm@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826
         env:
-          POSTGRES_USER: nivli
-          POSTGRES_PASSWORD: nivli
-          POSTGRES_DB: nivli_test
+          POSTGRES_USER: haiji
+          POSTGRES_PASSWORD: haiji
+          POSTGRES_DB: haiji_test
         ports: ["55432:5432"]
         options: >-
-          --health-cmd "pg_isready -U nivli -d nivli_test"
+          --health-cmd "pg_isready -U haiji -d haiji_test"
           --health-interval 2s --health-timeout 3s --health-retries 30
     env:
-      DATABASE_URL: postgresql://nivli:nivli@127.0.0.1:55432/nivli_test
-      PUBLIC_URL: https://nivli.test
+      DATABASE_URL: postgresql://haiji:haiji@127.0.0.1:55432/haiji_test
+      PUBLIC_URL: https://haiji.test
       ENVIRONMENT_NAME: CI
       PUSH_MODE: disabled
       MODEL_DATA_DESTINATION: No model configured
@@ -49,4 +49,4 @@ jobs:
       - name: Swift public contract tests
         run: swift test --package-path ios
       - name: Native build and UI tests
-        run: xcodebuild -project ios/Nivli.xcodeproj -scheme Nivli -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGN_IDENTITY=- test
+        run: xcodebuild -project ios/Haiji.xcodeproj -scheme Haiji -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGN_IDENTITY=- test

@@ -3,8 +3,8 @@ import { readModelConfig } from "./model-config.js";
 import { interpret } from "./pi-adapter.js";
 import { validateProposal } from "./agent-validation.js";
 import { randomUUID } from "node:crypto";
-if (process.env.NIVLI_REAL_MODEL_SMOKE !== "1")
-  throw new Error("Explicit NIVLI_REAL_MODEL_SMOKE=1 is required");
+if (process.env.HAIJI_REAL_MODEL_SMOKE !== "1")
+  throw new Error("Explicit HAIJI_REAL_MODEL_SMOKE=1 is required");
 const model = await readModelConfig();
 if (!model) throw new Error("Configure a server-only model API key first");
 const smokeBudget = Number(process.env.MODEL_SMOKE_BUDGET_USD ?? 0.5);

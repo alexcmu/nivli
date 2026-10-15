@@ -262,7 +262,7 @@ export async function executeTaskAction(
         reminderId,
         reminderRevision,
         state.reminder.instant,
-        "nivli." + occurrenceId + ".1",
+        "haiji." + occurrenceId + ".1",
         confirmed,
         time,
       ],

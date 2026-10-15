@@ -11,7 +11,7 @@ import { dropFixtureDatabase } from "./database-cleanup.js";
 
 const rootUrl =
   process.env.DATABASE_URL ??
-  "postgres://nivli:nivli@127.0.0.1:55432/nivli_test";
+  "postgres://haiji:haiji@127.0.0.1:55432/haiji_test";
 const name = "runtime_" + randomUUID().replaceAll("-", "");
 const database = new URL(rootUrl);
 database.pathname = "/" + name;
@@ -25,7 +25,7 @@ let directory = "";
 
 beforeAll(async () => {
   await maintenance.query(`CREATE DATABASE ${name}`);
-  directory = await mkdtemp(join(tmpdir(), "nivli-runtime-"));
+  directory = await mkdtemp(join(tmpdir(), "haiji-runtime-"));
 });
 async function stop() {
   if (!child || child.exitCode !== null || child.signalCode !== null) return;

@@ -9,10 +9,10 @@ x-app: &app
   security_opt: [no-new-privileges:true]
   environment: &app-env
     NODE_ENV: production
-    DATABASE_URL: postgresql://nivli:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/nivli
+    DATABASE_URL: postgresql://${POSTGRES_USER:-haiji}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-haiji}
     ADMIN_SECRET_FILE: /run/secrets/admin_secret
     PUBLIC_URL: ${PUBLIC_URL:?Set PUBLIC_URL to your HTTPS address}
-    ENVIRONMENT_NAME: ${ENVIRONMENT_NAME:-Nivli personal environment}
+    ENVIRONMENT_NAME: ${ENVIRONMENT_NAME:-Haiji personal environment}
     PUSH_MODE: ${PUSH_MODE:-disabled}
     MODEL_DATA_DESTINATION: ${MODEL_DATA_DESTINATION:-No model configured}
   secrets: [admin_secret]
@@ -32,12 +32,12 @@ services:
   db:
     image: postgres:17-bookworm@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826
     environment:
-      POSTGRES_DB: nivli
-      POSTGRES_USER: nivli
+      POSTGRES_DB: ${POSTGRES_DB:-haiji}
+      POSTGRES_USER: ${POSTGRES_USER:-haiji}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
     volumes: [postgres_data:/var/lib/postgresql/data]
     healthcheck:
-      test: [CMD-SHELL, "pg_isready -U nivli -d nivli"]
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
       interval: 2s
       timeout: 3s
       retries: 30

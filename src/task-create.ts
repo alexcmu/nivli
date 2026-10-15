@@ -47,7 +47,7 @@ export async function createTaskInTransaction(
           identity.deviceId,
           reminderId,
           input.reminder.instant,
-          "nivli." + occurrenceId + ".1",
+          "haiji." + occurrenceId + ".1",
           confirmed,
           time,
         ],

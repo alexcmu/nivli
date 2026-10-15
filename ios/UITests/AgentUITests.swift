@@ -43,7 +43,7 @@ final class AgentUITests: XCTestCase {
         let systemConfirmed = app.staticTexts["实际系统计划=1；预览隐私=true"].waitForExistence(timeout: 10)
         XCTAssertTrue(systemConfirmed, app.staticTexts["agentSystemEvidence"].label)
         guard systemConfirmed else { return }
-        print("NIVLI_AGENT_DEVICE durable_relaunch=true single_task=true single_provider_request=true OS_pending=1 private_preview=true")
+        print("HAIJI_AGENT_DEVICE durable_relaunch=true single_task=true single_provider_request=true OS_pending=1 private_preview=true")
         app.terminate(); app.launchArguments = []; app.launch(); app.tabBars.buttons["交代"].tap()
         XCTAssertTrue(app.staticTexts[fixture.title].waitForExistence(timeout: 20))
         app.tabBars.buttons["我的"].tap(); app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "环境连接")).firstMatch.tap()

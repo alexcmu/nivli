@@ -9,7 +9,7 @@ import { createApp } from "../src/app.js";
 import { migrate } from "../src/database.js";
 const rootUrl =
   process.env.DATABASE_URL ??
-  "postgres://nivli:nivli@127.0.0.1:55432/nivli_test";
+  "postgres://haiji:haiji@127.0.0.1:55432/haiji_test";
 const name = "agent09_" + randomUUID().replaceAll("-", "");
 const url = new URL(rootUrl);
 url.pathname = "/" + name;
@@ -21,7 +21,7 @@ let currentInstant = "2026-10-11T12:00:00Z";
 const config = {
   databaseUrl,
   adminSecret: admin,
-  publicUrl: "https://nivli.example",
+  publicUrl: "https://haiji.example",
   environmentName: "Tasks",
   pushMode: "disabled" as const,
   modelDataDestination: "None",

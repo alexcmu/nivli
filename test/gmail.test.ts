@@ -7,7 +7,7 @@ import { createApp } from "../src/app.js";
 import { migrate } from "../src/database.js";
 const root =
   process.env.DATABASE_URL ??
-  "postgres://nivli:nivli@127.0.0.1:55432/nivli_test";
+  "postgres://haiji:haiji@127.0.0.1:55432/haiji_test";
 const name = "gmail_" + randomUUID().replaceAll("-", "");
 const url = new URL(root);
 url.pathname = "/" + name;
@@ -148,7 +148,7 @@ beforeAll(async () => {
   app = await createApp({
     databaseUrl,
     adminSecret: "a".repeat(48),
-    publicUrl: "https://nivli.example",
+    publicUrl: "https://haiji.example",
     environmentName: "test",
     pushMode: "disabled",
     modelDataDestination: "none",
@@ -214,7 +214,7 @@ test("Gmail consent uses readonly OAuth bound state; wrong callback and revoked 
     { redirect: "manual" },
   );
   expect(valid.status).toBe(303);
-  expect(valid.headers.get("location")).toBe("nivli://gmail?result=connected");
+  expect(valid.headers.get("location")).toBe("haiji://gmail?result=connected");
   const status = await call("/v1/gmail");
   expect(status.body).toMatchObject({
     state: "active",
@@ -241,7 +241,7 @@ test("interrupted paging resumes its committed page and deduplicates repeated ID
       tokenEndpoint: endpoint() + "/token",
       apiEndpoint: endpoint(),
     },
-    publicUrl: "https://nivli.example",
+    publicUrl: "https://haiji.example",
     clock: () => new Date(clock + Date.now() - wallStart),
   });
   await until(async () => !!(await call("/v1/gmail")).body.syncError);

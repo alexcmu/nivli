@@ -26,14 +26,14 @@ type Case = {
 const allCases = JSON.parse(
   await readFile("evals/conversation-cases.json", "utf8"),
 ) as Case[];
-const selectedIds = process.env.NIVLI_EVAL_CASE_IDS?.split(",");
+const selectedIds = process.env.HAIJI_EVAL_CASE_IDS?.split(",");
 const cases = selectedIds
   ? allCases.filter((sample) => selectedIds.includes(sample.id))
   : allCases;
 if (selectedIds?.some((id) => !allCases.some((sample) => sample.id === id)))
   throw new Error("Unknown evaluation case ID");
 const output =
-  process.env.NIVLI_EVAL_REPORT ?? "/tmp/nivli-conversation-evaluation.json";
+  process.env.HAIJI_EVAL_REPORT ?? "/tmp/haiji-conversation-evaluation.json";
 const budget = Number(process.env.MODEL_DAILY_BUDGET_USD ?? "1");
 if (!Number.isFinite(budget) || budget <= 0 || budget > 2)
   throw new Error(
@@ -65,7 +65,7 @@ const report: {
   cleanupFailures: [],
 };
 const model = await readModelConfig();
-if (process.env.NIVLI_REAL_MODEL_EVAL !== "1" || !model) {
+if (process.env.HAIJI_REAL_MODEL_EVAL !== "1" || !model) {
   await writeFile(
     output,
     JSON.stringify(
@@ -82,7 +82,7 @@ if (process.env.NIVLI_REAL_MODEL_EVAL !== "1" || !model) {
 } else {
   const root =
     process.env.DATABASE_URL ??
-    "postgres://nivli:nivli@127.0.0.1:55432/nivli_test";
+    "postgres://haiji:haiji@127.0.0.1:55432/haiji_test";
   const maintenance = new pg.Pool({ connectionString: root });
   let committedUsd = 0;
   report.status = "running";

@@ -72,7 +72,7 @@ final class LiveAgentUITests: XCTestCase {
         let image = XCTAttachment(screenshot: app.screenshot()); image.name = "Live Claude current task history"; image.lifetime = .keepAlways; add(image)
         app.terminate(); app.launchArguments = ["-agent-system-evidence", "-agent-evidence-task", task.id]; app.launch()
         XCTAssertTrue(app.staticTexts["实际系统计划=1；预览隐私=true"].waitForExistence(timeout: 10), app.staticTexts["agentSystemEvidence"].label)
-        print("NIVLI_LIVE_DEVICE model=claude-sonnet-5-5 pi=1.1.0 clarify=true linked_answer=true edit=true history_relaunch=true OS_pending=1 usageUsd=\(changed.runs.reduce(0) { $0 + $1.cost.usageUsd }) requests=\(changed.runs.map(\.requests)) tools=\(changed.runs.map(\.toolCalls))")
+        print("HAIJI_LIVE_DEVICE model=claude-sonnet-5-5 pi=1.1.0 clarify=true linked_answer=true edit=true history_relaunch=true OS_pending=1 usageUsd=\(changed.runs.reduce(0) { $0 + $1.cost.usageUsd }) requests=\(changed.runs.map(\.requests)) tools=\(changed.runs.map(\.toolCalls))")
         app.terminate(); app.launchArguments = []; app.launch()
         app.tabBars.buttons["我的"].tap(); app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "环境连接")).firstMatch.tap()
         app.buttons["吊销并断开此设备"].tap(); XCTAssertTrue(app.textFields["serverAddress"].waitForExistence(timeout: 20))

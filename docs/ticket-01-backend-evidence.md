@@ -1,6 +1,6 @@
 # Ticket 01 backend and deployment evidence
 
-Date: 2026-10-11. Integration target: `integration/nivli-v1`; implementation branch: `implement/nivli-01`.
+Date: 2026-10-11. Integration target: `integration/haiji-v1`; implementation branch: `implement/haiji-01`.
 
 ## Verified locally
 
@@ -9,7 +9,7 @@ Date: 2026-10-11. Integration target: `integration/nivli-v1`; implementation bra
 - Initial HTTP tracer test was red because the application entry did not exist; subsequent mutation/revocation and administrator retry tests exposed failures before their fixes. Concurrency and expiration cases also verify already implemented transaction behavior. No claim is made that every assertion had its own isolated red run.
 - Public OpenAPI regeneration and validation of the shared DTO examples succeed. Regeneration leaves committed contracts unchanged. The Swift consumer validates the same examples separately; see native evidence.
 - Clean install/build/test/contract run and `git diff --check` passed after the idempotency review fix.
-- Docker Compose ran a real linux/arm64 application build and PostgreSQL 17. Readiness returned 200 after migration. Database stop + API restart followed by database restart recovered readiness. Forced migration exit 73 prevented API/agent/delivery startup. Disposable Compose projects and their volumes were removed. Detailed local log: `/tmp/nivli-compose-check.log`; reproducible command: `BUILDX_BUILDER=desktop-linux deploy/check-compose.sh`.
+- Docker Compose ran a real linux/arm64 application build and PostgreSQL 17. Readiness returned 200 after migration. Database stop + API restart followed by database restart recovered readiness. Forced migration exit 73 prevented API/agent/delivery startup. Disposable Compose projects and their volumes were removed. Detailed local log: `/tmp/haiji-compose-check.log`; reproducible command: `BUILDX_BUILDER=desktop-linux deploy/check-compose.sh`.
 
 ## Scope and limits
 

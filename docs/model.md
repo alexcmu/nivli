@@ -8,7 +8,7 @@
 
 Docker Compose 添加 `-f deploy/model.compose.yaml` 并设置 `MODEL_API_KEY_PATH`。API 与 agent 同时使用这一配置；修改后重启两者。尚未配置时交代仍然持久化，处理失败后可改用手动设置。
 
-管理员可使用 Bearer 管理密钥向 `POST /v1/admin/model/test` 提交 `{}`。该操作发送固定合成内容、检查 schema/工具 proposal，不写业务事项。另可先构建，再显式设置 `NIVLI_REAL_MODEL_SMOKE=1` 运行 `npm run model:smoke`；输出仅包括模型身份、数值使用量与计数。真实测试会产生少量模型费用；每 run 最多 3 次请求、每次 1024 输出 token、6 个原始工具调用、60 秒硬超时，不启用 SDK 重试或模型回退。缺少管理员配置时不能宣称已完成真实模型验收。
+管理员可使用 Bearer 管理密钥向 `POST /v1/admin/model/test` 提交 `{}`。该操作发送固定合成内容、检查 schema/工具 proposal，不写业务事项。另可先构建，再显式设置 `HAIJI_REAL_MODEL_SMOKE=1` 运行 `npm run model:smoke`；输出仅包括模型身份、数值使用量与计数。真实测试会产生少量模型费用；每 run 最多 3 次请求、每次 1024 输出 token、6 个原始工具调用、60 秒硬超时，不启用 SDK 重试或模型回退。缺少管理员配置时不能宣称已完成真实模型验收。
 
 ## 业务契约
 
@@ -30,9 +30,9 @@ API 与 agent 配置同一 `MODEL_DAILY_BUDGET_USD`（默认 1 USD，范围 0–
 
 ## 真实模型评估
 
-`npm run model:eval` 默认只写 `not_run`，必须显式设置 `NIVLI_REAL_MODEL_EVAL=1` 与服务端模型配置才调用付费模型。`MODEL_DAILY_BUDGET_USD` 是本次评估的全局上限，默认 1 USD、最高 2 USD；每个标注案例使用独立 PostgreSQL 数据库、实际 API 和 pg-boss worker，累计已确认 usage 与未知请求的完整预留后，才允许下一案例请求。模型失败仍记录为失败；没有足够预算执行的案例记录为 `unevaluated`，不能视作语义通过或失败。
+`npm run model:eval` 默认只写 `not_run`，必须显式设置 `HAIJI_REAL_MODEL_EVAL=1` 与服务端模型配置才调用付费模型。`MODEL_DAILY_BUDGET_USD` 是本次评估的全局上限，默认 1 USD、最高 2 USD；每个标注案例使用独立 PostgreSQL 数据库、实际 API 和 pg-boss worker，累计已确认 usage 与未知请求的完整预留后，才允许下一案例请求。模型失败仍记录为失败；没有足够预算执行的案例记录为 `unevaluated`，不能视作语义通过或失败。
 
-任务比较通过公开 API 的 `status=all` 分页进行，包含完成和取消事项，避免默认 active 筛选伪造数量变化。报告完成前为 `running`，完成后才为 `completed`；其含义是评估已执行，逐例 `passed` 才表示标注达成。`NIVLI_EVAL_REPORT` 指定报告路径；修复后可用 `NIVLI_EVAL_CASE_IDS=eval-08,eval-09` 进行聚焦重跑，必须保留原始失败结果。跨 CLI 调用的费用不会自动共享数据库，执行者必须累计各次 usage 与未知预留，确保合计不超过授权限额。
+任务比较通过公开 API 的 `status=all` 分页进行，包含完成和取消事项，避免默认 active 筛选伪造数量变化。报告完成前为 `running`，完成后才为 `completed`；其含义是评估已执行，逐例 `passed` 才表示标注达成。`HAIJI_EVAL_REPORT` 指定报告路径；修复后可用 `HAIJI_EVAL_CASE_IDS=eval-08,eval-09` 进行聚焦重跑，必须保留原始失败结果。跨 CLI 调用的费用不会自动共享数据库，执行者必须累计各次 usage 与未知预留，确保合计不超过授权限额。
 
 2026-10-11 的真实 Anthropic Claude Sonnet 5.5 结果见 [评估证据](evals/claude-sonnet-5-5-evidence.md)。这些数值是 usage/估价与保守预留，不是供应商账单；常规 CI 使用受控外部提供方，不随机调用付费模型。
 

@@ -15,7 +15,7 @@ Validation:
 - `npm test`: 6 files / 57 tests passed, including real PostgreSQL, pg-boss and Pi with a controlled external Anthropic HTTP service (67.34 s). Final additional negative/contraction cases passed in the targeted authority test (17.34 s).
 - Targeted deadline / repeated cancellation / midnight tests: 3 passed (9.78 s).
 - `swift test --package-path ios`: 15 tests passed, including persisted client lifecycle operation identity.
-- Generic iOS Simulator build: passed, log `/tmp/nivli-review-build.log`.
+- Generic iOS Simulator build: passed, log `/tmp/haiji-review-build.log`.
 - Evaluation labels now contain 51 cases, with the independent Friday deadline checked by the opt-in evaluator. Evaluation invocation without explicit credentials remains `not_run`, with zero results; no real Claude request or model outcome is claimed.
 
 No new true-device acceptance was performed for these review fixes. Existing outstanding IME, real-model smoke/evaluation and notification-permission checks remain open. Gmail connection is deferred as requested. Accessibility audits remain waived by the user.
@@ -31,6 +31,6 @@ Swift public client lifecycle tests cover initial no-run-ID Stop, retry acknowle
 - Combined creation/terminal authorization tests: 2 passed (25.39 s).
 - Real HTTP delayed retry acknowledgement/late provider test: 1 passed (3.75 s).
 - Swift tests: 17 passed; generic iOS Simulator build passed.
-- TypeScript build passed. Final full suite: 6 files / 58 tests passed with no unhandled errors (81.06 s), log `/tmp/nivli-review-stable-final.log`.
+- TypeScript build passed. Final full suite: 6 files / 58 tests passed with no unhandled errors (81.06 s), log `/tmp/haiji-review-stable-final.log`.
 
 Verification reproduced a PostgreSQL `57P01` teardown race twice: pg-pool 3.14.0 removes clients from its list and resolves `pool.end()` before asynchronous socket/backend exits finish; immediate `DROP DATABASE WITH (FORCE)` kills an ending client. All six isolated HTTP suites now use one bounded connection-drain helper and a normal database drop, so genuine leaks fail instead of being killed or ignored. The existing raw numeric/timeout integration test now has a 15-second harness allowance for two queue settlements, worker restart and a 1.1-second late-output observation; its actual model hard deadline remains 100 ms. Affected task/agent suites passed 25 tests, followed by the clean 58-test full run above. No model credentials or true-device acceptance were added by this follow-up.

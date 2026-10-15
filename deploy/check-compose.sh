@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 test_dir=$(mktemp -d)
-project="nivli-check-${RANDOM}-${RANDOM}"
+project="haiji-check-${RANDOM}-${RANDOM}"
 cleanup() {
   docker compose --project-name "$project" --env-file "$test_dir/env" down --volumes --remove-orphans >/dev/null 2>&1 || true
   rm -rf "$test_dir"
@@ -14,10 +14,10 @@ openssl rand -hex 32 > "$test_dir/admin-secret"
 # Parent directory is 0700; only the mounted file is readable by the non-root process.
 chmod 0444 "$test_dir/admin-secret"
 cat > "$test_dir/env" <<ENV
-APP_IMAGE=nivli-compose-check:local
+APP_IMAGE=haiji-compose-check:local
 POSTGRES_PASSWORD=$(openssl rand -hex 32)
 ADMIN_SECRET_PATH=$test_dir/admin-secret
-PUBLIC_URL=https://nivli.test
+PUBLIC_URL=https://haiji.test
 ENVIRONMENT_NAME=Compose check
 PUSH_MODE=disabled
 MODEL_DATA_DESTINATION=No model configured

@@ -1,11 +1,11 @@
-# Nivli
+# Haiji
 
 原生 iPhone AI 时间提醒应用。后端使用 Node 24、Fastify、PostgreSQL 与 pg-boss；本地通知由 iPhone 安排。
 
 ## 在 Railway 导入
 
-1. 在 Railway 选择 **Deploy from GitHub repo → alexcmu/nivli**，分支选 `main`。仓库的 Dockerfile 默认启动 `serve`：自动迁移数据库，同时运行 API 和 AI worker。
-2. 在同一项目添加 **PostgreSQL**。打开 Nivli 服务的 **Variables**，设置：
+1. 在 Railway 选择 **Deploy from GitHub repo**，选择本项目仓库，分支选 `main`。仓库的 Dockerfile 默认启动 `serve`：自动迁移数据库，同时运行 API 和 AI worker。
+2. 在同一项目添加 **PostgreSQL**。打开 Haiji 服务的 **Variables**，设置：
    - `DATABASE_URL=${{Postgres.DATABASE_URL}}`，数据库服务名称不同时使用对应名称。
    - `ADMIN_SECRET`：在本机运行 `openssl rand -hex 32` 生成，保存为服务端密钥，之后保持不变。
    - `ANTHROPIC_API_KEY`：你的服务端 Anthropic API key。
@@ -30,4 +30,4 @@ Railway 的账单和 Anthropic 的模型调用费用分别计算。模型每日�
 - [现有 Docker Compose 部署](docs/deployment.md)仍使用显式 `api` / `agent` / `delivery` 角色，支持 `ADMIN_SECRET_FILE`；文件密钥优先于环境变量。
 - [iPhone 构建与使用](ios/README.md)。
 
-当前实现范围以 `.scratch/nivli-v1/issues/` 的验收记录为准，完整 v1 尚未完成。
+当前实现范围以 `.scratch/haiji-v1/issues/` 的验收记录为准，完整 v1 尚未完成。
